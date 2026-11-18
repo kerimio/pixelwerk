@@ -13,7 +13,7 @@ npm start
 Dann **http://localhost:4300** öffnen. Du brauchst nur Node (ab Version 20), kein `npm install`.
 
 - Der Spielstand wird mit `npm start` automatisch in `fortschritt.json` im Repo-Ordner gespeichert (steht in `.gitignore`). Die vorige Fassung liegt daneben als `fortschritt.json.bak`. Zusätzlich merkt sich der Browser den Stand.
-- Ohne Server geht es auch: `index.html` im Browser öffnen. Dann liegt der Spielstand nur im Browser. Sichern und einspielen geht im Profil unter **Spielstand** (Export und Import als JSON).
+- Ohne Server geht es auch: `index.html` im Browser öffnen. Dann liegt der Spielstand nur im Browser. Sichern und einspielen geht im Profil unter **Spielstand** (Export und Import als JSON). Dort kannst du auch **ganz von vorn anfangen**: Nach einer Rückfrage sind Fortschritt, Profil und Avatar gelöscht, und der Einstieg startet neu. Hell oder dunkel und der KI-Schlüssel bleiben.
 
 ## So läuft es ab
 
