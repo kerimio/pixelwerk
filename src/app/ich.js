@@ -14,16 +14,28 @@ var FARB_PRESETS = [
   { id: 'beere', n: 'Beere', a: '#B0306E', g: '#2C7A4B' },
   { id: 'graphit', n: 'Graphit', a: '#37424E', g: '#2E7D4F' }
 ];
-/* Avatar: 10 × 10 Pixel, jedes Zeichen ein Farbindex (0 = leer) */
-var AV_N = 10;
-var AV_PAL = ['', '#1A2320', '#FFFFFF', '#F2C9A0', '#C68A5E', '#6B4226', '#F5B700', '#2453C9', '#D6455D', '#2E9E63', '#7B4DDB', '#8C979E', '#F4A7C0'];
+/* Avatar: 20 × 20 Pixel, jedes Zeichen ein Farbindex von 0 bis f (0 = leer). Bis Ende 2026 waren es 10 × 10:
+   Solche Avatare (100 Zeichen) werden beim Lesen verdoppelt, jedes alte Pixel wird ein Block aus 2 × 2. */
+var AV_N = 20, AV_ALT = 10;
+var AV_PAL = ['', '#1A2320', '#FFFFFF', '#F2C9A0', '#C68A5E', '#6B4226', '#F5B700', '#2453C9', '#D6455D', '#2E9E63', '#7B4DDB', '#8C979E', '#F4A7C0', '#8D5524', '#F08A00', '#163A94'];
+/* 10 × 10 → 20 × 20 */
+function avDoppelt(p) { let r = ''; for (let y = 0; y < AV_ALT; y++) { const z = p.slice(y * AV_ALT, (y + 1) * AV_ALT).split('').map(c => c + c).join(''); r += z + z; } return r; }
+/* Einzelne Pixel setzen: [[x, y, Farbe], …] auf einem 20 × 20-Avatar */
+function avFein(p, punkte) { const a = p.split(''); punkte.forEach(([x, y, c]) => { a[y * AV_N + x] = c; }); return a.join(''); }
 var AV_VORLAGEN = [
   { n: 'Dev', px: '0000000000' + '0055555500' + '0555555550' + '0533333350' + '0311311130' + '0333333330' + '0033113300' + '0003333000' + '0077777700' + '0777777770' },
   { n: 'Brille', px: '0001111000' + '0011111100' + '0133333310' + '1111331111' + '1221331221' + '0133333310' + '0033883300' + '0003333000' + '00a0aa0a00' + '0aaaaaaaa0' },
   { n: 'Roboter', px: '0000660000' + '0000bb0000' + '0bbbbbbbb0' + '0b77bb77b0' + '0b77bb77b0' + '0bbbbbbbb0' + '0bb1111bb0' + '0bbbbbbbb0' + '00b0bb0b00' + '0bb0bb0bb0' },
   { n: 'Katze', px: '0600000060' + '0660000660' + '0666666660' + '0612662160' + '0666666660' + '066c11c660' + '0666666660' + '0066666600' + '0006666000' + '0000000000' },
   { n: 'Pilz', px: '0008888000' + '0088228800' + '0828888280' + '8888888888' + '8228888228' + '0888888880' + '0002332000' + '0003113000' + '0003333000' + '0002222000' }
-];
+].map(v => Object.assign(v, { px: avDoppelt(v.px) }));
+/* Eine Vorlage, die zeigt, was mit den feinen Pixeln geht: Glanz in den Augen, Lächeln, Haarsträhne, Kragen */
+AV_VORLAGEN.splice(1, 0, { n: 'Dev fein', px: avFein(AV_VORLAGEN[0].px, [
+  [5, 9, '2'], [12, 9, '2'], [4, 8, '1'], [5, 8, '1'], [11, 8, '1'], [12, 8, '1'], [13, 8, '1'],
+  [6, 12, '3'], [7, 12, '3'], [12, 12, '3'], [13, 12, '3'], [7, 13, '1'], [12, 13, '1'], [8, 13, '8'], [9, 13, '8'], [10, 13, '8'], [11, 13, '8'],
+  [9, 2, '3'], [10, 3, '3'], [3, 10, 'c'], [16, 10, 'c'],
+  [8, 16, '2'], [9, 16, '2'], [10, 16, '2'], [11, 16, '2'], [9, 17, '2'], [10, 17, '2'], [9, 18, 'f'], [10, 18, 'f'], [9, 19, 'f'], [10, 19, 'f']
+]) });
 
 function ich() { S.ich = S.ich || {}; return S.ich; }
 /* Ein Name hat höchstens ICH_NAME_MAX Zeichen, im Einstieg wie im Profil. Ältere, längere Namen (früher bis 24) bleiben beim Laden ganz. */
@@ -82,7 +94,11 @@ function lookAnwenden() {
 }
 
 /* ---------- Avatar ---------- */
-function avatarPx() { const p = String(ich().avatar || ''); return p.length === AV_N * AV_N && /[^0]/.test(p) ? p : ''; }
+function avatarPx() {
+  let p = String(ich().avatar || '');
+  if (p.length === AV_ALT * AV_ALT && /^[0-9a-f]+$/.test(p)) p = avDoppelt(p);
+  return p.length === AV_N * AV_N && /^[0-9a-f]+$/.test(p) && /[^0]/.test(p) ? p : '';
+}
 /* o: Sachen aus der Garderobe (garderobe.js). true = was du gerade trägst, ein Objekt = genau diese, ohne = nur die eigenen Pixel */
 function avatarSvg(px, size, o) {
   let r = '';
@@ -96,15 +112,22 @@ function avatarHtml(cls) {
   const u = avatarUrl(), n = ichName();
   return u ? '<img class="' + (cls || '') + ' px-av" src="' + u + '" alt="">' : '<span class="' + (cls || '') + ' px-av px-leer" aria-hidden="true">' + esc(n ? n[0].toUpperCase() : '🙂') + '</span>';
 }
+/* Zufall: grob würfeln (10 × 10, symmetrisch), dann verdoppeln. Feines Rauschen sähe nicht nach Figur aus. */
 function zufallsAvatar() {
-  const farben = [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].sort(() => Math.random() - .5).slice(0, 3);
+  const farben = [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].sort(() => Math.random() - .5).slice(0, 3);
   let px = '';
-  for (let y = 0; y < AV_N; y++) {
+  for (let y = 0; y < AV_ALT; y++) {
     const halb = [];
-    for (let x = 0; x < AV_N / 2; x++) halb.push(Math.random() < (y === 0 || y === AV_N - 1 ? .25 : .55) ? farben[Math.random() * 3 | 0] : 0);
+    for (let x = 0; x < AV_ALT / 2; x++) halb.push(Math.random() < (y === 0 || y === AV_ALT - 1 ? .25 : .55) ? farben[Math.random() * 3 | 0] : 0);
     px += halb.concat(halb.slice().reverse()).map(v => v.toString(16)).join('');
   }
-  return px;
+  return avDoppelt(px);
+}
+/* Pinsel: fein = 1 Pixel, dick = Block aus 2 × 2 (bündig am Raster, wie die alten Pixel). Liefert die Felder, die er trifft. */
+function avPinsel(i, dick) {
+  if (!dick) return [i];
+  const x = (i % AV_N) & ~1, y = ((i / AV_N) | 0) & ~1;
+  return [y * AV_N + x, y * AV_N + x + 1, (y + 1) * AV_N + x, (y + 1) * AV_N + x + 1];
 }
 /* ---------- Einstellungen: ein Dialog, vier Reiter ---------- */
 var HUB_REITER = ['du', 'aussehen', 'toni', 'spielstand'];
@@ -138,13 +161,14 @@ function hubThema(v) {
 /* Reiter „Du“: Name und Pixel-Avatar. Jede Änderung gilt sofort. */
 function hubDuBauen(d, p) {
   const me = ich();
-  const ed = { px: (avatarPx() || '0'.repeat(AV_N * AV_N)).split(''), farbe: 1, spiegel: me.spiegel !== false };
+  const ed = { px: (avatarPx() || '0'.repeat(AV_N * AV_N)).split(''), farbe: 1, spiegel: me.spiegel !== false, dick: me.pinsel === 'dick' };
   p.innerHTML = `<label class="fld" for="ichName">Dein Name</label><input id="ichName" maxlength="${ICH_NAME_MAX}" autocomplete="given-name" placeholder="Dein Vorname" value="${esc(me.name || '')}">
     <p class="fld" id="avT">Dein Pixel-Avatar</p>
-    <div class="av-ed"><div class="av-grid" id="avGrid" aria-label="Malfläche, 10 mal 10 Pixel. Malen mit Maus oder Finger.">${ed.px.map((c, i) => `<i data-i="${i}"></i>`).join('')}</div>
+    <div class="av-ed"><div class="av-grid" id="avGrid" aria-label="Malfläche, 20 mal 20 Pixel. Malen mit Maus oder Finger.">${ed.px.map((c, i) => `<i data-i="${i}"></i>`).join('')}</div>
       <div class="av-side"><div class="av-prev" id="avPrev"></div>
-        <div class="av-pal" id="avPal" role="group" aria-label="Malfarbe">${AV_PAL.map((c, i) => `<button type="button" data-c="${i}" aria-pressed="${i === 1}" aria-label="${i ? 'Farbe ' + (i) : 'Radierer'}" style="${i ? '--c:' + c : ''}">${i ? '' : '⌫'}</button>`).join('')}</div>
+        <div class="av-pal" id="avPal" role="group" aria-label="Malfarbe">${AV_PAL.map((c, i) => `<button type="button" data-c="${i}" aria-pressed="${i === 1}" aria-label="${i ? ES_MALFARBEN[i] || 'Farbe ' + i : 'Radierer'}" title="${i ? ES_MALFARBEN[i] || '' : 'Radierer'}" style="${i ? '--c:' + c : ''}">${i ? '' : '⌫'}</button>`).join('')}</div>
         <label class="sw"><input type="checkbox" id="avSpiegel" ${ed.spiegel ? 'checked' : ''}><span>Spiegeln</span></label>
+        <label class="sw"><input type="checkbox" id="avDick" ${ed.dick ? 'checked' : ''}><span>Dicker Pinsel (2 × 2)</span></label>
       </div></div>
     <div class="hub-wahlen av-tpl" role="group" aria-label="Vorlagen">${AV_VORLAGEN.map((v, i) => `<button type="button" class="hub-wahl" data-v="${i}">${v.n}</button>`).join('')}<button type="button" class="hub-wahl" id="avZufall">🎲 Zufall</button><button type="button" class="hub-wahl" id="avLeer">Leeren</button></div>
     ${garderobeHtml()}
@@ -154,8 +178,8 @@ function hubDuBauen(d, p) {
   const grid = p.querySelector('#avGrid'), cells = [...grid.children];
   const malen = () => { cells.forEach((el, i) => { const c = AV_PAL[parseInt(ed.px[i], 16)]; el.style.background = c || ''; el.classList.toggle('leer', !c); }); p.querySelector('#avPrev').innerHTML = avatarSvg(ed.px.join(''), 72, true); };
   const setzen = i => {
-    const x = i % AV_N, y = (i / AV_N) | 0, v = ed.farbe.toString(16);
-    ed.px[i] = v; if (ed.spiegel) ed.px[y * AV_N + (AV_N - 1 - x)] = v;
+    const v = ed.farbe.toString(16);
+    avPinsel(i, ed.dick).forEach(j => { const x = j % AV_N, y = (j / AV_N) | 0; ed.px[j] = v; if (ed.spiegel) ed.px[y * AV_N + (AV_N - 1 - x)] = v; });
   };
   /* Die Vorschauen in der Garderobe zeigen deine eigenen Pixel, darum nach jedem Malen auch dort neu zeichnen */
   const speichern = () => { me.avatar = ed.px.join(''); malen(); save(); lookAnwenden(); garderobeFuellen(p); };
@@ -166,6 +190,7 @@ function hubDuBauen(d, p) {
   window.addEventListener('pointerup', los); d.addEventListener('close', () => window.removeEventListener('pointerup', los), { once: true });
   p.querySelectorAll('#avPal button').forEach(b => b.onclick = () => { ed.farbe = +b.dataset.c; p.querySelectorAll('#avPal button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   p.querySelector('#avSpiegel').onchange = e => { ed.spiegel = me.spiegel = e.target.checked; save(); };
+  p.querySelector('#avDick').onchange = e => { ed.dick = e.target.checked; me.pinsel = ed.dick ? 'dick' : 'fein'; save(); };
   p.querySelectorAll('.av-tpl [data-v]').forEach(b => b.onclick = () => { ed.px = AV_VORLAGEN[+b.dataset.v].px.split(''); speichern(); });
   p.querySelector('#avZufall').onclick = () => { ed.px = zufallsAvatar().split(''); speichern(); };
   p.querySelector('#avLeer').onclick = () => { ed.px = '0'.repeat(AV_N * AV_N).split(''); speichern(); };

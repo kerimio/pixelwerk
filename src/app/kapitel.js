@@ -95,8 +95,8 @@ function ticketHtml(ch, small) {
 
 /* ---------- Szene: der Team-Chat spielt sich ab ---------- */
 function kpAvatar(who) {
-  const c = CAST[who] || CAST.toni;
-  return who === 'du' && avatarPx() ? `<span class="av av-px">${avatarHtml()}</span>` : `<span class="av" style="${figurStil(c.color)}">${esc(c.initial)}</span>`;
+  const k = CAST[who] ? who : 'toni', c = CAST[k];
+  return k === 'du' && avatarPx() ? `<span class="av av-px">${avatarHtml()}</span>` : `<span class="av${figurUrl(k) ? ' av-fig' : ''}" style="${figurStil(c.color)}">${figurKopf(k)}</span>`;
 }
 function kpZeile([who, txt]) {
   if (who === 'erz') return '<p class="narr">' + txt + '</p>';

@@ -410,6 +410,7 @@ const lage = page => page.evaluate(() => {
   ok(L.chat.erste + 2 < L.chat.n && (await zeilen(page).count()) === L.chat.erste + 2, 'Szene: Klick in den Chat holt die nächste Nachricht');
   await page.click('.kp-alles');
   ok((await zeilen(page).count()) === L.chat.n && (await sichtbar(page, '#kpAnnehmen')), 'Szene: „Alles zeigen“ überspringt das Abspielen bis zum Ticket');
+  ok(await page.locator('#stepBody .line:not(.me) .av img.fig-av').count() > 0, 'Szene: Das Team spricht mit Pixel-Gesichtern statt Buchstaben');
   await page.dblclick('#kpAnnehmen');
   ok((await sichtbar(page, '#pretest')) && (await page.locator('.kp-stempel').count()) === 1, 'Szene: Doppelklick auf „Ticket annehmen“ nimmt nur einmal an');
   await page.evaluate(id => { delete S.steps[id]; delete S.pre[id]; }, L.chat.id);

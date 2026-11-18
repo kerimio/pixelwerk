@@ -58,3 +58,5 @@ body.chat-open .chat{display:flex}
 @media (max-width: 520px){
   #toniFab .t{display:none} #toniFab{padding:10px}
 }
+/* Tonis Pixel-Gesicht im Chat, am Knopf und im Review. Der Buchstabe „T“ bleibt im HTML, wird aber durchsichtig. */
+.chat-av,.msg:not(.me)::before,#toniFab .m,.pr-av{background-image:var(--fig-toni,none);background-size:cover;background-position:center;color:transparent}
