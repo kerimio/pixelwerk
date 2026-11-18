@@ -1,0 +1,86 @@
+/* ===== Lernen: Wiederholen, freie Runde, Vorab-Tipp, „Wie diese App beim Lernen hilft“ ===== */
+
+/* Bausteine, die auch Kapitel und Werkstatt benutzen: Antwort-Knopf mit Taste, Textfeld, eigene Stichworte */
+/* Die Zahl vor der Antwort sieht aus wie eine Taste: Sie lässt sich auch mit 1 bis 4 drücken */
+.opt .key{display:inline-grid;place-items:center;flex:none;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);background:var(--bg);box-shadow:0 2px 0 var(--edge);font:700 13px/1 var(--f-mono);color:var(--muted);margin-right:12px;vertical-align:middle}
+.opt:hover:not(:disabled) .key{border-color:var(--accent);color:var(--accent)}
+.opt.picked{border-color:var(--accent);background:var(--accent-soft)}
+.recall{width:100%;font:15px/1.5 var(--f-body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0 12px;resize:vertical}
+.recall:focus{border-color:var(--accent);outline:none}
+blockquote.mine{margin:6px 0 16px;padding:10px 14px;border-left:3px solid var(--muted);background:var(--sunk);border-radius:0 10px 10px 0;color:var(--ink)}
+
+/* Kopf der Seite (.le-kopf, .ort: siehe 03-kapitel.css), darunter der Stand der Runde (.blitz-bar: derselbe Balken in der Werkstatt) */
+.le-balken,.blitz-bar{height:10px;border-radius:4px;background:var(--sunk);overflow:hidden;margin-top:14px}
+.le-balken i,.blitz-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:4px;box-shadow:inset 0 -3px 0 var(--accent-edge);transition:width .3s}
+
+/* Karte einer Runde */
+.le-label{font-size:13.5px;font-weight:700;color:var(--muted);margin:0 0 6px}
+.le-label.le-ab{margin-top:20px}
+.le-label:focus,.le-frage:focus,.le-zahl:focus{outline:none}
+.le-frage{font-size:clamp(22px,3vw,27px);margin:0 0 18px;overflow-wrap:anywhere}
+.le-frage code{font-size:.72em}
+.le-opts{display:grid;gap:10px}
+.le-opts .opt{overflow-wrap:anywhere}
+.opt.wrong .key{background:var(--bad);color:var(--surface);border-color:var(--bad)}
+.le-warum:empty{display:none}
+.le-warum{margin-top:14px;padding:12px 16px;border-radius:var(--r);background:var(--sunk)}
+.le-hinweis{margin:10px 0 0;font-size:14.5px;color:var(--muted)}
+.le-ziel{margin:0;font-weight:700}
+.le-weiter{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;margin-top:16px}
+.le-weiter .btn{scroll-margin-bottom:24px}
+.le-weiter .linkbtn{min-height:40px}
+.le-merke,.le-nach{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.le-merke li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:11px 16px}
+.le-nach a{display:inline-flex;align-items:center;min-height:40px;font-weight:700}
+
+/* Wie sicher? und die Selbsteinschätzung bei Merksätzen (Tasten 1 bis 4, siehe start.js) */
+.conf{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border:1.5px dashed var(--accent);border-radius:var(--r);animation:lePop .2s}
+.le-conf-f{font-size:13.5px;font-weight:700;color:var(--muted);margin-right:6px}
+.cf,.gr{display:inline-flex;align-items:center;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 14px;cursor:pointer;font-weight:700;font-size:15px;box-shadow:0 3px 0 var(--edge);transition:transform .08s,box-shadow .08s}
+.cf:hover,.gr:hover{border-color:var(--accent)}
+.cf:active,.gr:active{transform:translateY(3px);box-shadow:0 0 0 var(--edge)}
+.cf .key,.gr .key{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);font:700 12px/1 var(--f-mono);color:var(--muted);margin-right:8px}
+.grades{display:flex;flex-wrap:wrap;gap:10px}
+.gr.bad:hover{border-color:var(--bad)} .gr.good:hover{border-color:var(--grass)}
+@keyframes lePop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.hyper{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;font-size:14.5px}
+
+/* Code aus dem Kopf: Leiste bleibt über der Übung stehen */
+.le-xbar{position:sticky;top:calc(var(--toph,62px) + env(safe-area-inset-top,0px) + 8px);z-index:5;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 16px;min-height:52px;margin-bottom:14px;padding:6px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.le-xbar .le-label,.le-xbar .le-weiter{margin:0}
+.le-xbar .linkbtn{min-height:40px}
+
+/* Bilanz am Ende, ruhige Seite ohne fällige Karten */
+.le-zahl{font:700 clamp(36px,6vw,54px)/1.1 var(--f-display);margin:0 0 4px}
+.le-zahl.le-voll{color:var(--grass)}
+.le-wann{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:0;margin:0}
+.le-wann li{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.le-wann b{font-size:24px;line-height:1.15}
+.le-wann span{font-size:13.5px;color:var(--muted)}
+.le-ruhe h2{font-size:22px;margin-bottom:6px}
+.le-ruhe p{margin:0}
+.le-ruhe .le-hinweis{margin-top:10px}
+
+/* Vorab-Tipp in der Szene */
+.pretest{margin-top:26px;padding:18px 20px;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--surface)}
+.le-pre-t{margin:0;font:700 20px/1.2 var(--f-display)}
+.le-pre-s{margin:2px 0 12px;font-size:14.5px;color:var(--muted)}
+.pretest .q{font-size:clamp(19px,2.6vw,23px);margin:0 0 14px;overflow-wrap:anywhere}
+.pretest .q code{font-size:.75em}
+.pretest .opts{display:grid;gap:10px}
+.pre-msg{margin:12px 0 0;min-height:1.6em;color:var(--grass);font-weight:700}
+.pre-note{margin:10px 0 0;font-size:14.5px;color:var(--muted)}
+
+/* Wie diese App beim Lernen hilft */
+.le-lede{margin:0 0 20px;color:var(--muted)}
+.le-ws{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px}
+.le-ws summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:13px 16px;cursor:pointer;list-style:none;border-radius:var(--r)}
+.le-ws summary::-webkit-details-marker{display:none}
+.le-ws summary::after{content:"+";grid-area:1/2/3/3;align-self:center;font:700 20px/1 var(--f-mono);color:var(--muted)}
+.le-ws[open] summary::after{content:"−"}
+.le-ws summary:hover::after{color:var(--accent)}
+.le-ws summary span{grid-column:1;font-size:15.5px;color:var(--muted)}
+.le-ws-m{padding:0 16px 8px;border-top:1px solid var(--line)}
+.le-ws-m p{margin:12px 0 4px}
+.le-ws-q{list-style:none;padding:0;margin:0}
+.le-ws-q a{display:flex;align-items:center;min-height:40px;font-size:14.5px}

@@ -1,0 +1,60 @@
+/* ===== Der eine Toni: Knopf unten rechts, Chat-Fenster, Schnellfragen ===== */
+
+#toniFab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:10px 16px 10px 10px;font-weight:700;cursor:pointer;display:flex;gap:8px;align-items:center;box-shadow:0 6px 20px -8px rgba(0,0,0,.45)}
+#toniFab .m{width:28px;height:28px;border-radius:8px;background:var(--c-toni);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+body.chat-open #toniFab{display:none}
+/* Chat wie ein Slack-Fenster: fest rechts angedockt, eigene Kopfzeile, Nachrichten als Zeilen mit Avatar und Name */
+.chat{--ch-head:#1E2433;position:fixed;top:calc(var(--toph) + env(safe-area-inset-top,0px));right:0;bottom:0;z-index:41;width:min(400px,100vw);background:var(--surface);border-left:1px solid var(--line);display:none;flex-direction:column;box-shadow:-12px 0 32px -24px rgba(0,0,0,.5)}
+body.chat-open .chat{display:flex}
+@media (min-width: 1180px){body.chat-open .main{padding-right:calc(400px + 16px)}}
+/* Übung: Der Chat darf den Editor nicht verdecken, auch auf mittleren Breiten rückt sie zur Seite */
+@media (min-width: 800px) and (max-width: 1179px){body.chat-open .main:has(.ub){padding-right:calc(400px + 16px)}}
+.chat:focus{outline:none}
+.chat-h{display:flex;gap:10px;align-items:center;padding:10px 12px 10px 14px;background:var(--ch-head);color:#fff}
+.chat-h > div{flex:1;min-width:0}
+.chat-h b{font-size:16px;display:block;line-height:1.2}
+.chat-h small{display:flex;align-items:center;gap:6px;color:#B8C0D0;font-size:12px}
+#tcSieht{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.on-dot{flex:none;width:8px;height:8px;border-radius:50%;background:#2BAC76;display:inline-block}
+.tc-aus .on-dot{background:#8A93A3}
+.chat-av,.msg::before{flex:none;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font:700 14px/1 var(--f-body);color:#fff;background:var(--c-toni)}
+#chatClose{border:0;background:none;font-size:24px;cursor:pointer;color:#B8C0D0;line-height:1;min-width:40px;min-height:40px;border-radius:6px}
+#chatClose:focus-visible{outline-color:#fff}
+#chatClose:hover{background:rgba(255,255,255,.1);color:#fff}
+#chatLog{flex:1;min-height:0;overflow:auto;padding:12px 6px;display:flex;flex-direction:column;gap:2px;background:var(--surface)}
+#chatLog>*{flex:none} /* Nachrichten behalten ihre Höhe, der Verlauf scrollt */
+.msg{position:relative;padding:24px 10px 6px 54px;min-height:40px;border-radius:6px;font-size:15px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.msg:hover{background:var(--sunk)}
+.msg::before{content:"T";position:absolute;left:10px;top:6px}
+.msg::after{content:"Toni";position:absolute;left:54px;top:4px;font-weight:700;font-size:14px;color:var(--ink)}
+.msg.me::before{content:"Du";background:var(--c-du);font-size:12px}
+.msg.me::after{content:"Du"}
+.msg p{margin:.15em 0 .45em} .msg pre.code{font-size:12.5px;margin:6px 0}
+.msg ul,.msg ol{margin:.2em 0 .5em;padding-left:20px}
+.msg h4{margin:.5em 0 .2em;font-size:15px}
+.chat-empty{color:var(--muted);font-size:14.5px;padding:8px 12px}
+.chat-empty p{margin:0 0 8px}
+.tc-denkt{color:var(--muted);animation:tcPuls 1.2s infinite}
+@keyframes tcPuls{50%{opacity:.4}}
+/* Ohne KI-Schlüssel: statt Eingabe und Schnellfragen ein Hinweis mit dem Weg zur Einstellung */
+.tc-ohne{margin:12px 10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:15px}
+.tc-ohne p{margin:0 0 12px}
+.tc-aus #chatLog:not(:has(.msg)){display:none}
+/* Schnellfragen, passend zum Ort (höchstens drei) */
+.tc-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px 0}
+.tc-chips .chip-btn{min-height:40px;padding:6px 13px;font-size:13.5px;text-align:left}
+.tc-chips .chip-btn:hover:not([aria-disabled="true"]){border-color:var(--accent)}
+.tc-chips .chip-btn[aria-disabled="true"],.send-btn:disabled{opacity:.5;cursor:not-allowed}
+.composer{margin:8px 10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-direction:column}
+.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+#chatIn{border:0;background:transparent;font:inherit;font-size:15px;padding:12px 12px 6px;color:var(--ink);outline:none;min-width:0}
+.composer-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 8px 8px}
+.chip-btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:4px 11px;cursor:pointer}
+.composer-bar .chip-btn,.send-btn{min-height:36px}
+.chip-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.send-btn{border:0;background:var(--accent);color:var(--accent-ink);font:700 13.5px var(--f-body);border-radius:8px;padding:6px 12px;cursor:pointer}
+#chatForm[data-mode="kapitel"]{border-color:var(--accent)}
+
+@media (max-width: 520px){
+  #toniFab .t{display:none} #toniFab{padding:10px}
+}

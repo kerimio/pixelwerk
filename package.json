@@ -1,0 +1,26 @@
+{
+  "name": "pixelwerk",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Pixelwerk: interaktive Angular- und RxJS-Lernplattform an echten Job-Tickets, Story: neu als Entwickler in einer Agentur",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "vendor": "node scripts/vendor.js",
+    "test": "npm run build && node tests/aufbau.test.js && node tests/solutions.test.js && node tests/learning.test.js && node tests/coach.test.js && node tests/review.test.js && node tests/arena.test.js && node tests/eigene.test.js && node tests/ich.test.js && node tests/pr.test.js && node tests/ki.test.js && node tests/datei.test.js && node tests/start.test.js && node tests/kapitel.test.js && node tests/uebung.test.js && node tests/einstieg.test.js && node tests/garderobe.test.js && node tests/themen.test.js && node tests/offen.test.js",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "@angular/common": "22.2.4",
+    "@angular/compiler": "22.2.4",
+    "@angular/core": "22.2.4",
+    "@angular/forms": "22.2.4",
+    "@angular/platform-browser": "22.2.4",
+    "@angular/router": "22.2.4",
+    "codemirror": "5.65.16",
+    "esbuild": "0.28.2",
+    "playwright": "^1.47.0",
+    "rxjs": "7.8.1",
+    "typescript": "5.4.5"
+  }
+}

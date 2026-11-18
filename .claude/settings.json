@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(git:*)", "Bash(node:*)", "Bash(npm:*)", "Bash(npx:*)", "Bash(python3:*)", "Read", "Edit", "Write", "Artifact"]
+  }
+}

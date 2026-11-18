@@ -1,0 +1,231 @@
+/* ===== Kapitel: Rahmen, Szene, Folie, Code mit Erklärungen, Selbsterklären, Wort-Karte, Quiz, Abschluss ===== */
+
+/* Seitenkopf, gleich in Kapitel, Wiederholen und Werkstatt: links leise zurück, rechts wo man ist (.ort), darunter der Titel */
+.ch-head,.le-kopf{margin-bottom:26px}
+.ch-head h1,.le-kopf h1{font-size:clamp(24px,3.4vw,32px)}
+.ort{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0 16px;min-height:40px;margin:-8px 0 4px;max-width:none;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ort a{display:inline-flex;align-items:center;min-height:40px;color:var(--muted);font-weight:700;text-decoration:none}
+.ort a:hover{color:var(--ink)}
+.ort p{margin:0}
+.tagline{color:var(--muted);margin:8px 0 16px;font-size:15px}
+.step-nav{display:flex;justify-content:space-between;margin-top:24px;gap:12px}
+#stepBody > * + *{margin-top:18px}
+/* Lange Fachwörter ohne Leerzeichen brechen um, statt die Seite breiter zu machen */
+.kp-chat,.ticket,.kp-tipp,.slide,.quiz,.end{overflow-wrap:anywhere}
+
+/* Kapitel-Kopf: eine Fortschrittsanzeige (fünf Abschnitte, ein Strich je Schritt) */
+.kp-weg{display:flex;gap:6px;margin-top:10px}
+.kp-ph{flex:var(--n,1) 1 auto;min-width:0;min-height:40px;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;padding:0;border:0;border-radius:6px;background:none;cursor:pointer;color:var(--muted);font-size:12.5px;line-height:1.2;text-align:left}
+.kp-ph:enabled:hover,.kp-ph.an{color:var(--ink)}
+.kp-ph:disabled{cursor:default}
+.kp-ph:disabled .kp-ph-n{opacity:.55}
+.kp-ph.an{font-weight:700}
+.kp-ph-n{white-space:nowrap}
+.kp-ph small{font-size:inherit;font-weight:400;color:var(--muted)}
+.kp-ph-b{display:flex;gap:3px}
+.kp-ph-b i{flex:1;height:8px;border-radius:3px;background:var(--line)}
+.kp-ph-b i.voll{background:var(--grass);box-shadow:inset 0 -2px 0 var(--grass-edge)}
+.kp-ph-b i.an{background:var(--accent);box-shadow:inset 0 -2px 0 var(--accent-edge),0 0 0 3px var(--accent-soft)}
+
+/* Szene: Team-Chat, der sich abspielt */
+.kp-chat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 6px;box-shadow:var(--shadow)}
+.kp-spielt{cursor:pointer}
+.story{display:flex;flex-direction:column;gap:2px}
+.narr{color:var(--muted);margin:6px 10px 8px;font-size:17px;font-style:italic;max-width:none}
+.line{display:flex;gap:12px;align-items:flex-start;padding:6px 10px;border-radius:8px}
+.line.me{background:var(--sunk)}
+.av{flex:none;width:36px;height:36px;border-radius:8px;background:var(--av);color:#fff;display:grid;place-items:center;font-weight:700;font-size:15px}
+.bubble{min-width:0;font-size:16.5px}
+.bubble p{margin:2px 0 0}
+.who-n{font-weight:700;font-size:14.5px;display:block}
+.who-n small{font-weight:400;color:var(--muted);margin-left:6px}
+.kp-tippt{display:flex;align-items:center;gap:12px;margin:0;padding:6px 10px;color:var(--muted);font-size:14.5px}
+.kp-punkte{display:inline-flex;gap:3px;margin-left:-6px}
+.kp-punkte i{width:5px;height:5px;border-radius:50%;background:currentColor;animation:kpTippt 1s infinite}
+.kp-punkte i:nth-child(2){animation-delay:.15s} .kp-punkte i:nth-child(3){animation-delay:.3s}
+@keyframes kpTippt{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.kp-antwort{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:8px 10px 6px}
+.kp-antwort-l{font-size:13px;font-weight:700;color:var(--muted)}
+.kp-sag{min-height:40px;padding:9px 14px;border:1.5px solid var(--accent);border-radius:4px 14px 14px 14px;background:var(--accent-soft);color:var(--ink);font-size:16.5px;line-height:1.45;text-align:left;cursor:pointer;box-shadow:0 3px 0 var(--accent-line);transition:transform .08s,box-shadow .08s}
+.kp-sag:hover{transform:translateY(-1px);box-shadow:0 4px 0 var(--accent-line)}
+.kp-sag:active{transform:translateY(3px);box-shadow:0 0 0 var(--accent-line)}
+.kp-alles{display:block;min-height:40px;margin:0 10px}
+.kp-auftrag{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.kp-auftrag .ticket{margin:0;align-self:stretch}
+.kp-ok .ticket{--tk:var(--grass)}
+/* „Angenommen“ als Stempel: kurz schräg aufgedrückt */
+.kp-stempel{margin:0;padding:4px 14px;border:2.5px solid var(--grass);border-radius:8px;font-weight:800;font-size:17px;color:var(--grass);transform:rotate(-3deg)}
+.kp-stempel.kp-rein{animation:kpStempel .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes kpStempel{from{opacity:0;transform:rotate(-10deg) scale(1.6)}to{opacity:1;transform:rotate(-3deg) scale(1)}}
+.kp-tipp .pretest{margin-top:0}
+.kp-rein{animation:kpRein .3s ease-out}
+@keyframes kpRein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Ticket-Karte (auch Schreibtisch und Werkstatt) */
+.ticket{border:1px solid var(--line);border-left:5px solid var(--tk,var(--accent));background:var(--surface);border-radius:var(--r);padding:14px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
+.ticket[data-typ="Bug"],.ticket[data-typ="Incident"]{--tk:var(--bad)} .ticket[data-typ="Feature"]{--tk:var(--grass)} .ticket[data-typ="Security"]{--tk:#B45309}
+.tk-h{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:4px}
+.tk-id{font-family:var(--f-mono);font-weight:600;color:var(--ink)}
+.tk-typ{padding:1px 9px;border-radius:99px;background:color-mix(in srgb,var(--tk,var(--accent)) 13%,transparent);color:var(--ink);font-weight:700}
+.tk-t{font-size:21px;margin:0 0 4px}
+.tk-x{margin:0;color:var(--ink)}
+.ticket.tk-small{padding:10px 14px;margin-bottom:12px} .tk-small .tk-t{font-size:17px;margin:0}
+
+/* Folie: eine eigene Karte, klar getrennt vom Kapitel-Kopf und vom Blättern.
+   Innen drei Zonen mit Abstand und Trennlinie: Kernsatz, Inhalt (Punkte, Code, Im Job), Fuß (Mehr dazu, Doku). */
+.slide{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 28px 24px;box-shadow:0 1px 2px rgba(16,24,20,.04),0 10px 28px -18px rgba(16,24,20,.22)}
+.sl-title{font-size:clamp(24px,3.2vw,30px);margin-bottom:10px}
+.say{font-size:20px;line-height:1.45;font-weight:400;margin:0 0 22px;padding-bottom:22px;border-bottom:1px solid var(--line);max-width:none}
+.say:last-child{margin-bottom:0;padding-bottom:0;border-bottom:0}
+.slide > .say + *{margin-top:0}
+.job{margin:22px 0 0;padding:14px 18px;border:1px solid var(--accent-line);border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:var(--r);max-width:none}
+.job-l{display:block;font-size:13px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.job p{margin:0;font-size:16.5px;max-width:68ch}
+.punkte{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:0}
+.pk{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border:1px solid transparent;border-radius:12px;padding:14px 16px}
+.pk b{display:block;font-size:16px;line-height:1.25;margin-bottom:4px}
+.pk span{font-size:15px;line-height:1.45;color:var(--ink)}
+.pk.plus{border-color:var(--grass);background:var(--grass-soft)}
+.pk.minus{border-color:var(--bad);background:var(--bad-soft)}
+.pk-ic{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;line-height:1}
+.pk.plus .pk-ic{background:var(--grass);color:var(--on-grass)}
+.pk.minus .pk-ic{background:var(--bad);color:#fff}
+.slide > .punkte + .anno{margin-top:18px}
+.slide > .anno{margin-bottom:0}
+/* Fuß der Folie: durch eine Linie abgesetzt */
+.kp-mehr{margin-top:22px}
+.slide > .kp-mehr,.slide > :not(.kp-mehr) + .kp-doku-t{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.slide > .kp-mehr + .kp-doku-t{margin-top:16px}
+.kp-mehr>summary{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--muted);font-weight:700;font-size:15px;cursor:pointer;list-style:none}
+.kp-mehr>summary::-webkit-details-marker{display:none}
+.kp-mehr>summary::before{content:"+"}
+.kp-mehr[open]>summary::before{content:"−"}
+.kp-mehr>summary:hover{color:var(--ink);border-color:var(--muted)}
+.kp-mehr h3{margin:14px 0 2px;font-size:15px;color:var(--grass)}
+.kp-mehr p{margin:0}
+.kp-doku-l{list-style:none;padding:0;margin:0;display:grid}
+.kp-doku{display:inline-flex;align-items:center;gap:.3em;min-height:40px;font-weight:700}
+
+/* Code (auch Übung, Werkstatt, Chat) und Code mit nummerierten Erklärungen. Der Code-Kasten ist in Hell und Dunkel dunkel. */
+pre.code{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--code-line);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--f-mono);margin:12px 0}
+pre.code code{background:none;padding:0;font-size:inherit;color:inherit}
+.anno{margin:6px 0 14px}
+pre.acode{padding:12px 0;--kp-hell:#86A8FF}
+pre.acode code{display:block;min-width:max-content}
+.cl{display:flex;padding-right:16px;transition:background .12s}
+.cl .gut{flex:none;width:var(--gw,34px);gap:2px;display:flex;justify-content:center;align-items:center;user-select:none}
+.gut i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--kp-hell);color:#0D1530;font:700 11px/1 var(--f-body);font-style:normal}
+.cl .ct{white-space:pre}
+.acode .cl{height:1.6em;align-items:center}
+.cl.lit{background:var(--code-lit)}
+.cl.has{cursor:pointer}
+.acode :focus-visible{outline:2px solid var(--kp-hell);outline-offset:-2px}
+.notes{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.notes li{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:9px;cursor:pointer;font-size:15.5px;line-height:1.4}
+.notes li:hover,.notes li.lit{background:var(--sunk)}
+.nb{flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:12.5px;margin-top:1px}
+
+/* Erst selbst erklären: Feld je Nummer unter dem Code, danach stehen die Erklärungen mit deinen Worten darunter */
+.kp-se{margin:14px 0 4px;padding:14px 16px 10px;border:1px solid var(--accent-line);border-radius:var(--r);background:var(--accent-soft)}
+.kp-se p{margin:0;max-width:none}
+.kp-se-f{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
+.kp-se-f b{color:var(--accent);font-size:15px}
+.kp-se-h{padding:4px 0 10px;font-size:15px;line-height:1.45}
+.kp-se-l{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.kp-se-l li{display:grid;gap:5px}
+@media (min-width:700px){.kp-se-l li{grid-template-columns:minmax(0,200px) 1fr;gap:12px;align-items:center}}
+.kp-se-l label{display:flex;gap:8px;align-items:center;min-width:0;font-size:14px}
+.kp-se-l label code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:13px/1.3 var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.kp-se-in{width:100%;box-sizing:border-box;font:16px/1.45 var(--f-body);color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;resize:none;field-sizing:content;min-height:44px}
+.kp-se-in:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.kp-se-act{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding-top:12px}
+.kp-se-act .linkbtn{margin-left:auto;min-height:40px}
+.kp-se-r{min-height:22px;padding-top:6px;font-weight:700;font-size:14.5px}
+.kp-se-r:empty{min-height:0;padding:0}
+.kp-se-r.ok{color:var(--grass)} .kp-se-r.no{color:var(--bad)} .kp-se-r.hin{font-weight:400;color:var(--muted)}
+.kp-se:not(:has(.kp-se-l)){padding:10px 14px}
+.kp-se .ai-box{margin-top:10px}
+.kp-se-karten .kp-se-l label b{font-size:15.5px}
+.pk .kp-du{margin-top:8px;font-size:14px}
+.pk .kp-du b{display:inline}
+.kp-du{display:block;margin-top:4px;padding-left:10px;border-left:2px solid var(--line);color:var(--muted);font-size:14.5px}
+.kp-du b{color:var(--ink);font-weight:600}
+@media (max-width:520px){.kp-se-act .linkbtn{margin-left:0}}
+@keyframes kpWackel{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* Unterstrichene Wörter im Code und ihre Karte: Was, Woher, Warum */
+.lx{cursor:help;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;border-radius:3px}
+.lx:hover{background:rgba(128,128,128,.15)}
+.lx.w-js{text-decoration-color:var(--w-js)} .lx.w-ts{text-decoration-color:var(--w-ts)} .lx.w-ng{text-decoration-color:var(--w-ng)} .lx.w-rx{text-decoration-color:var(--w-rx)} .lx.w-web{text-decoration-color:var(--w-web)}
+.who{display:inline-block;font:700 11px/1 var(--f-body);text-transform:uppercase;letter-spacing:.08em;padding:4px 7px;border-radius:99px;border:1px solid currentColor;white-space:nowrap}
+.who.w-js{color:var(--w-js)} .who.w-ts{color:var(--w-ts)} .who.w-ng{color:var(--w-ng)} .who.w-rx{color:var(--w-rx)} .who.w-web{color:var(--w-web)}
+.lexpop{position:fixed;z-index:60;max-height:min(70vh,520px);overflow:auto;box-shadow:0 18px 50px rgba(0,0,0,.55);border-radius:14px}
+.lexpop.sheet{left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));top:auto;width:auto}
+.lp-x{position:absolute;right:6px;top:6px;width:40px;height:40px;border-radius:8px;border:0;background:none;color:var(--ink);font-size:20px;cursor:pointer;line-height:1}
+.lp-x:hover{background:var(--sunk)}
+.lexcard{background:var(--surface);border:1px solid var(--accent);border-radius:12px;padding:12px 48px 12px 14px}
+.lc-h{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px}
+.lc-k{font-size:15px;background:var(--code-bg);color:var(--code-ink);padding:3px 8px}
+.lexcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15px;line-height:1.45}
+.lexcard dt{font-weight:700;color:var(--accent);padding-top:1px}
+.lexcard dd{margin:0}
+.lexcard h5{margin:10px 0 4px;font-size:12.5px;font-weight:700;color:var(--accent)}
+.lexcard dl.el-dl{grid-template-columns:1fr;gap:2px;font-size:14.5px}
+.el-dl dt{padding:0}
+.el-dl dt code{font:12.5px/1.4 var(--f-mono);background:var(--code-bg);color:var(--code-ink);padding:1px 6px;border-radius:5px;overflow-wrap:anywhere}
+.el-dl dd{margin-bottom:5px}
+.el-was,.el-job{margin:0;font-size:15px;line-height:1.45}
+.el-job{margin-top:8px;color:var(--muted)}
+.el-mehr{margin-top:6px}
+.el-mehr summary{padding:8px 0;color:var(--muted);font-weight:700;font-size:14px;cursor:pointer}
+@media (max-width:520px){.lexcard dl{grid-template-columns:1fr}.lexcard dt{padding-top:6px}}
+
+/* Antworten von Coach Toni (Chat, Übung, Werkstatt) */
+.ai-row{display:flex;flex-wrap:wrap;gap:10px}
+.ai-box{margin-top:14px;border-left:3px solid var(--grass);background:var(--surface);border-radius:0 var(--r) var(--r) 0;padding:10px 16px}
+.ai-box::before{content:"Coach Toni";display:block;font-weight:700;font-size:13px;color:var(--grass)}
+.ai-box p{margin:.4em 0}
+.ai-box h4{margin:.8em 0 .3em;font-size:20px}
+.ai-err{color:var(--bad)}
+
+/* Quiz (auch Wiederholen und Werkstatt) */
+.quiz .q{font-size:clamp(22px,3vw,27px);margin:4px 0 18px}
+.quiz .q code{text-transform:none;font-size:.62em;vertical-align:.12em}
+.q-label{font-size:13px;font-weight:700;color:var(--muted);margin:0 0 6px}
+/* Antworten sind Knöpfe mit Kante wie .btn: drüberfahren hebt sie an, Klicken drückt sie ein. Richtig wird grün mit Haken, falsch wackelt kurz. */
+.opts{display:grid;gap:12px}
+.opt{--kante:var(--edge);display:flex;align-items:center;min-height:56px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 16px;cursor:pointer;font-size:16.5px;line-height:1.4;font-family:var(--f-body);box-shadow:0 3px 0 var(--kante);transition:transform .1s,box-shadow .1s,border-color .15s,background .2s}
+.opt:hover:not(:disabled){border-color:var(--accent);--kante:var(--accent-line);transform:translateY(-1px);box-shadow:0 4px 0 var(--kante)}
+.opt:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--kante)}
+.opt.right{--kante:var(--grass-edge);border-color:var(--grass);background:var(--grass-soft)}
+.opt.right::after{content:"✓";margin-left:auto;padding-left:12px;font-weight:800;font-size:20px;line-height:1;color:var(--grass)}
+.opt.wrong{--kante:var(--bad-edge);border-color:var(--bad);background:var(--bad-soft);animation:kpWackel .3s}
+.opt:disabled{cursor:default}
+.opt:disabled:not(.right):not(.wrong):not(.picked){opacity:.6}
+.why{margin-top:16px;padding:14px 18px;border-radius:14px;background:var(--sunk);border-left:4px solid var(--muted)}
+.why:has(> b:first-child){background:var(--grass-soft);border-left-color:var(--grass)}
+.why > b:first-child{color:var(--grass)}
+
+/* Abschluss (die Auswertung beim Wiederholen und in der Werkstatt nutzt .end und .score mit) */
+.end{text-align:left}
+.score{font-size:28px;font-weight:700;color:var(--ink);margin:0 0 14px;line-height:1.1}
+.end ul{list-style:none;padding:0;display:grid;gap:10px;margin:10px 0 0}
+.end li{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;font-size:17px}
+.kp-ende-t{margin:0 0 12px;font-weight:700;font-size:15px;color:var(--grass)}
+.kp-offen{margin:0 0 20px;padding:16px 18px;border:2px solid var(--gold);border-radius:12px;background:var(--gold-soft)}
+.kp-offen p{margin:0 0 10px}
+.kp-offen .kp-offen-t{color:var(--ink);font-size:17px}
+.kp-offen .kp-schluss{margin:12px 0 0}
+.kp-frage{font-size:22px;margin:0 0 2px}
+.kp-frage + p{margin:0 0 10px}
+.kp-doku-t{margin-top:18px}
+.slide > .kp-doku-l{margin-bottom:-8px}
+.end .kp-doku-l{gap:0;margin:0}
+.end .kp-doku-l li{padding:0;border:0;background:none;font-size:inherit}
+.kp-schluss{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+
+@media (max-width:520px){
+  .slide{padding:20px 16px 18px;border-radius:14px}
+  .say{font-size:19px}
+  .bubble{font-size:16px}
+}

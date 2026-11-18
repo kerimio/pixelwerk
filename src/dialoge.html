@@ -1,0 +1,39 @@
+<!-- Dialoge: Suche und die Einstellungen (ein Dialog, vier Reiter); dazu die kurze Meldung unten -->
+<dialog id="sucheDlg" class="aidlg suche-dlg" aria-label="Themen suchen"><div class="su-in"><input id="sucheIn" type="search" placeholder="Thema suchen, z. B. switchMap, Formular, Router" autocomplete="off" spellcheck="false" aria-label="Suchbegriff"><button class="linkbtn" id="sucheClose" type="button">Schließen</button></div><div id="sucheErg" aria-live="polite"></div></dialog>
+<dialog id="ichDlg" class="aidlg ich-dlg" aria-labelledby="ichT">
+  <div class="ich-top"><h2 id="ichT">Einstellungen</h2><button type="button" class="x" id="ichZu" aria-label="Einstellungen schließen">✕</button></div>
+  <div class="hub-tabs" role="tablist" aria-label="Einstellungen">
+    <button type="button" role="tab" id="ichTab-du" aria-controls="ichP-du" data-r="du">Du</button>
+    <button type="button" role="tab" id="ichTab-aussehen" aria-controls="ichP-aussehen" data-r="aussehen">Aussehen</button>
+    <button type="button" role="tab" id="ichTab-toni" aria-controls="ichP-toni" data-r="toni">Coach Toni</button>
+    <button type="button" role="tab" id="ichTab-spielstand" aria-controls="ichP-spielstand" data-r="spielstand">Spielstand</button>
+  </div>
+  <section class="hub-panel" role="tabpanel" id="ichP-du" aria-labelledby="ichTab-du"></section>
+  <section class="hub-panel" role="tabpanel" id="ichP-aussehen" aria-labelledby="ichTab-aussehen" hidden></section>
+  <section class="hub-panel" role="tabpanel" id="ichP-toni" aria-labelledby="ichTab-toni" hidden>
+    <p class="muted small">Ohne KI läuft alles, und die App passt Wiederholen und Hilfe trotzdem an dich an. Mit KI liest Toni deinen Code, schreibt dir Fragen zu deinen Schwächen und erklärt so, wie du lernst.</p>
+    <p class="hub-status" id="aiState"></p>
+    <div class="hub-wahlen" id="aiAnb" role="group" aria-label="KI-Anbieter"><button type="button" class="hub-wahl" data-a="claude">Claude</button><button type="button" class="hub-wahl" data-a="openai">ChatGPT</button><button type="button" class="hub-wahl" data-a="gemini">Gemini</button><button type="button" class="hub-wahl" data-a="deepseek">DeepSeek</button></div>
+    <label class="fld" for="aiKey" id="aiKeyL">API-Schlüssel</label>
+    <div class="hub-zeile"><input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…"><button class="btn" id="aiLoad" type="button">Prüfen</button></div>
+    <label class="fld" for="aiModel">Modell</label>
+    <select id="aiModel"></select>
+    <p class="small" id="aiMsg" aria-live="polite"></p>
+    <div class="dlg-row"><button class="btn primary" id="aiSaveBtn" type="button">Speichern</button><button class="linkbtn" id="aiRemove" type="button">Schlüssel entfernen</button></div>
+    <p class="muted small">Der Schlüssel bleibt in diesem Browser. Die Kosten laufen über dein Konto beim Anbieter. Schlüssel gibt es bei <span id="aiWo"></span>.</p>
+    <details class="hub-mehr" id="hubLernbild"><summary>Was die App über dich weiß</summary>
+      <p class="muted small">Ohne KI rechnet die App aus deinen Antworten aus, welche Themen sitzen und welche wackeln. Mit KI merkt sich Toni dazu, wie du fragst, und erklärt passend dazu. Alles liegt in deinem Spielstand.</p>
+      <div id="pfBody"></div>
+      <label class="sw"><input type="checkbox" id="pfOn"><span>Toni darf aus meinen Fragen lernen</span></label>
+      <p class="small" id="pfMsg" aria-live="polite"></p>
+      <div class="dlg-row"><button class="btn" id="pfNow" type="button">Neu auswerten</button><button class="linkbtn" id="pfReset" type="button">Zurücksetzen</button></div>
+    </details>
+  </section>
+  <section class="hub-panel" role="tabpanel" id="ichP-spielstand" aria-labelledby="ichTab-spielstand" hidden>
+    <p class="hub-status" id="syncState"></p>
+    <div class="dlg-row"><button class="btn" id="exportBtn" type="button">Als Datei speichern</button><button class="btn" id="importBtn" type="button">Aus Datei laden</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+    <p class="small" id="hubSpielMsg" aria-live="polite"></p>
+    <p class="muted small">In der Datei stehen dein Fortschritt und dein Profil. Dein KI-Schlüssel ist nicht dabei.</p>
+  </section>
+</dialog>
+<div id="toast" role="status"></div>
