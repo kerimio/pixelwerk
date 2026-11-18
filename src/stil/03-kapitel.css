@@ -229,3 +229,6 @@ pre.acode code{display:block;min-width:max-content}
   .say{font-size:19px}
   .bubble{font-size:16px}
 }
+/* Team-Figuren als Pixel-Gesicht auf ihrer Farbkachel (src/app/figuren.js) */
+.av .fig-av,.es-av .fig-av{width:100%;height:100%;border-radius:0;display:block;background:transparent}
+.av.av-fig{overflow:hidden;padding:0}

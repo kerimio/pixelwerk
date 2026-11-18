@@ -48,11 +48,11 @@ const ok = (cond, msg) => { console.log((cond ? '✓ ' : '✗ ') + msg); if (!co
   const box = await page.locator('#avGrid i').nth(0).boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   const px = await page.evaluate(() => S.ich.avatar);
-  ok(px.length === 100 && px[0] === '8' && px[9] === '8', 'Pixel malen klappt, gespiegelt auch rechts');
+  ok(px.length === 400 && px[0] === '8' && px[19] === '8', 'Pixel malen klappt, gespiegelt auch rechts');
   ok(await page.isVisible('#ichBtn img.px-av'), 'Avatar erscheint im Profil-Chip');
   await page.click('#avZufall');
   const zufall = await page.evaluate(() => S.ich.avatar);
-  ok(zufall.length === 100 && zufall !== px && /[^0]/.test(zufall), 'Zufall würfelt einen neuen Avatar');
+  ok(zufall.length === 400 && zufall !== px && /[^0]/.test(zufall), 'Zufall würfelt einen neuen Avatar');
   await page.click('#avLeer');
   ok(await page.evaluate(() => !/[^0]/.test(S.ich.avatar)) && !(await page.$('#ichBtn img.px-av')) && (await page.textContent('#ichBtn .px-leer')) === 'K', 'Leeren: ohne Avatar zeigt der Chip den Anfangsbuchstaben');
   await page.click('.av-tpl [data-v="2"]');

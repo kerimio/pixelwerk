@@ -1,6 +1,6 @@
 /* ================= GARDEROBE: Sachen für den Avatar =================
    Wer Kapitel abschließt, gewinnt Sachen für seinen Pixel-Avatar: Kopf (Mützen, Helm, Krone), Gesicht (Brillen, Bart),
-   Dazu (Tasse, Krawatte, Ente, Rakete) und Hintergrund. Jede Sache ist ein kleines Pixelbild im selben 10 × 10-Raster
+   Dazu (Tasse, Krawatte, Ente, Rakete) und Hintergrund. Jede Sache ist ein kleines Pixelbild im 10 × 10-Raster (beim Zeichnen verdoppelt auf das 20 × 20 des Avatars)
    wie der Avatar und liegt beim Zeichnen über (oder beim Hintergrund unter) den eigenen Pixeln.
    Gespeichert im Spielstand: S.schrank (was du schon gewonnen hast), S.schrankNeu (noch nicht angesehen) und
    S.ich.outfit (was du gerade trägst, eine Sache je Platz). Damit wandert alles mit fortschritt.json und dem Export.
@@ -74,7 +74,8 @@ function outfit() {
 /* Farben aller 100 Felder: Hintergrund, dann die eigenen Pixel, dann Gesicht, Kopf und Dazu darüber */
 function avatarFelder(px, o) {
   const f = new Array(AV_N * AV_N).fill('');
-  const legen = x => { if (!x) return; x.px.forEach((zeile, j) => { const y = (x.y || 0) + j; if (y >= AV_N) return; for (let i = 0; i < AV_N; i++) { const c = x.f[zeile[i]]; if (c) f[y * AV_N + i] = c; } }); };
+  const k = AV_N / AV_ALT;
+  const legen = x => { if (!x) return; x.px.forEach((zeile, j) => { const y = (x.y || 0) + j; if (y >= AV_ALT) return; for (let i = 0; i < AV_ALT; i++) { const c = x.f[zeile[i]]; if (c) for (let dy = 0; dy < k; dy++) for (let dx = 0; dx < k; dx++) f[(y * k + dy) * AV_N + i * k + dx] = c; } }); };
   o = o || {};
   legen(sache(o.grund));
   for (let i = 0; i < f.length; i++) { const c = AV_PAL[parseInt((px || '')[i], 16)]; if (c) f[i] = c; }

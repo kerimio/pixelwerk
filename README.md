@@ -27,6 +27,8 @@ Dann **http://localhost:4300** öffnen. Du brauchst nur Node (ab Version 20), ke
 6. **Coach Toni**: der Chat-Knopf unten rechts, mit Schnellfragen je nach Ort (Folie, Übung). Du kannst dir auch ein **eigenes Kapitel** zu einem Wunschthema schreiben lassen („Kapitel zu Angular Animations“), es landet unter „Eigene Kapitel“.
 7. **Profil** (Chip oben rechts) ist der einzige Ort für Einstellungen: **Du** (Name, Avatar, Garderobe), **Aussehen** (hell oder dunkel, Farben, Animationen, Ton), **Coach Toni** (KI und Schlüssel, was Toni über dich gelernt hat), **Spielstand**.
 
+   Der **Pixel-Avatar** hat 20 × 20 Pixel und 15 Farben. Mit dem **dicken Pinsel** malst du Blöcke aus 2 × 2 Pixeln, das geht auf dem Handy leichter. Avatare aus älteren Spielständen (10 × 10) werden beim Laden verdoppelt und sehen aus wie vorher. Auch das Team hat Pixel-Gesichter: im Einstieg, in den Szenen und im Chat mit Toni.
+
 8. **Garderobe** (im Profil unter **Du**, oder Klick auf deinen Avatar auf dem Schreibtisch): Für abgeschlossene Kapitel und Phasen gewinnst du Sachen für deinen Avatar, 17 Stück auf vier Plätzen (Kopf, Gesicht, Dazu, Hintergrund). Was ein Kapitel einbringt, steht auf dem Schreibtisch neben den XP. Gewonnenes und dein Outfit stehen im Spielstand.
 
 Dazu: Themensuche (Knopf oben oder Taste `/`), Pfeiltasten blättern, Zahlen 1 bis 4 wählen eine Quiz-Antwort, Strg/⌘ + Enter prüft deinen Code. Warum die Funktionen so gebaut sind und welche Studien dahinterstehen, steht in der App unter **„Wie diese App beim Lernen hilft“**.
@@ -65,6 +67,7 @@ Alles liegt in `src/`, daraus entsteht `index.html`. `npm start` baut bei jeder 
 - **Doku-Links** eines Kapitels: Feld `doku` im Kapitel (angular.dev, rxjs.dev, MDN, typescriptlang.org).
 - **Kapitel-IDs** (`k07`, `w03` …) sind die Schlüssel im Spielstand. Nie umbenennen. Die angezeigte Nummer kommt aus der Position.
 - **Team und Figuren**: `CAST` in `src/inhalte/00-basis.js`.
+- **Gesichter fürs Team**: `FIGUREN` in `src/app/figuren.js`. Jede Figur ist aus Bausteinen gebaut (Hautton, Frisur, Kleidung, Besonderheiten wie Brille oder Bart).
 - **Sachen für den Avatar**: `SACHEN` in `src/app/garderobe.js` (Pixelbild, Platz, Bedingung). Die `id` steht im Spielstand, nie umbenennen.
 - **Werkstatt-Aufgaben**: `src/werkstatt/aufgaben.js` und `src/werkstatt/review-schule-inhalte.js`.
 - **Erklärkarten** an unterstrichenen Wörtern: `src/app/lexikon.js` und `src/app/html-elemente.js`.
@@ -121,6 +124,7 @@ src/
     eigene.js           Eigene Kapitel
     suche.js            Themensuche
     ich.js              Profil-Dialog (Name, Avatar, Farben, Spielstand)
+    figuren.js          Pixel-Gesichter für das Team (Toni, Sara, Jonas, Mia, Leon, Katrin, Ricky)
     jubel.js            Erfolgsmomente
 scripts/build.js        setzt alles zu index.html zusammen
 scripts/vendor.js       bündelt echtes Angular und RxJS nach vendor/

@@ -17,7 +17,7 @@ const ORDER = [
   'app/start.js', 'app/kapitel.js', 'app/uebung.js',  // Rahmen und Start, Kapitel-Ablauf, Code-Übung
   'app/chat.js', 'app/coach.js', 'app/staerken.js',   // Chat mit Toni, Lernprofil, Themen (was sitzt, was wackelt)
   'werkstatt/werkstatt.js', 'werkstatt/review-schule.js',
-  'app/eigene.js', 'app/suche.js', 'app/jubel.js', 'app/ich.js', 'app/garderobe.js', 'app/einstieg.js', 'app/pr-review.js'
+  'app/eigene.js', 'app/suche.js', 'app/jubel.js', 'app/ich.js', 'app/garderobe.js', 'app/figuren.js', 'app/einstieg.js', 'app/pr-review.js'
 ];
 const fehlt = [];
 const walk = d => fs.readdirSync(path.join(root, 'src', d), { withFileTypes: true }).forEach(e => { const p = (d ? d + '/' : '') + e.name; if (e.isDirectory()) walk(p); else if (p.endsWith('.js') && !ORDER.includes(p)) fehlt.push(p); });

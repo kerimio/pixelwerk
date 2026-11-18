@@ -76,7 +76,7 @@ body.es-an .main>.es{max-width:none}
 .es-rollt svg{animation:esRollen .35s linear}
 @keyframes esRollen{to{transform:rotate(360deg)}}
 .es-mal{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;scroll-margin-bottom:110px}
-.es-raster{--z:min(25px,calc((100vw - 34px) / 10));display:grid;grid-template-columns:repeat(10,var(--z));grid-auto-rows:var(--z);gap:1px;padding:1px;background:var(--line);border-radius:8px;overflow:hidden;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
+.es-raster{--z:min(13px,calc((100vw - 54px) / 20));display:grid;grid-template-columns:repeat(20,var(--z));grid-auto-rows:var(--z);gap:1px;padding:1px;background:var(--line);border-radius:8px;overflow:hidden;touch-action:none;cursor:crosshair;user-select:none;-webkit-user-select:none}
 .es-raster i{background:var(--foto)}
 .es-raster:focus-visible .es-cur{outline:3px solid var(--accent);outline-offset:-3px}
 .es-palette{display:grid;grid-template-columns:repeat(4,40px);gap:2px}
@@ -245,3 +245,4 @@ body.es-an .main>.es{max-width:none}
   .es-kachel{width:50px;height:50px}
   .es-palette{grid-template-columns:repeat(7,40px)}
 }
+.es-dick{margin-left:7px}

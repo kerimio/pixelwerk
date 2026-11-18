@@ -54,7 +54,7 @@ const MIT_FORTSCHRITT = { ich: { name: 'Ada', avatar: '' }, xp: 640, steps: { k0
     await page.click('#esZufall');
     await page.waitForFunction(() => !document.querySelector('#esZufall').classList.contains('es-rollt'));
     const zufall = await page.evaluate(() => S.ich.avatar);
-    ok(zufall.length === 100 && /[^0]/.test(zufall) && await page.evaluate(() => !AV_VORLAGEN.some(v => v.px === S.ich.avatar)), '„Zufall“ würfelt einen neuen Avatar');
+    ok(zufall.length === 400 && /[^0]/.test(zufall) && await page.evaluate(() => !AV_VORLAGEN.some(v => v.px === S.ich.avatar)), '„Zufall“ würfelt einen neuen Avatar');
 
     await page.click('#esMalen');
     ok(await page.isVisible('#esRaster') && await page.getAttribute('#esMalen', 'aria-expanded') === 'true', '„Selbst malen“ klappt das Pixel-Raster auf');
@@ -67,7 +67,7 @@ const MIT_FORTSCHRITT = { ich: { name: 'Ada', avatar: '' }, xp: 640, steps: { k0
     ok(gemalt[0] === '8' && gemalt.slice(22, 26) === '8888' && gemalt[21] === zufall[21], 'Klicken und Ziehen malt Pixel in der gewählten Farbe');
     ok(await page.evaluate(() => JSON.parse(localStorage.getItem('ngfc.v1')).ich.avatar === S.ich.avatar), 'Das Gemalte ist gespeichert');
     await page.focus('#esRaster'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Space');
-    ok(await bild(page) === 1 && await page.evaluate(() => S.ich.avatar[36] === '8'), 'Malen geht auch mit Pfeiltasten und Leertaste');
+    ok(await bild(page) === 1 && await page.evaluate(() => S.ich.avatar[46] === '8'), 'Malen geht auch mit Pfeiltasten und Leertaste');
 
     await page.click('#esLeeren');
     ok(await page.evaluate(() => S.ich.avatar === '') && (await page.textContent('#esAwBild')).trim() === 'K' && await page.locator('#esAwBild svg').count() === 0, '„Alles löschen“ leert das Raster, der Ausweis zeigt solange den Anfangsbuchstaben');
@@ -78,7 +78,7 @@ const MIT_FORTSCHRITT = { ich: { name: 'Ada', avatar: '' }, xp: 640, steps: { k0
     ok(await bild(page) === 1 && await page.evaluate(() => S.ich.avatar === '') && await page.locator('#esAwBild svg').count() === 0, 'Weiter und Zurück nach „Alles löschen“: Der Avatar bleibt leer');
     await page.click('.es-palette [data-c="8"]');
     await page.mouse.click(...await zelle(44));
-    ok(await page.evaluate(() => S.ich.avatar.length === 100 && S.ich.avatar[44] === '8' && S.ich.avatar.replace(/0/g, '') === '8'), 'Danach malt man auf leerem Raster weiter');
+    ok(await page.evaluate(() => S.ich.avatar.length === 400 && S.ich.avatar[44] === '8' && S.ich.avatar.replace(/0/g, '') === '8'), 'Danach malt man auf leerem Raster weiter');
 
     await page.click('.es-kachel[data-v="2"]');
     ok(await page.evaluate(() => S.ich.avatar === AV_VORLAGEN[2].px) && await page.getAttribute('.es-kachel[data-v="2"]', 'aria-pressed') === 'true', 'Vorlage anklicken setzt den Avatar');
@@ -122,6 +122,7 @@ const MIT_FORTSCHRITT = { ich: { name: 'Ada', avatar: '' }, xp: 640, steps: { k0
 
     await page.click('#esWeiter');
     ok(await bild(page) === 3 && await page.locator('.es-karte').count() === 6 && await page.isDisabled('#esWeiter'), 'Team: sechs Karten, „Weiter“ noch aus');
+    ok(await page.locator('.es-karte .es-av img.fig-av').count() === 6 && await page.evaluate(() => new Set(Object.keys(FIGUREN).map(k => figurMalen(FIGUREN[k]))).size === Object.keys(FIGUREN).length), 'Team: Jede Figur hat ihr eigenes Pixel-Gesicht');
     await page.click('.es-karte[data-k="sara"]'); await page.click('.es-karte[data-k="sara"]'); await page.click('.es-karte[data-k="jonas"]');
     ok(await page.isDisabled('#esWeiter') && (await page.textContent('#esHinweis')).includes('2 von 3'), 'Zwei Begrüßte reichen nicht, doppelt klicken zählt nicht doppelt');
     ok((await page.textContent('.es-karte[data-k="sara"] .es-ksatz')).includes('Tickets') && await page.getAttribute('.es-karte[data-k="sara"]', 'aria-pressed') === 'true', 'Die begrüßte Figur stellt sich vor und bekommt einen Haken');

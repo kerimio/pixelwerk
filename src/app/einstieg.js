@@ -18,7 +18,7 @@ var ES_TEAM = [
 var ES_WEG = [['Ticket lesen', 'Der Team-Chat sagt, worum es geht.'], ['Verstehen', 'Kurze Folien mit Code.'], ['Quiz', 'Ein paar Fragen, sofort mit Antwort.'], ['Umsetzen', 'Ab Phase 1 schreibst du echten Angular-Code.']];
 /* Antwort auf die Frage nach den Grundlagen, wie sie in S.ich.weg steht (siehe grundlagenOptional in basis.js) */
 var ES_WEGE = ['grundlagen', 'angular'];
-var ES_MALFARBEN = ['Radierer', 'Schwarz', 'Weiß', 'Hautton hell', 'Hautton mittel', 'Braun', 'Gelb', 'Blau', 'Rot', 'Grün', 'Lila', 'Grau', 'Rosa'];
+var ES_MALFARBEN = ['Radierer', 'Schwarz', 'Weiß', 'Hautton hell', 'Hautton mittel', 'Braun', 'Gelb', 'Blau', 'Rot', 'Grün', 'Lila', 'Grau', 'Rosa', 'Hautton dunkel', 'Orange', 'Dunkelblau'];
 /* Pixel-Schrift für den Schriftzug auf dem Titelbild, 7 Zeilen je Buchstabe */
 var ES_SCHRIFT = {
   P: ['####.', '#...#', '#...#', '####.', '#....', '#....', '#....'], I: ['###', '.#.', '.#.', '.#.', '.#.', '.#.', '###'],
@@ -182,8 +182,9 @@ function esCharHtml(l) {
           <div class="es-kacheln"><button type="button" class="btn es-mini" id="esZufall"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="2" width="16" height="16" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M5.5 5.5h2.6v2.6H5.5zM11.9 5.5h2.6v2.6h-2.6zM8.7 8.7h2.6v2.6H8.7zM5.5 11.9h2.6v2.6H5.5zM11.9 11.9h2.6v2.6h-2.6z"/></svg>Zufall</button>
             <button type="button" class="btn es-mini" id="esMalen" aria-expanded="${l.malen}" aria-controls="esMalFeld"><svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M3 3h6v6H3zM11 11h6v6h-6z"/><path fill="currentColor" opacity=".35" d="M11 3h6v6h-6zM3 11h6v6H3z"/></svg>Selbst malen</button></div>
           <div class="es-mal" id="esMalFeld"${l.malen ? '' : ' hidden'}>
-            <div class="es-raster" id="esRaster" tabindex="0" role="application" aria-label="Pixel-Raster, 10 mal 10. Pfeiltasten bewegen, Leertaste malt.">${'<i></i>'.repeat(AV_N * AV_N)}</div>
+            <div class="es-raster" id="esRaster" tabindex="0" role="application" aria-label="Pixel-Raster, 20 mal 20. Pfeiltasten bewegen, Leertaste malt.">${'<i></i>'.repeat(AV_N * AV_N)}</div>
             <div class="es-mal-r"><div class="es-palette" role="group" aria-label="Malfarbe">${AV_PAL.map((c, i) => `<button type="button" data-c="${i}" aria-pressed="${i === esMalFarbe}" aria-label="${ES_MALFARBEN[i] || 'Farbe ' + i}" title="${ES_MALFARBEN[i] || ''}"><i style="${c ? 'background:' + c : ''}"></i></button>`).join('')}</div>
+              <label class="sw es-dick"><input type="checkbox" id="esDick" ${me.pinsel === 'dick' ? 'checked' : ''}><span>Dicker Pinsel</span></label>
               <button type="button" class="linkbtn es-leeren" id="esLeeren">Alles löschen</button></div>
           </div>
         </div>
@@ -238,7 +239,8 @@ function esCharAn(w, l) {
   malen.onclick = () => { l.malen = !l.malen; esMerken(); feld.hidden = !l.malen; malen.setAttribute('aria-expanded', l.malen); if (l.malen) feld.scrollIntoView({ block: 'nearest' }); };
   w.querySelectorAll('.es-palette button').forEach(b => b.onclick = () => { esMalFarbe = +b.dataset.c; w.querySelectorAll('.es-palette button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
   /* Malen: klicken oder ziehen, mit Maus, Finger oder Stift. Gespeichert wird beim Loslassen. */
-  const setze = i => { const px = (avatarPx() || '0'.repeat(AV_N * AV_N)).split(''); px[i] = esMalFarbe.toString(16); ich().avatar = px.join(''); esCharNeu(w); };
+  const setze = i => { const px = (avatarPx() || '0'.repeat(AV_N * AV_N)).split(''); avPinsel(i, ich().pinsel === 'dick').forEach(j => { px[j] = esMalFarbe.toString(16); }); ich().avatar = px.join(''); esCharNeu(w); };
+  $('#esDick', w).onchange = e => { ich().pinsel = e.target.checked ? 'dick' : 'fein'; save(); };
   const zelleBei = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.parentNode === raster ? zellen.indexOf(el) : -1; };
   let zieht = false, cur = 0;
   const zeiger = i => { zellen[cur].classList.remove('es-cur'); cur = i; zellen[cur].classList.add('es-cur'); };
@@ -291,7 +293,7 @@ function esTagHtml() {
 }
 function esZeileHtml(wer, text) {
   const c = CAST[wer], selbst = wer === 'du';
-  return `<span class="es-av${selbst ? ' es-av-ich"' : '" style="' + figurStil(c.color) + '"'} aria-hidden="true">${selbst ? avatarHtml() : c.initial}</span><div class="es-blase"><span class="es-wer">${esc(selbst ? ichName() || 'Du' : c.name)}${selbst ? '' : '<small>' + esc(c.role) + '</small>'}</span><p>${esc(text)}</p></div>`;
+  return `<span class="es-av${selbst ? ' es-av-ich"' : '" style="' + figurStil(c.color) + '"'} aria-hidden="true">${selbst ? avatarHtml() : figurKopf(wer)}</span><div class="es-blase"><span class="es-wer">${esc(selbst ? ichName() || 'Du' : c.name)}${selbst ? '' : '<small>' + esc(c.role) + '</small>'}</span><p>${esc(text)}</p></div>`;
 }
 function esTagAn(w, l) {
   const log = $('#esChat', w), antw = $('#esAntworten', w), weiterBtn = $('#esWeiter', w);
@@ -320,7 +322,7 @@ function esTagAn(w, l) {
     }
     if (eilig || !bewegungAn()) { zeile(z, true).scrollIntoView({ block: 'nearest' }); weiter(); return; }
     /* kurzes „schreibt …“, dann die Nachricht, dann eine Atempause */
-    tippt = dazu('es-tippt' + (z[0] === zuletzt ? ' es-folge' : ''), `<span class="es-av" style="${figurStil(CAST[z[0]].color)}" aria-hidden="true">${CAST[z[0]].initial}</span><div class="es-blase" aria-hidden="true"><i></i><i></i><i></i></div>`);
+    tippt = dazu('es-tippt' + (z[0] === zuletzt ? ' es-folge' : ''), `<span class="es-av" style="${figurStil(CAST[z[0]].color)}" aria-hidden="true">${figurKopf(z[0])}</span><div class="es-blase" aria-hidden="true"><i></i><i></i><i></i></div>`);
     tippt.scrollIntoView(sanft());
     spaeter(() => { tippt.remove(); tippt = null; zeile(z).scrollIntoView(sanft()); spaeter(weiter, 400); }, 450 + Math.min(400, z[1].length * 5));
   };
@@ -338,7 +340,7 @@ function esTeamHtml(l) {
   return `<section class="es-bild es-team">
     <div class="es-kopf"><h1 id="esT" tabindex="-1">Dein Team</h1></div>
     <ul class="es-karten">${ES_TEAM.map(([k, satz]) => { const c = CAST[k], da = l.team.includes(k); return `<li><button type="button" class="es-karte${da ? ' es-da' : ''}" data-k="${k}" aria-pressed="${da}" style="--av:${c.color}">
-      <span class="es-av" style="${figurStil(c.color)}" aria-hidden="true">${c.initial}</span><span class="es-kwer"><b>${esc(c.name)}</b><small>${esc(c.role)}</small></span>
+      <span class="es-av" style="${figurStil(c.color)}" aria-hidden="true">${figurKopf(k)}</span><span class="es-kwer"><b>${esc(c.name)}</b><small>${esc(c.role)}</small></span>
       <span class="es-ksatz">${da ? '„' + esc(satz) + '“' : ''}</span><span class="es-khallo">Hallo sagen</span><span class="es-kok" aria-hidden="true">✓</span></button></li>`; }).join('')}</ul>
     <p class="nur-sr" id="esSagt" aria-live="polite"></p>
     <div class="es-fuss"><p class="es-hinweis" id="esHinweis" aria-live="polite"></p><button type="button" class="btn primary big" id="esWeiter">Weiter</button></div>
