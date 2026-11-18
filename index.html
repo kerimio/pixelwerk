@@ -1250,6 +1250,12 @@ blockquote.mine{margin:6px 0 16px;padding:10px 14px;border-left:3px solid var(--
 .pf-chip.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
 .pf-chip.ok{background:var(--grass-soft);border-color:color-mix(in srgb,var(--grass) 45%,transparent)}
 
+/* Ganz von vorn anfangen: leise unten im Reiter „Spielstand“, mit Rückfrage */
+.hub-neu{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
+.hub-neu .linkbtn{display:inline-flex;align-items:center;min-height:40px}
+.hub-neu-frage{margin:0 0 4px;font-size:14.5px}
+.hub-neu-ja{--kante:var(--bad-edge);background:var(--bad);border-color:var(--bad);color:var(--surface)}
+
 /* ---------- Garderobe: Sachen für den Avatar ---------- */
 .gd{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}
 .gd .fld small{margin-left:6px;font-weight:600;color:var(--muted)}
@@ -1687,6 +1693,7 @@ body.es-an .main>.es{max-width:none}
     <div class="dlg-row"><button class="btn" id="exportBtn" type="button">Als Datei speichern</button><button class="btn" id="importBtn" type="button">Aus Datei laden</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
     <p class="small" id="hubSpielMsg" aria-live="polite"></p>
     <p class="muted small">In der Datei stehen dein Fortschritt und dein Profil. Dein KI-Schlüssel ist nicht dabei.</p>
+    <div class="hub-neu" id="hubNeu"><button class="linkbtn" id="neuBtn" type="button">Ganz von vorn anfangen</button></div>
   </section>
 </dialog>
 <div id="toast" role="status"></div>
@@ -13345,7 +13352,33 @@ function importProgress(file) {
   r.readAsText(file);
 }
 
+/* Ganz von vorn: Fortschritt, Profil, Avatar und Garderobe weg, danach startet der Einstieg wie beim ersten Mal.
+   Hell/Dunkel und der KI-Schlüssel bleiben, sie gehören zum Gerät. Erst fragt der Reiter nach (kein confirm(), das ist im Artefakt gesperrt). */
+function neuAnfangenFragen() {
+  const host = $('#hubNeu');
+  host.innerHTML = '<p class="hub-neu-frage"><b>Wirklich ganz von vorn?</b> Dein Fortschritt, dein Profil und dein Avatar mit allen gewonnenen Sachen sind dann weg. Speicher ihn vorher als Datei, wenn du ihn behalten willst.</p>' +
+    '<div class="dlg-row"><button class="btn hub-neu-ja" id="neuJa" type="button">Ja, alles löschen und neu starten</button><button class="linkbtn" id="neuNein" type="button">Abbrechen</button></div>';
+  $('#neuNein', host).onclick = () => { host.innerHTML = '<button class="linkbtn" id="neuBtn" type="button">Ganz von vorn anfangen</button>'; $('#neuBtn', host).onclick = neuAnfangenFragen; $('#neuBtn', host).focus(); };
+  $('#neuJa', host).onclick = neuAnfangen;
+  $('#neuNein', host).focus();
+}
+function neuAnfangen() {
+  S = withDefaults(); S.updated = Date.now();
+  try {
+    localStorage.setItem('ngfc.v1', JSON.stringify(S));
+    ['pw-look-css', 'pw-motion', 'ngfc.fuerdich'].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(ES_KEY);
+  } catch (e) {}
+  /* Mit npm start: fortschritt.json bekommt den leeren Stand (die alte Fassung bleibt als fortschritt.json.bak) */
+  if (typeof dateiPlanen === 'function') dateiPlanen();
+  const d = document.getElementById('ichDlg'); if (d && d.open) d.close();
+  if (typeof esLauf !== 'undefined') esLauf = null;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  route();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  $('#neuBtn').onclick = neuAnfangenFragen;
   $('#exportBtn').onclick = exportProgress;
   $('#importBtn').onclick = () => $('#importFile').click();
   $('#importFile').onchange = e => { const f = e.target.files[0]; if (f) importProgress(f); e.target.value = ''; };

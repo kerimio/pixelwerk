@@ -73,6 +73,12 @@
 .pf-chip.no{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
 .pf-chip.ok{background:var(--grass-soft);border-color:color-mix(in srgb,var(--grass) 45%,transparent)}
 
+/* Ganz von vorn anfangen: leise unten im Reiter „Spielstand“, mit Rückfrage */
+.hub-neu{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
+.hub-neu .linkbtn{display:inline-flex;align-items:center;min-height:40px}
+.hub-neu-frage{margin:0 0 4px;font-size:14.5px}
+.hub-neu-ja{--kante:var(--bad-edge);background:var(--bad);border-color:var(--bad);color:var(--surface)}
+
 /* ---------- Garderobe: Sachen für den Avatar ---------- */
 .gd{margin-top:18px;padding-top:4px;border-top:1px solid var(--line)}
 .gd .fld small{margin-left:6px;font-weight:600;color:var(--muted)}

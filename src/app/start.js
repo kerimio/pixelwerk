@@ -156,7 +156,33 @@ function importProgress(file) {
   r.readAsText(file);
 }
 
+/* Ganz von vorn: Fortschritt, Profil, Avatar und Garderobe weg, danach startet der Einstieg wie beim ersten Mal.
+   Hell/Dunkel und der KI-Schlüssel bleiben, sie gehören zum Gerät. Erst fragt der Reiter nach (kein confirm(), das ist im Artefakt gesperrt). */
+function neuAnfangenFragen() {
+  const host = $('#hubNeu');
+  host.innerHTML = '<p class="hub-neu-frage"><b>Wirklich ganz von vorn?</b> Dein Fortschritt, dein Profil und dein Avatar mit allen gewonnenen Sachen sind dann weg. Speicher ihn vorher als Datei, wenn du ihn behalten willst.</p>' +
+    '<div class="dlg-row"><button class="btn hub-neu-ja" id="neuJa" type="button">Ja, alles löschen und neu starten</button><button class="linkbtn" id="neuNein" type="button">Abbrechen</button></div>';
+  $('#neuNein', host).onclick = () => { host.innerHTML = '<button class="linkbtn" id="neuBtn" type="button">Ganz von vorn anfangen</button>'; $('#neuBtn', host).onclick = neuAnfangenFragen; $('#neuBtn', host).focus(); };
+  $('#neuJa', host).onclick = neuAnfangen;
+  $('#neuNein', host).focus();
+}
+function neuAnfangen() {
+  S = withDefaults(); S.updated = Date.now();
+  try {
+    localStorage.setItem('ngfc.v1', JSON.stringify(S));
+    ['pw-look-css', 'pw-motion', 'ngfc.fuerdich'].forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(ES_KEY);
+  } catch (e) {}
+  /* Mit npm start: fortschritt.json bekommt den leeren Stand (die alte Fassung bleibt als fortschritt.json.bak) */
+  if (typeof dateiPlanen === 'function') dateiPlanen();
+  const d = document.getElementById('ichDlg'); if (d && d.open) d.close();
+  if (typeof esLauf !== 'undefined') esLauf = null;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  route();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  $('#neuBtn').onclick = neuAnfangenFragen;
   $('#exportBtn').onclick = exportProgress;
   $('#importBtn').onclick = () => $('#importFile').click();
   $('#importFile').onchange = e => { const f = e.target.files[0]; if (f) importProgress(f); e.target.value = ''; };

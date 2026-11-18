@@ -1,5 +1,5 @@
 // Prüft im echten Browser die Garderobe: Sachen für den Avatar gewinnen (still beim Laden, mit Jubel beim Abschließen),
-// anziehen und ausziehen, gesperrte Sachen mit Bedingung, Speichern im Spielstand und die Anzeige auf dem Schreibtisch.
+// anziehen und ausziehen, „Ganz von vorn anfangen“, gesperrte Sachen mit Bedingung, Speichern im Spielstand und die Anzeige auf dem Schreibtisch.
 const { oeffnen, pruefer, neuLaden } = require('./hilfe');
 const { ok, ende } = pruefer();
 const DEV = '0000000000' + '0055555500' + '0555555550' + '0533333350' + '0311311130' + '0333333330' + '0033113300' + '0003333000' + '0077777700' + '0777777770';
@@ -57,5 +57,18 @@ const DEV = '0000000000' + '0055555500' + '0555555550' + '0533333350' + '0311311
 
   // 7. Manipuliertes Outfit: Eine nicht gewonnene Sache wird nicht gezeichnet
   ok(await page.evaluate(() => { S.ich.outfit.kopf = 'krone'; return !outfit().kopf; }), 'Eine nicht gewonnene Sache im Outfit wird ignoriert');
+  // 8. Ganz von vorn anfangen: erst eine Rückfrage, dann ist alles weg und der Einstieg startet
+  await page.evaluate(() => { const k = document.getElementById('jubelKarte'); if (k) k.remove(); });
+  await page.evaluate(() => ichOeffnen('spielstand'));
+  await page.click('#neuBtn');
+  ok(await page.isVisible('#neuJa') && await page.evaluate(() => S.xp > 0), 'Neustart fragt erst nach und löscht noch nichts');
+  await page.click('#neuNein');
+  ok(await page.isVisible('#neuBtn') && await page.evaluate(() => S.xp > 0), 'Abbrechen lässt alles, wie es ist');
+  await page.click('#neuBtn'); await page.click('#neuJa');
+  await page.waitForSelector('.es-bild');
+  ok(await page.evaluate(() => S.xp === 0 && !Object.keys(S.done).length && !S.schrank.length && !S.ich.avatar && !S.ich.outfit), 'Ja: Fortschritt, Avatar und Garderobe sind weg');
+  ok(await page.evaluate(() => document.body.classList.contains('es-an') && !document.getElementById('ichDlg').open), 'Danach startet der Einstieg wie beim ersten Mal');
+  await neuLaden(page); await page.waitForSelector('.es-bild');
+  ok(await page.evaluate(() => S.xp === 0), 'Der leere Stand übersteht das Neuladen');
   await ende(browser, fehler);
 })();
