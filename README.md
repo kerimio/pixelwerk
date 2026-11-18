@@ -84,6 +84,14 @@ npm test                           # baut, dann alle Tests
 
 `npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand und KI-Auswahl.
 
+**Artefakt-Fassung** (claude.ai): `scripts/artefakt/` macht aus `index.html` die Fassung, in der Toni ohne eigenen Schlüssel über Claude im Artefakt antwortet. Dort kann man auch „Ganz ohne KI“ wählen.
+
+```bash
+node scripts/artefakt/1-claude.js index.html /tmp/a.html
+node scripts/artefakt/2-einstieg.js /tmp/a.html /tmp/b.html
+node scripts/artefakt/3-ohne-ki.js /tmp/b.html artefakt.html
+```
+
 Neue JS-Dateien trägst du in `scripts/build.js` (`ORDER`) ein, der Build meldet nicht eingebundene Dateien. Neue Phasen in `src/inhalte/` und neue CSS-Dateien in `src/stil/` findet der Build selbst.
 
 ```
