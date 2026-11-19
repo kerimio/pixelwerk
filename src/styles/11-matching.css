@@ -1,0 +1,32 @@
+/* ===== Zuordnen: Begriffe links, Aussagen rechts (zuordnen.js) =====
+   Zwei Spalten auch auf dem Handy: Begriffe sind kurz, Aussagen bekommen mehr Platz. Jede Karte ist ein großer Knopf (mind. 48 px),
+   gefundene Paare tragen dieselbe Nummer und Farbe (nie die Akzentfarbe, die heißt „gewählt“). Ausgewählt = Akzentfarbe, falsch = kurz rot und wackeln. */
+.match-cp .q{margin-bottom:6px}
+.match-h{color:var(--muted);font-size:15px;margin:0 0 14px}
+.match-field{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:12px;align-items:start}
+.match-col{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.match-k{--rim:var(--edge);--match-c:var(--grass);display:flex;align-items:center;gap:9px;width:100%;min-height:54px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 13px;cursor:pointer;font-size:15.5px;line-height:1.35;box-shadow:0 3px 0 var(--rim);overflow-wrap:anywhere;transition:transform .1s,box-shadow .1s,border-color .15s,background .2s;-webkit-tap-highlight-color:transparent}
+.match-left .match-k{font-weight:700}
+.match-k code{font-size:.9em;background:none;padding:0;overflow-wrap:anywhere}
+.match-k:hover:not(:disabled){border-color:var(--accent);--rim:var(--accent-line)}
+.match-k:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--rim)}
+/* Gewählt: Die andere Spalte zeigt mit gestrichelter Kante, wo es weitergeht */
+.match-k.match-active{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-line);transform:translateY(2px)}
+.match[data-choice="l"] .match-right .match-k:not(:disabled),.match[data-choice="r"] .match-left .match-k:not(:disabled){border-style:dashed;border-color:var(--accent-line)}
+.match-k.match-no{border-color:var(--bad);background:var(--bad-soft);--rim:var(--bad-edge);animation:cpWobble .3s}
+/* Gefunden: gleiche Nummer, gleiche Farbe auf beiden Seiten */
+.match-k[data-nr="2"]{--match-c:var(--c-mia)} .match-k[data-nr="3"]{--match-c:var(--gold)} .match-k[data-nr="4"]{--match-c:var(--c-sara)} .match-k[data-nr="5"]{--match-c:var(--c-jonas)} .match-k[data-nr="6"]{--match-c:var(--w-web)}
+.match-k.match-ok{cursor:default;border-color:var(--match-c);background:color-mix(in srgb,var(--match-c) 12%,var(--surface));--rim:color-mix(in srgb,var(--match-c) 55%,var(--line))}
+.match-n{display:none}
+.match-ok .match-n{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:7px;background:var(--match-c);color:var(--surface);font:700 13px/1 var(--f-mono)}
+.match-msg{min-height:1.5em;margin:14px 0 0;color:var(--muted);font-size:15px}
+.match-done .match-msg{color:var(--ink);font-weight:700}
+.match-act{margin:10px 0 0}
+.learn-card .match{margin-top:12px}
+.learn-card .match + .learn-why,.learn-card .match-host + .learn-why{margin-top:12px}
+@media (max-width:520px){
+  .match-field{gap:8px;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+  .match-col{gap:8px}
+  .match-k{min-height:50px;padding:9px 10px;font-size:14.5px;gap:7px;border-radius:11px}
+  .match-ok .match-n{width:21px;height:21px;font-size:12px}
+}

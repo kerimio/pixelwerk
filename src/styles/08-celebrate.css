@@ -1,0 +1,38 @@
+/* ===== Jubel: Erfolgsmomente ===== */
+
+/* ---------- Jubel: Erfolgsmomente ---------- */
+.cheer-cv{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:90}
+.cheer-cv[popover],.cheer-bubble[popover],.cheer-card[popover]{margin:0;border:0;padding:0;overflow:visible;inset:auto}
+.cheer-cv[popover]{inset:0;background:transparent}
+.cheer-card[popover]{border:1px solid var(--line);padding:22px 34px 20px;left:50%;top:50%}
+.cheer-bubble[popover]{padding:9px 16px;left:50%;top:calc(var(--toph) + 14px)}
+.cheer-pop{animation:cheerPop .55s cubic-bezier(.2,1.6,.4,1)}
+@keyframes cheerPop{0%{transform:scale(1)}35%{transform:scale(1.045)}100%{transform:scale(1)}}
+.opt.right,.rs-b.right{transition:box-shadow .3s,background .3s}
+.opt.right.cheer-pop,.rs-b.right.cheer-pop{box-shadow:0 0 0 4px color-mix(in srgb,var(--grass) 28%,transparent)}
+.opt.right .key{background:var(--grass);color:var(--on-grass);border-color:var(--grass)}
+.cheer-glow{animation:cheerGlow 1s ease-out}
+@keyframes cheerGlow{0%{filter:none}30%{filter:drop-shadow(0 0 8px var(--accent))}100%{filter:none}}
+.cheer-glow .xpbar i{background:linear-gradient(90deg,var(--accent),var(--grass),var(--accent));background-size:200% 100%;animation:cheerShine 1s linear}
+@keyframes cheerShine{from{background-position:100% 0}to{background-position:-100% 0}}
+.cheer-bubble{position:fixed;left:50%;top:calc(var(--toph) + 14px);transform:translateX(-50%);z-index:91;background:var(--ink);color:var(--bg);font-weight:700;font-size:15px;padding:9px 16px;border-radius:99px;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none;animation:cheerBubble 2.2s ease forwards;white-space:nowrap}
+@keyframes cheerBubble{0%{opacity:0;transform:translate(-50%,-10px) scale(.9)}12%{opacity:1;transform:translate(-50%,0) scale(1.04)}20%{transform:translate(-50%,0) scale(1)}85%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+.cheer-card{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:92;pointer-events:none;text-align:center;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:22px 34px 20px;min-width:min(320px,calc(100vw - 32px));max-width:calc(100vw - 32px);box-shadow:0 24px 60px rgba(0,0,0,.22),0 0 0 6px color-mix(in srgb,var(--grass) 18%,transparent);animation:cheerCard .5s cubic-bezier(.2,1.5,.4,1)}
+.cheer-card.gone{opacity:0;transform:translate(-50%,-46%) scale(.96);transition:opacity .35s,transform .35s}
+@keyframes cheerCard{from{opacity:0;transform:translate(-50%,-40%) scale(.7)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.ck-av{display:inline-block;animation:cheerHop .6s cubic-bezier(.3,0,.3,1) 2 alternate}
+.ck-av .px-av{width:76px;height:76px;border-radius:18px;font-size:34px}
+@keyframes cheerHop{0%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-16px) scaleY(1.04)}100%{transform:translateY(0) scaleY(.94)}}
+.ck-praise{margin:10px 0 2px;font:700 26px/1.15 var(--f-display);color:var(--grass)}
+.ck-t{margin:0;font-weight:700;font-size:17px}
+.ck-sub{margin:4px 0 0;color:var(--muted);font-size:14px}
+.ck-sub:empty{display:none}
+/* XP-Münze: fliegt von der Meldung unten in den Profil-Chip oben */
+.cheer-coin{position:fixed;z-index:93;left:0;top:0;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 5px;border-radius:99px;background:var(--gold-soft);color:var(--gold);font:700 14px/1.2 var(--f-body);box-shadow:0 6px 18px rgba(0,0,0,.18);pointer-events:none;white-space:nowrap}
+.cheer-coin[popover]{margin:0;border:0;inset:auto;left:0;top:0;padding:4px 10px 4px 5px;overflow:visible}
+.cheer-coin::before{content:"";width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#FFE28A,#F2B425 60%,#C98A00);box-shadow:inset 0 -2px 0 rgba(0,0,0,.18)}
+/* Animationen aus: im Profil oder per System-Einstellung */
+:root[data-motion="off"] *,:root[data-motion="off"] *::before,:root[data-motion="off"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+:root[data-motion="off"] .cheer-cv{display:none}
+/* Neue Sache für den Avatar auf der Jubel-Karte */
+.ck-item{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:14px}

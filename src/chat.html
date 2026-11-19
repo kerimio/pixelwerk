@@ -1,9 +1,9 @@
-<!-- Der eine Toni: Knopf unten rechts und das Chat-Fenster. Schnellfragen (#tcChips) und der Hinweis ohne KI-Schlüssel (#tcOhne) füllt chat.js. -->
+<!-- Der eine Toni: Knopf unten rechts und das Chat-Fenster. Schnellfragen (#tcChips) und der Hinweis ohne KI-Schlüssel (#tcWithout) füllt chat.js. -->
 <button id="toniFab" type="button" aria-label="Coach Toni fragen" aria-expanded="false" aria-controls="tcChat"><span class="m" aria-hidden="true">T</span><span class="t">Toni fragen</span></button>
 <section class="chat" id="tcChat" tabindex="-1" aria-label="Chat mit Coach Toni">
-  <div class="chat-h"><span class="chat-av" aria-hidden="true">T</span><div><b>Coach Toni</b><small><i class="on-dot" aria-hidden="true"></i><span id="tcSieht">Senior-Dev · dein Mentor</span></small></div><button id="chatClose" type="button" aria-label="Chat schließen">×</button></div>
-  <div id="chatLog" aria-live="polite"><div class="chat-empty" id="tcLeer"><p><b>Frag mich, was du willst.</b> Kurz und klar, versprochen.</p></div></div>
-  <div class="tc-ohne" id="tcOhne" hidden><p><b>Ich brauche einen eigenen KI-Schlüssel, um zu antworten.</b> Alles andere in Pixelwerk läuft auch ohne mich.</p><button class="btn primary" id="tcEinrichten" type="button">Coach Toni einrichten</button></div>
+  <div class="chat-h"><span class="chat-av" aria-hidden="true">T</span><div><b>Coach Toni</b><small><i class="on-dot" aria-hidden="true"></i><span id="tcSees">Senior-Dev · dein Mentor</span></small></div><button id="chatClose" type="button" aria-label="Chat schließen">×</button></div>
+  <div id="chatLog" aria-live="polite"><div class="chat-empty" id="tcEmpty"><p><b>Frag mich, was du willst.</b> Kurz und klar, versprochen.</p></div></div>
+  <div class="tc-without" id="tcWithout" hidden><p><b>Ich brauche einen eigenen KI-Schlüssel, um zu antworten.</b> Alles andere in Pixelwerk läuft auch ohne mich.</p><button class="btn primary" id="tcSetup" type="button">Coach Toni einrichten</button></div>
   <div class="tc-chips" id="tcChips" role="group" aria-label="Schnellfragen" hidden></div>
-  <form id="chatForm" class="composer"><input id="chatIn" autocomplete="off" placeholder="Nachricht an Toni" aria-label="Nachricht an Toni"><div class="composer-bar"><button id="chatKapitel" class="chip-btn" type="button" aria-pressed="false" title="Toni schreibt dir ein eigenes Kapitel zu deinem Thema">📘 Neues Kapitel</button><button class="send-btn" type="submit">Senden</button></div></form>
+  <form id="chatForm" class="composer"><input id="chatIn" autocomplete="off" placeholder="Nachricht an Toni" aria-label="Nachricht an Toni"><div class="composer-bar"><button id="chatChapter" class="chip-btn" type="button" aria-pressed="false" title="Toni schreibt dir ein eigenes Kapitel zu deinem Thema">📘 Neues Kapitel</button><button class="send-btn" type="submit">Senden</button></div></form>
 </section>
