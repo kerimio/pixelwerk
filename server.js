@@ -155,7 +155,7 @@ const server = http.createServer((req, res) => {
   if (p === '/') p = '/index.html';
   const file = path.join(ROOT, path.normalize(p));
   const blocked = !file.startsWith(ROOT + path.sep) || file.startsWith(DATA + path.sep) || file === SECRETS || file.startsWith(SECRETS)
-    || path.basename(file).startsWith('progress.json') || path.relative(ROOT, file).split(path.sep).some(s => s.startsWith('.'));
+    || /^(progress|fortschritt)\.json/.test(path.basename(file)) || path.relative(ROOT, file).split(path.sep).some(s => s.startsWith('.'));
   if (blocked) { res.writeHead(404); return res.end(); }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Nicht gefunden'); }
