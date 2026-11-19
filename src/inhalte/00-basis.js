@@ -3,7 +3,9 @@
    und genau so sehen die Lernenden sie auch: AKTE und CH werden der Reihe nach befüllt.
 
    Neue Phase:   neue Datei mit passender Nummer, oben AKTE.push({ n: <neue eindeutige Kennung>, title, sub }).
-   Neues Kapitel: CH.push({ id, akt, title, tag, xp, ticket, story, slides, quiz, ex, merke }) in der Phase-Datei.
+   Neues Kapitel: CH.push({ id, akt, title, tag, xp, ticket, story, slides, quiz, ex, merke, paare }) in der Phase-Datei.
+                  paare: [[Begriff, Aussage], …] fürs Zuordnen, 3 bis 6 Stück, HTML wie im Quiz (<code>). Jede Aussage
+                  passt zu genau einem Begriff.
                   Am einfachsten ein vorhandenes Kapitel kopieren. Die id (z. B. 'k07') ist der Schlüssel im
                   gespeicherten Fortschritt: nie umbenennen, auch wenn ein Kapitel an eine andere Stelle wandert.
                   Die Nummer, die die App anzeigt, kommt aus der Position, nicht aus der id.

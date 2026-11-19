@@ -94,7 +94,14 @@ export function vorhang(): Observable<string> {
       { name: 'vorhang kommt nach ~50 ms', run: async T => { const r = await T.collect(T.get('vorhang')(), 150); T.eq(r.vals, ['Vorhang!'], 'Es soll „Vorhang!“ kommen.'); T.ok(r.complete, 'Danach complete.'); } },
       { name: 'Früh abbestellt = nichts', run: async T => { const got = []; const sub = T.get('vorhang')().subscribe(v => got.push(v)); await T.flush(10); sub.unsubscribe(); await T.flush(80); T.eq(got, [], 'Nach unsubscribe kam trotzdem was. Gib eine Aufräum-Funktion mit clearTimeout zurück.'); } }
     ] },
-  merke: ['Observable = Werte über Zeit: next, error, complete.', 'Lazy: ohne subscribe passiert nichts.', 'Aufräum-Funktion läuft beim unsubscribe.']
+  merke: ['Observable = Werte über Zeit: next, error, complete.', 'Lazy: ohne subscribe passiert nichts.', 'Aufräum-Funktion läuft beim unsubscribe.'],
+  paare: [
+    ['Observable', 'Schickt Werte über die Zeit'],
+    ['<code>subscribe</code>', 'Startet das Zuhören, vorher passiert nichts'],
+    ['<code>next</code>', 'Liefert einen neuen Wert'],
+    ['<code>complete</code>', 'Fertig, es kommt nichts mehr'],
+    ['<code>unsubscribe</code>', 'Hört auf, die Aufräum-Funktion läuft']
+  ]
 });
 
 CH.push({
@@ -185,7 +192,14 @@ export function nurPosition(pos: string) {
       { name: 'nurPosition("Frontend")', run: async T => { const sp = T.rx.from([{ name: 'Leon', position: 'Frontend' }, { name: 'Mo', position: 'Backend' }, { name: 'Ben', position: 'Frontend' }]); const r = await T.collect(sp.pipe(T.get('nurPosition')('Frontend'))); T.eq(r.vals.map(s => s.name), ['Leon', 'Ben'], 'Nur Leon und Ben sollen durch.'); } },
       { name: 'nurPosition("Backend")', run: async T => { const sp = T.rx.from([{ name: 'Leon', position: 'Frontend' }, { name: 'Mo', position: 'Backend' }]); const r = await T.collect(sp.pipe(T.get('nurPosition')('Backend'))); T.eq(r.vals.map(s => s.name), ['Mo'], 'Nur Mo soll durch.'); } }
     ] },
-  merke: ['pipe(op1, op2): oben nach unten.', 'map umwandeln, filter sieben, take begrenzen, tap gucken.', 'Eigener Operator = Funktion Observable → Observable.']
+  merke: ['pipe(op1, op2): oben nach unten.', 'map umwandeln, filter sieben, take begrenzen, tap gucken.', 'Eigener Operator = Funktion Observable → Observable.'],
+  paare: [
+    ['<code>pipe()</code>', 'Steckt Operatoren hintereinander'],
+    ['<code>map</code>', 'Wandelt jeden Wert um'],
+    ['<code>filter</code>', 'Lässt nur passende Werte durch'],
+    ['<code>take(3)</code>', 'Nimmt drei Werte, dann ist Schluss'],
+    ['<code>tap</code>', 'Guckt nur zu, ändert nichts']
+  ]
 });
 
 CH.push({
@@ -263,7 +277,13 @@ export class TicketService {
       { name: 'anzahl$ zählt mit', run: async T => { const s = T.inject(T.get('TicketService')); const got = []; s.anzahl$.subscribe(v => got.push(v)); s.kaufen('A'); s.kaufen('B'); s.stornieren('A'); T.eq(got, [0, 1, 2, 1], 'anzahl$ soll 0, 1, 2, 1 schicken.'); } },
       { name: 'meldungen: „X gekauft“', run: T => { const s = T.inject(T.get('TicketService')); const got = []; T.ok(s.meldungen && s.meldungen.subscribe, 'meldungen fehlt.'); s.meldungen.subscribe(m => got.push(m)); s.kaufen('C3'); T.eq(got, ['C3 gekauft'], 'Falsche Meldung.'); } }
     ] },
-  merke: ['Subject: Mikro, nur für Anwesende.', 'BehaviorSubject: Startwert, Neue kriegen den letzten Wert.', 'Intern privat, außen asObservable().']
+  merke: ['Subject: Mikro, nur für Anwesende.', 'BehaviorSubject: Startwert, Neue kriegen den letzten Wert.', 'Intern privat, außen asObservable().'],
+  paare: [
+    ['Subject', 'Durchsage: nur wer gerade zuhört, hört sie'],
+    ['BehaviorSubject', 'Hat einen Startwert, Neue bekommen den letzten'],
+    ['<code>next(x)</code>', 'Ins Mikro sprechen'],
+    ['<code>asObservable()</code>', 'Nach außen nur zum Zuhören']
+  ]
 });
 
 CH.push({
@@ -380,7 +400,14 @@ export function bieten(
       { name: 'Alte Anfrage wird abgebrochen', run: async T => { const s = new T.rx.Subject(); const api = q => T.rx.timer(500).pipe(T.op.map(() => ['Ergebnis ' + q])); const got = []; T.get('liveSuche')(s, api).subscribe(v => got.push(v)); s.next('Leon'); await T.flush(350); s.next('Mo'); await T.flush(1000); T.eq(got, [['Ergebnis Mo']], 'Das alte Ergebnis für "Leon" kam auch. Nimm switchMap.'); } },
       { name: 'bieten ignoriert Doppelklicks', run: async T => { const k = new T.rx.Subject(); let calls = 0; const api = () => { calls++; return T.rx.timer(100).pipe(T.op.map(() => 'ok')); }; const got = []; T.get('bieten')(k, api).subscribe(v => got.push(v)); k.next(); k.next(); k.next(); await T.flush(150); k.next(); await T.flush(150); T.eq(calls, 2, '3 schnelle Klicks = 1 Angebot, späterer Klick = 2. Nimm exhaustMap.'); T.eq(got, ['ok', 'ok'], 'Ergebnisse stimmen nicht.'); } }
     ] },
-  merke: ['map mit einer Anfrage ergibt ein Observable im Observable. Die vier …Map-Operatoren machen es flach.', 'switchMap: neu bricht alt ab (Suche).', 'concatMap: der Reihe nach. mergeMap: parallel.', 'exhaustMap: ignorieren, solange beschäftigt (Submit).', 'debounceTime + distinctUntilChanged = Live-Suche.']
+  merke: ['map mit einer Anfrage ergibt ein Observable im Observable. Die vier …Map-Operatoren machen es flach.', 'switchMap: neu bricht alt ab (Suche).', 'concatMap: der Reihe nach. mergeMap: parallel.', 'exhaustMap: ignorieren, solange beschäftigt (Submit).', 'debounceTime + distinctUntilChanged = Live-Suche.'],
+  paare: [
+    ['<code>switchMap</code>', 'Neu bricht alt ab: Live-Suche'],
+    ['<code>mergeMap</code>', 'Alle laufen gleichzeitig'],
+    ['<code>concatMap</code>', 'Eine nach der anderen: Speichern'],
+    ['<code>exhaustMap</code>', 'Ignoriert Neues, solange eine läuft: Bezahlen'],
+    ['<code>debounceTime</code>', 'Wartet, bis eine Weile nichts mehr kam']
+  ]
 });
 
 CH.push({
@@ -491,7 +518,13 @@ export class Team {
       { name: 'toSignal benutzt', run: T => T.ok(/toSignal\s*\(/.test(T.code), 'Nimm toSignal(...) als Brücke.') },
       { name: 'anzahlFrontend zählt', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(100); T.ok(T.isComputed(f.instance.anzahlFrontend), 'anzahlFrontend soll computed sein.'); T.eq(f.instance.anzahlFrontend(), 2, 'Es gibt 2 Frontend-Devs.'); } }
     ] },
-  merke: ['HttpClient gibt cold Observables.', 'toSignal(obs$, { initialValue }) = Brücke, räumt selbst auf.', 'httpResource() für reaktives Laden.']
+  merke: ['HttpClient gibt cold Observables.', 'toSignal(obs$, { initialValue }) = Brücke, räumt selbst auf.', 'httpResource() für reaktives Laden.'],
+  paare: [
+    ['HttpClient', 'Holt Daten und gibt ein cold Observable'],
+    ['<code>toSignal(obs$)</code>', 'Macht aus einem Observable ein Signal'],
+    ['<code>initialValue</code>', 'Gilt, bis die erste Antwort da ist'],
+    ['<code>httpResource</code>', 'Lädt neu, wenn sich ein Signal in der Adresse ändert']
+  ]
 });
 
 CH.push({
@@ -593,7 +626,13 @@ export class Stoppuhr {
       { name: 'Stoppuhr tickt', run: async T => { const f = T.mount(T.cmp('Stoppuhr')); await T.flush(90); T.ok(f.instance.ticks() >= 2, 'Nach ~90 ms soll ticks mindestens 2 sein.'); } },
       { name: 'Stoppuhr stoppt beim Zerstören', run: async T => { const f = T.mount(T.cmp('Stoppuhr')); await T.flush(50); f.destroy(); const v = f.instance.ticks(); await T.flush(80); T.eq(f.instance.ticks(), v, 'Nach dem Zerstören läuft die Uhr weiter: Memory-Leak! Nimm takeUntilDestroyed().'); T.ok(/takeUntilDestroyed\s*\(/.test(T.code), 'Benutze takeUntilDestroyed().'); } }
     ] },
-  merke: ['error beendet den Stream.', 'retry = nochmal, catchError = Plan B.', 'Keine Leaks: toSignal, sonst takeUntilDestroyed.']
+  merke: ['error beendet den Stream.', 'retry = nochmal, catchError = Plan B.', 'Keine Leaks: toSignal, sonst takeUntilDestroyed.'],
+  paare: [
+    ['<code>retry</code>', 'Nochmal versuchen'],
+    ['<code>catchError</code>', 'Plan B liefern'],
+    ['<code>error</code>', 'Beendet den Stream'],
+    ['<code>takeUntilDestroyed</code>', 'Abo endet, wenn der Baustein verschwindet']
+  ]
 });
 
 CH.push({
@@ -678,7 +717,12 @@ export function dashboard(api: { entwickler(): Observable<Entwickler[]>; stunden
       { name: 'stundenSumme zählt mit', run: async T => { const r = await T.collect(T.get('stundenSumme')(T.rx.from([2, 1, 3]))); T.eq(r.vals, [2, 3, 6], 'Laufende Summe soll 2, 3, 6 sein.'); } },
       { name: 'dashboard lädt parallel', run: async T => { let par = 0, max = 0; const slow = v => T.rx.defer(() => { par++; max = Math.max(max, par); return T.rx.timer(50).pipe(T.op.map(() => { par--; return v; })); }); const api = { entwickler: () => slow([{}, {}, {}]), stunden: () => slow([2, 1, 3]) }; const r = await T.collect(T.get('dashboard')(api), 300); T.eq(r.vals, [{ anzahlEntwickler: 3, summe: 6 }], 'dashboard soll { anzahlEntwickler: 3, summe: 6 } liefern.'); T.eq(max, 2, 'Die Anfragen sollen parallel laufen (forkJoin).'); } }
     ] },
-  merke: ['combineLatest: neuester Stand von allen.', 'forkJoin: einmal, wenn alle fertig sind.', 'scan: laufender Zustand.']
+  merke: ['combineLatest: neuester Stand von allen.', 'forkJoin: einmal, wenn alle fertig sind.', 'scan: laufender Zustand.'],
+  paare: [
+    ['<code>combineLatest</code>', 'Neuester Stand von allen, bei jeder Änderung'],
+    ['<code>forkJoin</code>', 'Einmal, wenn alle fertig sind'],
+    ['<code>scan</code>', 'Laufender Zustand, wie reduce über die Zeit']
+  ]
 });
 
 /* ================= AUSBLICK ================= */

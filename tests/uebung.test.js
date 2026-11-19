@@ -86,6 +86,11 @@ const { ok, ende } = pruefer();
 
   // 5. Schritt verlassen: „Weiter“ ist wieder die Hauptaktion des Kapitels
   await page.click('#prevStep');
+  /* Davor liegt das Zuordnen: Solange es nicht gespielt ist, ist „Weiter“ dort auch nur ein normaler Knopf */
+  if (await page.locator('#stepBody .zu').count()) {
+    ok(await page.evaluate(() => !document.querySelector('#nextStep').classList.contains('primary') && currentExercise === null), 'Nach dem Verlassen der Übung: Beim offenen Zuordnen davor ist „Weiter“ ein normaler Knopf');
+    await page.click('#prevStep');
+  }
   ok(await page.evaluate(() => !!document.querySelector('#stepBody .quiz .opt:not(:disabled)') && !document.querySelector('#nextStep').classList.contains('primary') && currentExercise === null), 'Nach dem Verlassen der Übung: Im offenen Quiz davor ist „Weiter“ ein normaler Knopf');
   await page.click('#kpWeg .kp-ph >> nth=1');
   ok(await page.evaluate(() => !!document.querySelector('#stepBody .slide') && document.querySelector('#nextStep').classList.contains('primary')), 'Auf der Folie ist „Weiter“ wieder Hauptknopf');

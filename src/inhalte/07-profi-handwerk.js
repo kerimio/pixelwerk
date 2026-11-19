@@ -159,7 +159,14 @@ export class Team {
       { name: 'Suchfeld per viewChild', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(10); const s = f.instance.suche; T.ok(T.isSignal(s), 'Es fehlt suche = viewChild.required<ElementRef<HTMLInputElement>>(\'suche\').'); const el = s(); T.ok(el && el.nativeElement && el.nativeElement.tagName === 'INPUT', 'viewChild findet das Feld nicht. Steht #suche am <input>?'); } },
       { name: 'Suchfeld hat den Fokus', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(20); T.ok(document.activeElement === f.q('input.suche'), 'Nach dem Malen soll das Suchfeld fokussiert sein: afterNextRender(() => this.suche().nativeElement.focus()).'); } }
     ] },
-  merke: ['ng-content reicht Inhalt durch, select macht Fächer.', '#name + viewChild holt ein Element als Signal.', 'DOM erst nach dem Malen: afterNextRender.', 'Im constructor sind Inputs noch leer.', 'animate.enter / animate.leave: CSS-Klasse beim Erscheinen und Verschwinden. @angular/animations ist Altcode.']
+  merke: ['ng-content reicht Inhalt durch, select macht Fächer.', '#name + viewChild holt ein Element als Signal.', 'DOM erst nach dem Malen: afterNextRender.', 'Im constructor sind Inputs noch leer.', 'animate.enter / animate.leave: CSS-Klasse beim Erscheinen und Verschwinden. @angular/animations ist Altcode.'],
+  paare: [
+    ['<code>ng-content</code>', 'Reicht Inhalt vom Eltern-Baustein durch'],
+    ['<code>viewChild</code>', 'Holt ein markiertes Element als Signal'],
+    ['<code>afterNextRender</code>', 'Für Code, der das fertig gemalte DOM braucht'],
+    ['<code>constructor</code>', 'Hier sind die Inputs noch leer'],
+    ['<code>animate.enter</code>', 'CSS-Klasse beim Erscheinen']
+  ]
 });
 
 CH.push({
@@ -309,7 +316,14 @@ export class PitchListe {
       { name: 'Farbe kommt aus dem Attribut', run: T => { const f = T.mount(T.cmp('PitchListe')); T.eq(f.q('.leon').style.borderColor, 'red', 'border-color soll red sein: farbe = input(\'gold\', { alias: \'appBadge\' }) und \'[style.border-color]\': \'farbe()\'.'); } },
       { name: 'Hover zeigt die Badge an', run: async T => { const f = T.mount(T.cmp('PitchListe')); f.q('.leon').dispatchEvent(new Event('mouseenter')); await T.flush(); T.ok(f.q('.leon').classList.contains('hover'), 'Nach mouseenter soll .leon die Klasse hover haben.'); f.q('.leon').dispatchEvent(new Event('mouseleave')); await T.flush(); T.ok(!f.q('.leon').classList.contains('hover'), 'Nach mouseleave soll hover wieder weg sein.'); } }
     ] },
-  merke: ['Direktive = Verhalten ohne eigenes HTML, selector in [ ].', 'host: {} statt @HostListener/@HostBinding.', 'Pipe = transform(), pure rechnet nur bei neuer Referenz.', 'Direktiven und Pipes immer in imports.']
+  merke: ['Direktive = Verhalten ohne eigenes HTML, selector in [ ].', 'host: {} statt @HostListener/@HostBinding.', 'Pipe = transform(), pure rechnet nur bei neuer Referenz.', 'Direktiven und Pipes immer in imports.'],
+  paare: [
+    ['Komponente', 'Hat eigenes HTML'],
+    ['Direktive', 'Kein eigenes HTML, hängt Verhalten an ein Element'],
+    ['Pipe', 'Formt einen Wert fürs Anzeigen um'],
+    ['<code>transform()</code>', 'Die Methode, die eine Pipe ausmacht'],
+    ['<code>host: {}</code>', 'Ersetzt @HostListener und @HostBinding']
+  ]
 });
 
 CH.push({
@@ -479,7 +493,14 @@ export class Statistik {
       { name: 'Ohne Analytics kein Absturz', run: T => { let s; try { s = T.inject(T.get('Statistik')); } catch (e) { T.ok(false, 'Statistik stürzt ab: ' + e.message + ' Tipp: inject(Analytics, { optional: true })'); } T.ok(s.analytics === null, 'Ohne Provider soll analytics null sein.'); s.tracke('Klick'); } },
       { name: 'Mit Analytics wird gesendet', run: T => { const inj = new T.ng.Injector(null, [T.get('Analytics')]); const s = inj.get(T.get('Statistik')); s.tracke('Klick'); T.eq(s.analytics && s.analytics.gesendet, ['Klick'], 'Gibt es Analytics, soll tracke() senden.'); } }
     ] },
-  merke: ['useValue, useClass, useExisting, useFactory.', 'InjectionToken für alles, was keine Klasse ist.', 'multi: true sammelt alle in einer Liste.', 'providers in der Komponente = eigene Instanz pro Komponente.', 'optional, self, skipSelf, host ändern die Suche.']
+  merke: ['useValue, useClass, useExisting, useFactory.', 'InjectionToken für alles, was keine Klasse ist.', 'multi: true sammelt alle in einer Liste.', 'providers in der Komponente = eigene Instanz pro Komponente.', 'optional, self, skipSelf, host ändern die Suche.'],
+  paare: [
+    ['<code>useValue</code>', 'Gib genau diesen fertigen Wert'],
+    ['<code>useClass</code>', 'Baue dafür diese Klasse'],
+    ['<code>useFactory</code>', 'Rechne den Wert mit einer Funktion aus'],
+    ['<code>multi: true</code>', 'Sammelt alle Provider in einer Liste'],
+    ['InjectionToken', 'Schlüssel für etwas, das keine Klasse ist']
+  ]
 });
 
 CH.push({
@@ -662,7 +683,14 @@ export class Sterne implements ControlValueAccessor {
       { name: 'Formular schreibt in die Sterne', run: async T => { const f = T.mount(T.cmp('Sterne')); f.instance.writeValue(2); await T.flush(); T.eq(f.qa('.stern.an').length, 2, 'writeValue(2) → 2 Sterne an.'); f.instance.writeValue(null); await T.flush(); T.eq(f.qa('.stern.an').length, 0, 'writeValue(null) → keiner an.'); T.ok(typeof f.instance.setDisabledState === 'function', 'Es fehlt setDisabledState(aus).'); f.instance.setDisabledState(true); await T.flush(); T.ok(f.qa('.stern').every(b => b.disabled), 'setDisabledState(true) → alle Knöpfe disabled.'); } },
       { name: 'NG_VALUE_ACCESSOR-Provider', run: T => { const S = T.get('Sterne'); const NVA = T.ng.modules['@angular/forms'].NG_VALUE_ACCESSOR; const p = [].concat(T.meta(S).providers || []).find(x => x && x.provide === NVA); T.ok(p, 'providers: [{ provide: NG_VALUE_ACCESSOR, … }] fehlt.'); T.ok(p.multi === true, 'NG_VALUE_ACCESSOR braucht multi: true.'); const ex = T.ng.core.resolveForwardRef(p.useExisting); T.ok(ex === S, 'useExisting: forwardRef(() => Sterne).'); } }
     ] },
-  merke: ['FormArray für Listen: push, removeAt.', 'Gruppen-Validator sieht alle Felder, async-Validator fragt den Server (pending).', 'ControlValueAccessor: writeValue rein, onChange raus.', 'NG_VALUE_ACCESSOR + forwardRef + multi.']
+  merke: ['FormArray für Listen: push, removeAt.', 'Gruppen-Validator sieht alle Felder, async-Validator fragt den Server (pending).', 'ControlValueAccessor: writeValue rein, onChange raus.', 'NG_VALUE_ACCESSOR + forwardRef + multi.'],
+  paare: [
+    ['FormArray', 'Liste von Feldern, wächst zur Laufzeit'],
+    ['Gruppen-Validator', 'Sieht alle Felder: keine Nummer doppelt'],
+    ['async-Validator', 'Fragt den Server, solange ist es pending'],
+    ['ControlValueAccessor', 'Macht deine Komponente zum Formularfeld'],
+    ['<code>writeValue</code>', 'Wert vom Formular in deine Komponente']
+  ]
 });
 
 CH.push({
@@ -794,7 +822,14 @@ export class ProfilAnsicht {
       { name: 'Tab springt zurück', run: async T => { const f = T.mount(T.cmp('ProfilAnsicht')); const i = f.instance; i.tab.set('statistik'); T.eq(i.tab(), 'statistik', 'tab soll setzbar sein.'); i.id.set(2); T.eq(i.tab(), 'profil', 'Neuer Entwickler → tab wieder profil. linkedSignal({ source: this.id, computation: () => \'profil\' })'); } },
       { name: 'Protokoll nur bei Entwicklerwechsel', run: async T => { const f = T.mount(T.cmp('ProfilAnsicht')); await T.flush(10); const i = f.instance; const n = i.protokoll.length; T.ok(n === 1, 'Nach dem Start soll genau ein Eintrag im Protokoll stehen.'); await f.click('.klick'); await f.click('.klick'); await T.flush(10); T.eq(i.protokoll.length, n, 'Klicks sollen den effect NICHT auslösen. klicks mit untracked lesen.'); i.id.set(3); await T.flush(10); T.eq(i.protokoll[i.protokoll.length - 1], 'Entwickler 3, Klicks: 2', 'Bei Entwicklerwechsel neuer Eintrag mit aktuellen Klicks.'); } }
     ] },
-  merke: ['Signal = Zustand, Observable = Ablauf über Zeit.', 'rxResource/httpResource: value, isLoading, error, reload.', 'linkedSignal: setzbar, springt bei neuer Quelle zurück.', 'untracked: lesen ohne Abhängigkeit.']
+  merke: ['Signal = Zustand, Observable = Ablauf über Zeit.', 'rxResource/httpResource: value, isLoading, error, reload.', 'linkedSignal: setzbar, springt bei neuer Quelle zurück.', 'untracked: lesen ohne Abhängigkeit.'],
+  paare: [
+    ['Signal', 'Aktueller Zustand, synchron, immer da'],
+    ['Observable', 'Ereignisse über die Zeit'],
+    ['<code>rxResource</code>', 'Lädt neu, wenn sich params ändert'],
+    ['<code>linkedSignal</code>', 'Setzbar, springt bei neuer Quelle zurück'],
+    ['<code>untracked</code>', 'Liest ein Signal, ohne davon abzuhängen']
+  ]
 });
 
 CH.push({
@@ -921,7 +956,14 @@ export const STANDORTE = { koeln: 'Köln', berlin: 'Berlin' } satisfies Record<s
       { name: 'istEntwickler prüft wirklich', run: T => { const g = T.get('istEntwickler'); T.ok(g({ id: 9, name: 'Leon' }) === true, 'Echter Entwickler → true.'); T.ok(g({ id: '9', name: 'Leon' }) === false, 'id als Text → false.'); T.ok(g(null) === false && g('Leon') === false && g({ name: 'Leon' }) === false, 'null, Text oder ohne id → false.'); T.ok(T.has(/x\s*:\s*unknown\s*\)\s*:\s*x\s+is\s+Entwickler/), 'Signatur: istEntwickler(x: unknown): x is Entwickler'); } },
       { name: 'satisfies', run: T => { T.eq(T.get('STANDORTE').koeln, 'Köln', 'Werte bleiben gleich.'); T.ok(T.has(/satisfies\s+Record<\s*string\s*,\s*string\s*>/), 'Hänge satisfies Record<string, string> an.'); } }
     ] },
-  merke: ['Generics: <T> ist ein Typ-Platzhalter.', 'Discriminated Union + switch + never = kein Fall vergessen.', 'Server-Daten sind unknown, Type Guard prüft echt.', 'strict: true, unknown statt any, satisfies.']
+  merke: ['Generics: <T> ist ein Typ-Platzhalter.', 'Discriminated Union + switch + never = kein Fall vergessen.', 'Server-Daten sind unknown, Type Guard prüft echt.', 'strict: true, unknown statt any, satisfies.'],
+  paare: [
+    ['Generic <code><T></code>', 'Platzhalter für einen Typ'],
+    ['Discriminated Union', 'Ein Feld sagt, welche Form gerade gilt'],
+    ['<code>never</code>', 'Meldet im switch: ein Fall wurde vergessen'],
+    ['Type Guard', 'Prüft zur Laufzeit und sagt TypeScript Bescheid'],
+    ['<code>satisfies</code>', 'Prüft gegen einen Typ und behält den genauen Typ']
+  ]
 });
 
 CH.push({
@@ -1063,7 +1105,14 @@ export const routes: Routes = [
       { name: 'ungespeichert fragt nur bei Änderungen', run: T => { const g = T.get('ungespeichert'); const d = T.inject(T.get('Dialog')); T.eq(T.inCtx(() => g({ geaendert: () => false })), true, 'Nichts geändert → true.'); d.antwort = false; T.eq(T.inCtx(() => g({ geaendert: () => true })), false, 'Geändert und Dialog sagt nein → false.'); d.antwort = true; T.eq(T.inCtx(() => g({ geaendert: () => true })), true, 'Geändert und Dialog sagt ja → true.'); } },
       { name: 'Planung nur für Leads', run: T => { const m = T.match(T.get('routes'), '/planung'); T.ok(m && m.route.component === T.get('Planung'), '/planung soll Planung zeigen.'); T.ok((m.route.canMatch || []).includes(T.get('nurLeads')), 'canMatch: [nurLeads] fehlt.'); const a = T.inject(T.get('Auth')); a.rolle.set('dev'); T.eq(T.inCtx(() => T.get('nurLeads')({}, [])), false, 'Dev → false.'); a.rolle.set('lead'); T.eq(T.inCtx(() => T.get('nurLeads')({}, [])), true, 'Lead → true.'); } }
     ] },
-  merke: ['children für Bereiche, title für den Tab.', 'Resolver: Daten vorher. canMatch: Route unsichtbar. canDeactivate: vor dem Gehen fragen.', 'Filter und Seite in die URL.', 'Guards schützen nur die Ansicht, der Server schützt die Daten.']
+  merke: ['children für Bereiche, title für den Tab.', 'Resolver: Daten vorher. canMatch: Route unsichtbar. canDeactivate: vor dem Gehen fragen.', 'Filter und Seite in die URL.', 'Guards schützen nur die Ansicht, der Server schützt die Daten.'],
+  paare: [
+    ['<code>children</code>', 'Unterseiten eines Bereichs'],
+    ['Resolver', 'Holt Daten, bevor die Seite erscheint'],
+    ['<code>canMatch</code>', 'Die Route wird gar nicht erst gefunden'],
+    ['<code>canDeactivate</code>', 'Fragt vor dem Verlassen nach'],
+    ['Query-Parameter', 'Filter und Seite in der URL, der Link ist teilbar']
+  ]
 });
 
 CH.push({
@@ -1207,5 +1256,12 @@ export class Feedback {
       { name: 'Klick bei Fehlern zeigt alle Fehler', run: async T => { const f = T.mount(T.cmp('Feedback')); T.ok(!f.q('button.absenden').disabled, 'Der Knopf soll auch bei leerem Formular klickbar sein. Sperr ihn nur während des Speicherns: [disabled]="feedback().submitting()".'); T.ok(!T.has(/\[disabled\]\s*=\s*"[^"]*invalid\(\)/), 'Sperr den Knopf nicht mit invalid(). submit() zeigt beim Klick die Fehler.'); await f.click('button.absenden'); await T.flush(20); T.ok(f.q('p.fehler'), 'Nach dem Klick auf Absenden soll der Fehler am Namen erscheinen. submit() markiert alle Felder als berührt.'); T.eq(f.instance.gesendet().length, 0, 'Ein ungültiges Formular darf nicht abgeschickt werden.'); } },
       { name: 'submit legt ab und leert das Formular', run: async T => { const f = T.mount(T.cmp('Feedback')); f.instance.absenden(); await T.flush(20); T.eq(f.instance.gesendet().length, 0, 'Ein ungültiges Formular darf nicht abgeschickt werden. Nimmst du submit()?'); f.instance.daten.set({ name: 'Lea', mail: 'lea@firma.de', text: 'Sehr verständlich erklärt.' }); f.instance.absenden(); await T.flush(20); T.eq(f.instance.gesendet().map(r => r.name), ['Lea'], 'Nach dem Absenden soll die Rückmeldung in gesendet() stehen.'); T.eq(f.instance.daten(), { name: '', mail: '', text: '' }, 'Danach sollen die Daten wieder leer sein.'); T.eq(f.text().includes('1 Rückmeldung'), true, 'Die Anzahl soll 1 zeigen.'); } }
     ] },
-  merke: ['Signal Forms: erst die Daten als Signal, dann form(daten, regeln).', 'Regeln an einer Stelle: required, email, minLength, validate.', 'Feld aufrufen = Zustand: value(), invalid(), touched(), errors().', 'submit() zeigt alle Fehler und führt die Aktion nur bei gültigem Formular aus.']
+  merke: ['Signal Forms: erst die Daten als Signal, dann form(daten, regeln).', 'Regeln an einer Stelle: required, email, minLength, validate.', 'Feld aufrufen = Zustand: value(), invalid(), touched(), errors().', 'submit() zeigt alle Fehler und führt die Aktion nur bei gültigem Formular aus.'],
+  paare: [
+    ['<code>form(daten, regeln)</code>', 'Baut aus einem Signal ein Feld pro Eigenschaft'],
+    ['<code>required</code>', 'Regel: das Feld darf nicht leer sein'],
+    ['<code>touched()</code>', 'Wurde das Feld schon angefasst?'],
+    ['<code>errors()</code>', 'Die Fehler eines Felds'],
+    ['<code>submit()</code>', 'Zeigt alle Fehler, führt nur gültig aus']
+  ]
 });

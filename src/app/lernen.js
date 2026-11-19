@@ -22,8 +22,8 @@ function leFaelligIn(tage, ab) {
 const leTageBis = t => Math.round((leFaelligIn(0, t) - leFaelligIn(0)) / DAY);
 const leWann = t => { const n = leTageBis(t); return n <= 1 ? 'morgen' : 'in ' + n + ' Tagen'; };
 
-/* Karten: q:<kapitel>:<nr> Quizfrage · m:<kapitel> Merksätze aus dem Kopf · x:<kapitel> Übung aus dem Kopf.
-   Sie entstehen, sobald ein Kapitel geschafft ist. Die erste Wiederholung kommt nach 1, 2 oder 4 Tagen. */
+/* Karten: q:<kapitel>:<nr> Quizfrage · m:<kapitel> Merksätze aus dem Kopf · z:<kapitel> Zuordnen (zuordnen.js) · x:<kapitel> Übung aus dem Kopf.
+   Sie entstehen, sobald ein Kapitel geschafft ist. Die erste Wiederholung kommt nach 1, 2, 3 oder 4 Tagen. */
 function srsSeed() {
   const c = srs();
   CH.forEach(ch => {
@@ -31,6 +31,8 @@ function srsSeed() {
     const add = (k, tage) => { if (!c[k]) c[k] = { s: 0, n: 0, l: 0, due: leFaelligIn(tage, typeof d === 'number' ? d : Date.now()) }; };
     ch.quiz.forEach((q, i) => add('q:' + ch.id + ':' + i, 1));
     if (ch.merke && ch.merke.length) add('m:' + ch.id, 2);
+    /* Zuordnen: mit Fehlern im Kapitel schon nach 1 Tag, sonst nach 3 */
+    if (zuHat(ch)) add('z:' + ch.id, (S.zu || {})[ch.id] ? 1 : 3);
     /* Übung, die nur mit Lösung oder nach vielen Fehlversuchen klappte: schon nach 2 Tagen aus dem Kopf */
     const e = ch.ex && (S.ex || {})[ch.ex.id];
     if (ch.ex) add('x:' + ch.id, e && (e.usedSolution || e.fails >= 3) ? 2 : 4);
@@ -42,6 +44,7 @@ function srsCard(k) {
   if (p[0] === 'q') { const q = ch.quiz[+p[2]]; return q ? { t: 'q', k, ch, q, i: +p[2] } : null; }
   if (p[0] === 'm') return ch.merke && ch.merke.length ? { t: 'm', k, ch } : null;
   if (p[0] === 'x') return ch.ex ? { t: 'x', k, ch } : null;
+  if (p[0] === 'z') return zuHat(ch) ? { t: 'z', k, ch } : null;
   return null;
 }
 function srsDue(now) { srsSeed(); const c = srs(); now = now || Date.now(); return Object.keys(c).filter(k => c[k].due <= now && srsCard(k)); }
@@ -137,22 +140,27 @@ function leMischen(keys) {
   }
   return out;
 }
-/* Fällige Karten für eine Runde: die am längsten überfälligen zuerst, höchstens 15, davon 3 Merksatz-Karten und 1 Übung (am Schluss).
+/* Fällige Karten für eine Runde: die am längsten überfälligen zuerst, höchstens 15, davon 3 Merksatz-Karten, 2 zum Zuordnen und 1 Übung (am Schluss).
    Karten aus Themen, die bei dir wackeln (staerken.js), rücken nach vorn: Sie zählen bis zu doppelt so dringend. */
 function wdhRunde() {
   const c = srs(), now = Date.now(), sw = schwachKarte(), dran = k => (now - c[k].due + DAY) / Math.max(1, c[k].s) * (1 + (sw[k.split(':')[1]] || 0));
-  const pick = []; let nm = 0, nx = 0;
-  srsDue(now).sort((a, b) => dran(b) - dran(a)).forEach(k => { if (pick.length >= 15) return; if (k[0] === 'm') { if (nm >= 3) return; nm++; } if (k[0] === 'x') { if (nx >= 1) return; nx++; } pick.push(k); });
+  const pick = []; let nm = 0, nx = 0, nz = 0;
+  srsDue(now).sort((a, b) => dran(b) - dran(a)).forEach(k => { if (pick.length >= 15) return; if (k[0] === 'm') { if (nm >= 3) return; nm++; } if (k[0] === 'z') { if (nz >= 2) return; nz++; } if (k[0] === 'x') { if (nx >= 1) return; nx++; } pick.push(k); });
   return leMischen(pick.filter(k => k[0] !== 'x')).concat(pick.filter(k => k[0] === 'x'));
 }
 /* Freie Runde: bis zu 7 Quizfragen aus gespielten Kapiteln. Was du in freien Runden falsch hattest (S.weak), wird öfter gezogen.
    Eine Frage, die im Kapitel erst im zweiten Anlauf saß (S.quiz > 1), zählt wie ein solcher Fehler.
-   Dazu zieht jedes Thema, das bei dir wackelt (staerken.js), bis zu drei Lose mehr pro Frage. */
+   Dazu zieht jedes Thema, das bei dir wackelt (staerken.js), bis zu drei Lose mehr pro Frage.
+   Zuordnen (z:<kapitel>) ist mit im Topf, als Abwechslung höchstens zweimal pro Runde. Fehler dort zählen in S.weak['<kapitel>:zu']. */
 function leFreiPool() {
   const lose = [], sw = schwachKarte();
-  CH.filter(c => S.done[c.id] || S.steps[c.id]).forEach(c => c.quiz.forEach((q, i) => { const k = c.id + ':' + i, w = Math.min(((S.weak || {})[k] || 0) + (S.quiz[k] > 1 ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('q:' + c.id + ':' + i); }));
-  const pick = new Set(), max = Math.min(7, new Set(lose).size);
-  while (pick.size < max) pick.add(lose[Math.floor(Math.random() * lose.length)]);
+  CH.filter(c => S.done[c.id] || S.steps[c.id]).forEach(c => {
+    c.quiz.forEach((q, i) => { const k = c.id + ':' + i, w = Math.min(((S.weak || {})[k] || 0) + (S.quiz[k] > 1 ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('q:' + c.id + ':' + i); });
+    if (zuHat(c)) { const w = Math.min(((S.weak || {})[c.id + ':zu'] || 0) + ((S.zu || {})[c.id] ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('z:' + c.id); }
+  });
+  const qs = new Set(lose.filter(k => k[0] === 'q')).size, zs = new Set(lose.filter(k => k[0] === 'z')).size;
+  const pick = new Set(), max = Math.min(7, qs + Math.min(2, zs));
+  while (pick.size < max) { const k = lose[Math.floor(Math.random() * lose.length)]; if (k[0] !== 'z' || pick.has(k) || [...pick].filter(x => x[0] === 'z').length < 2) pick.add(k); }
   return leMischen([...pick]);
 }
 const leKopf = (titel, stand) => `<header class="le-kopf"><div class="ort"><a href="#start">← Schreibtisch</a>${stand ? '<p id="leStand" aria-live="polite"></p>' : ''}</div><h1>${titel}</h1>${stand ? '<div class="le-balken" aria-hidden="true"><i id="wdhBar"></i></div>' : ''}</header>`;
@@ -198,10 +206,10 @@ function leRunde(main, keys, frei, titel) {
         const u = S.ux || (S.ux = {}), st = u[card.ch.id] || (u[card.ch.id] = { r: 0, f: 0 }); st[g ? 'r' : 'f']++;
         if (g) xp += 20;
       } else if (frei) {
-        const w = S.weak || (S.weak = {}), wk = card.ch.id + ':' + card.i;
+        const w = S.weak || (S.weak = {}), wk = card.ch.id + ':' + (card.t === 'z' ? 'zu' : card.i);
         if (g) { xp += 5; if (++serie === 5) xp += 15; if (w[wk] > 1) w[wk]--; else delete w[wk]; }
         else { serie = 0; w[wk] = (w[wk] || 0) + 1; }
-      } else { srsGrade(item.k, g); xp += x ? (g ? 20 : 5) : 3; }
+      } else { srsGrade(item.k, g); xp += x ? (g ? 20 : 5) : card.t === 'z' ? (g ? 8 : 3) : 3; }
     }
     /* Nochmal, bis es sitzt: Was daneben war, kommt in dieser Runde wieder (höchstens zweimal) */
     if (g === 0 && item.again < 2 && !x) queue.splice(Math.min(queue.length, 3 + Math.floor(Math.random() * 2)), 0, { k: item.k, again: item.again + 1 });
@@ -239,6 +247,12 @@ function leRunde(main, keys, frei, titel) {
           weiterKnopf(body.firstElementChild);
         };
         if (frei || item.again) aufloesen(null); else askConf($('.conf-slot', body), aufloesen);
+      });
+    } else if (card.t === 'z') {
+      /* Zuordnen: die Fehler bestimmen die Bewertung (zuNote), ohne Sicherheitsfrage */
+      zuKarte(body, ch, label(ch.title), f => {
+        $('.zu-host', body).insertAdjacentHTML('afterend', `<div class="le-warum"><b>${f ? (f === 1 ? 'Fast.' : 'Daneben.') : 'Sitzt.'}</b> Alle Paare gefunden, ${zuFehlerText(f)}.</div>`);
+        fertig(item, zuNote(f)); weiterKnopf(body.firstElementChild);
       });
     } else if (card.t === 'm') {
       body.innerHTML = `<div class="le-karte">${label('Merksätze')}<h2 class="le-frage" tabindex="-1">Was nimmst du aus „${esc(ch.title)}“ mit?</h2><p class="le-hinweis">Erst aus dem Kopf. Stichworte reichen, im Kopf aufsagen zählt auch.</p>
@@ -307,7 +321,7 @@ function leRunde(main, keys, frei, titel) {
 const LE_DOI = 'https://doi.org/';
 const WISSEN = [
   { t: 'Verteilt wiederholen', was: 'Quizfragen kommen nach 1 Tag wieder, Merksätze nach 2, die Übung nach 4. Sitzt es, wächst der Abstand: etwa 3, 7, 18 Tage.', warum: 'Über Tage verteilt bleibt meist mehr hängen als alles an einem Stück.', q: [['Cepeda u. a. 2006, Psychological Bulletin (Meta-Analyse)', '10.1037/0033-2909.132.3.354'], ['Carpenter, Pan & Butler 2022, Nature Reviews Psychology (Überblick)', '10.1038/s44159-022-00089-1']] },
-  { t: 'Abrufen statt nachlesen', was: 'Quiz, „Was nimmst du mit?“ und Code aus dem Kopf: Du holst das Wissen selbst hervor.', warum: 'Sich zu erinnern festigt meist besser, als denselben Text nochmal zu lesen.', q: [['Roediger & Karpicke 2006, Psychological Science', '10.1111/j.1467-9280.2006.01693.x'], ['Yang u. a. 2021, Psychological Bulletin (Meta-Analyse, Unterricht)', '10.1037/bul0000309']] },
+  { t: 'Abrufen statt nachlesen', was: 'Quiz, Zuordnen, „Was nimmst du mit?“ und Code aus dem Kopf: Du holst das Wissen selbst hervor.', warum: 'Sich zu erinnern festigt meist besser, als denselben Text nochmal zu lesen.', q: [['Roediger & Karpicke 2006, Psychological Science', '10.1111/j.1467-9280.2006.01693.x'], ['Yang u. a. 2021, Psychological Bulletin (Meta-Analyse, Unterricht)', '10.1037/bul0000309']] },
   { t: 'Nochmal, bis es sitzt', was: 'Eine falsche Karte kommt in derselben Runde wieder und am nächsten Tag noch einmal.', warum: 'Bis zum Treffer üben und das an späteren Tagen wiederholen hält Wissen meist lange.', q: [['Rawson & Dunlosky 2022, Current Directions in Psychological Science (Überblick)', '10.1177/09637214221100484']] },
   { t: 'Mehr Übung, wo es hakt', was: 'Die App rechnet aus deinen Antworten, welche Themen wackeln. Die kommen öfter dran, und in Übungen kommt Hilfe früher.', warum: 'Übung, die sich nach deinem Stand richtet, bringt meist mehr als für alle die gleiche.', q: [['Kulik & Fletcher 2016, Review of Educational Research (Meta-Analyse, Tutor-Systeme)', '10.3102/0034654315581420']] },
   { t: 'Wie sicher bist du?', was: 'Beim Wiederholen sagst du vor der Auflösung, ob du sicher bist. Geratenes kommt früher wieder.', warum: 'Richtig geraten ist noch nicht gewusst. Und wer sicher war und danebenlag, behält die Korrektur meist besonders gut.', q: [['Metcalfe 2017, Annual Review of Psychology (Überblick)', '10.1146/annurev-psych-010416-044022']] },

@@ -1643,6 +1643,39 @@ body.es-an .main>.es{max-width:none}
 }
 .es-dick{margin-left:7px}
 
+/* ===== Zuordnen: Begriffe links, Aussagen rechts (zuordnen.js) =====
+   Zwei Spalten auch auf dem Handy: Begriffe sind kurz, Aussagen bekommen mehr Platz. Jede Karte ist ein großer Knopf (mind. 48 px),
+   gefundene Paare tragen dieselbe Nummer und Farbe (nie die Akzentfarbe, die heißt „gewählt“). Ausgewählt = Akzentfarbe, falsch = kurz rot und wackeln. */
+.zu-kp .q{margin-bottom:6px}
+.zu-h{color:var(--muted);font-size:15px;margin:0 0 14px}
+.zu-feld{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:12px;align-items:start}
+.zu-sp{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.zu-k{--kante:var(--edge);--zu-c:var(--grass);display:flex;align-items:center;gap:9px;width:100%;min-height:54px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 13px;cursor:pointer;font-size:15.5px;line-height:1.35;box-shadow:0 3px 0 var(--kante);overflow-wrap:anywhere;transition:transform .1s,box-shadow .1s,border-color .15s,background .2s;-webkit-tap-highlight-color:transparent}
+.zu-links .zu-k{font-weight:700}
+.zu-k code{font-size:.9em;background:none;padding:0;overflow-wrap:anywhere}
+.zu-k:hover:not(:disabled){border-color:var(--accent);--kante:var(--accent-line)}
+.zu-k:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--kante)}
+/* Gewählt: Die andere Spalte zeigt mit gestrichelter Kante, wo es weitergeht */
+.zu-k.zu-an{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-line);transform:translateY(2px)}
+.zu[data-wahl="l"] .zu-rechts .zu-k:not(:disabled),.zu[data-wahl="r"] .zu-links .zu-k:not(:disabled){border-style:dashed;border-color:var(--accent-line)}
+.zu-k.zu-no{border-color:var(--bad);background:var(--bad-soft);--kante:var(--bad-edge);animation:kpWackel .3s}
+/* Gefunden: gleiche Nummer, gleiche Farbe auf beiden Seiten */
+.zu-k[data-nr="2"]{--zu-c:var(--c-mia)} .zu-k[data-nr="3"]{--zu-c:var(--gold)} .zu-k[data-nr="4"]{--zu-c:var(--c-sara)} .zu-k[data-nr="5"]{--zu-c:var(--c-jonas)} .zu-k[data-nr="6"]{--zu-c:var(--w-web)}
+.zu-k.zu-ok{cursor:default;border-color:var(--zu-c);background:color-mix(in srgb,var(--zu-c) 12%,var(--surface));--kante:color-mix(in srgb,var(--zu-c) 55%,var(--line))}
+.zu-n{display:none}
+.zu-ok .zu-n{display:inline-grid;place-items:center;flex:none;width:24px;height:24px;border-radius:7px;background:var(--zu-c);color:var(--surface);font:700 13px/1 var(--f-mono)}
+.zu-msg{min-height:1.5em;margin:14px 0 0;color:var(--muted);font-size:15px}
+.zu-fertig .zu-msg{color:var(--ink);font-weight:700}
+.zu-act{margin:10px 0 0}
+.le-karte .zu{margin-top:12px}
+.le-karte .zu + .le-warum,.le-karte .zu-host + .le-warum{margin-top:12px}
+@media (max-width:520px){
+  .zu-feld{gap:8px;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+  .zu-sp{gap:8px}
+  .zu-k{min-height:50px;padding:9px 10px;font-size:14.5px;gap:7px;border-radius:11px}
+  .zu-ok .zu-n{width:21px;height:21px;font-size:12px}
+}
+
 </style>
 
 <header class="top">
@@ -2067,7 +2100,9 @@ async function runTests(src, tests, sandbox, setupBackend, extraMods) {
    und genau so sehen die Lernenden sie auch: AKTE und CH werden der Reihe nach befüllt.
 
    Neue Phase:   neue Datei mit passender Nummer, oben AKTE.push({ n: <neue eindeutige Kennung>, title, sub }).
-   Neues Kapitel: CH.push({ id, akt, title, tag, xp, ticket, story, slides, quiz, ex, merke }) in der Phase-Datei.
+   Neues Kapitel: CH.push({ id, akt, title, tag, xp, ticket, story, slides, quiz, ex, merke, paare }) in der Phase-Datei.
+                  paare: [[Begriff, Aussage], …] fürs Zuordnen, 3 bis 6 Stück, HTML wie im Quiz (<code>). Jede Aussage
+                  passt zu genau einem Begriff.
                   Am einfachsten ein vorhandenes Kapitel kopieren. Die id (z. B. 'k07') ist der Schlüssel im
                   gespeicherten Fortschritt: nie umbenennen, auch wenn ein Kapitel an eine andere Stelle wandert.
                   Die Nummer, die die App anzeigt, kommt aus der Position, nicht aus der id.
@@ -2193,7 +2228,14 @@ export class Anzeige {
       { name: 'Anfangs steht da Tickets: 0', run: T => { const f = T.mount(T.cmp('Anzeige')); T.ok(/Tickets:\s*0\b/.test(f.q('p').textContent), 'Im <p> soll „Tickets: 0“ stehen.'); } },
       { name: 'Ein Klick zählt hoch', run: async T => { const f = T.mount(T.cmp('Anzeige')); await f.click('button'); await f.click('button'); T.ok(/Tickets:\s*2\b/.test(f.q('p').textContent), 'Nach zwei Klicks soll „Tickets: 2“ dastehen. Ruft der Knopf erledigt() auf, und steht im <p> {{ tickets() }}?'); } }
     ] },
-  merke: ['Browser verstehen nur HTML, CSS, JavaScript. Angular erzeugt genau das.', 'Angular hält Daten und Bildschirm automatisch synchron.', 'Framework = fester Rahmen. Es ruft deinen Code (Hollywood-Prinzip).', 'AngularJS (alt, 2010) ≠ Angular (neu, seit 2016).']
+  merke: ['Browser verstehen nur HTML, CSS, JavaScript. Angular erzeugt genau das.', 'Angular hält Daten und Bildschirm automatisch synchron.', 'Framework = fester Rahmen. Es ruft deinen Code (Hollywood-Prinzip).', 'AngularJS (alt, 2010) ≠ Angular (neu, seit 2016).'],
+  paare: [
+    ['HTML', 'Die Struktur: Überschrift, Knopf, Liste'],
+    ['CSS', 'Das Aussehen: Farben, Abstände, Schrift'],
+    ['JavaScript', 'Das Verhalten: Klick, und etwas passiert'],
+    ['Framework', 'Fester Rahmen, der deinen Code aufruft'],
+    ['SPA', 'Eine Seite lädt, danach tauscht Angular nur Inhalte aus']
+  ]
 },
 {
   id: 'g02', akt: 0, title: 'Was passiert beim Start?', tag: 'index.html · main.ts · Komponenten-Baum', xp: 40,
@@ -2254,7 +2296,13 @@ App                 (app-root)
     { q: 'Was macht der Aufruf bootstrapApplication(App) in der Datei main.ts?', options: ['Er übersetzt TypeScript in JavaScript', 'Er startet Angular mit App als oberster Komponente', 'Er lädt die index.html vom Server', 'Er installiert die Angular-Pakete'], correct: 1, why: 'Das ist der Startschuss: Angular setzt die Komponente App in <app-root> ein, und von dort wächst der Komponenten-Baum.' },
     { q: 'Ein Signal ändert seinen Wert. Was macht Angular daraufhin?', options: ['Angular lädt die Seite neu', 'Angular prüft jede Komponente der App', 'Angular aktualisiert nur die Stellen, die das Signal benutzen', 'Angular macht nichts, bis du die Seite neu lädst'], correct: 2, why: 'Angular weiß, welche Stellen das Signal lesen, und aktualisiert nur diese. Genau das macht Signals so stark.' }
   ],
-  merke: ['index.html ist fast leer. Angular baut alles in <app-root>.', 'main.ts startet alles mit bootstrapApplication.', 'Komponenten bilden einen Baum. Daten runter, Meldungen hoch.', 'Signal ändert sich → nur die betroffene Stelle wird neu gemalt.']
+  merke: ['index.html ist fast leer. Angular baut alles in <app-root>.', 'main.ts startet alles mit bootstrapApplication.', 'Komponenten bilden einen Baum. Daten runter, Meldungen hoch.', 'Signal ändert sich → nur die betroffene Stelle wird neu gemalt.'],
+  paare: [
+    ['<code>index.html</code>', 'Fast leere Seite mit nur einem eigenen Tag'],
+    ['<code>main.ts</code>', 'Startet Angular mit bootstrapApplication'],
+    ['Komponenten-Baum', 'Daten fließen runter, Meldungen hoch'],
+    ['Tree-Shaking', 'Unbenutzter Code fliegt beim Build raus']
+  ]
 }
 );
 
@@ -2381,7 +2429,14 @@ export const karte = \`
       { name: 'Knopf zum Speichern', run: T => { const b = bHtml(T.get('karte')).querySelector('.karte button'); T.ok(b, 'Kein <button> in der Karte gefunden.'); T.eq(b.textContent.trim(), 'Speichern', 'Auf dem Knopf soll Speichern stehen.'); } },
       { name: 'Alles steht in der Karte', run: T => T.eq([...bHtml(T.get('karte')).children].map(e => e.tagName.toLowerCase() + '.' + e.className), ['div.karte'], 'Alles gehört in den einen <div class="karte">. Steht etwas nach dem </div>?') }
     ] },
-  merke: ['Element = Start-Tag, Inhalt, End-Tag.', 'Attribute stehen im Start-Tag: name="wert".', 'class ist ein Name für CSS. label for gehört zur id eines Felds.', 'Attribut = Startwert im HTML. DOM-Property = Wert gerade jetzt.']
+  merke: ['Element = Start-Tag, Inhalt, End-Tag.', 'Attribute stehen im Start-Tag: name="wert".', 'class ist ein Name für CSS. label for gehört zur id eines Felds.', 'Attribut = Startwert im HTML. DOM-Property = Wert gerade jetzt.'],
+  paare: [
+    ['Element', 'Start-Tag, Inhalt, End-Tag'],
+    ['Attribut', 'Zusatzinfo im Start-Tag: name="wert"'],
+    ['<code><a></code>', 'Ein Link, das Ziel steht in href'],
+    ['<code><ul></code> und <code><li></code>', 'Eine Liste und ihre Punkte'],
+    ['DOM-Property', 'Der Wert des Elements gerade jetzt']
+  ]
 },
 {
   id: 'b02', akt: 'B', title: 'CSS in kurz', tag: 'Selektor · Klasse · Box-Modell · Flexbox', xp: 50,
@@ -2476,7 +2531,14 @@ export const stil = \`
         const s = bStil(T.get('stil')); T.ok(s.titel !== s.rolle, 'Der Name hat noch dieselbe Farbe wie die Rolle. Gib .titel eine eigene color.');
       } }
     ] },
-  merke: ['Selektor { eigenschaft: wert; }', '.name trifft eine Klasse, #name eine id.', 'Box-Modell: Inhalt, padding, border, margin.', 'display: flex stellt Kinder nebeneinander, gap macht Abstand.']
+  merke: ['Selektor { eigenschaft: wert; }', '.name trifft eine Klasse, #name eine id.', 'Box-Modell: Inhalt, padding, border, margin.', 'display: flex stellt Kinder nebeneinander, gap macht Abstand.'],
+  paare: [
+    ['Selektor', 'Sagt, wen eine CSS-Regel trifft'],
+    ['<code>.name</code>', 'Trifft alle Elemente mit dieser Klasse'],
+    ['<code>#name</code>', 'Trifft das Element mit dieser id'],
+    ['<code>padding</code>', 'Innenabstand zwischen Inhalt und Rahmen'],
+    ['<code>display: flex</code>', 'Stellt die Kinder nebeneinander']
+  ]
 },
 {
   id: 'b03', akt: 'B', title: 'TypeScript: Typen und Funktionen', tag: 'Typen · Pfeilfunktion · ? : · ?? · ?.', xp: 60,
@@ -2573,7 +2635,14 @@ export function stadtVon(kunde: { name: string; adresse?: { stadt: string } }): 
         T.eq(r, 'keine Angabe', "Ohne adresse soll keine Angabe kommen. Häng ?? 'keine Angabe' an.");
       } }
     ] },
-  merke: ['name: string, tickets: number, fertig: boolean, team: string[].', '(x: number) => x * 2 heißt: nimm x, gib x mal 2 zurück.', 'a ? b : c = wenn a, dann b, sonst c.', 'a ?? b = a, außer a ist null/undefined. a?.b = kein Absturz, wenn a fehlt.']
+  merke: ['name: string, tickets: number, fertig: boolean, team: string[].', '(x: number) => x * 2 heißt: nimm x, gib x mal 2 zurück.', 'a ? b : c = wenn a, dann b, sonst c.', 'a ?? b = a, außer a ist null/undefined. a?.b = kein Absturz, wenn a fehlt.'],
+  paare: [
+    ['<code>string[]</code>', 'Eine Liste von Texten'],
+    ['<code>(x: number) => x * 2</code>', 'Nimmt x, gibt das Doppelte zurück'],
+    ['<code>a ? b : c</code>', 'Wenn a, dann b, sonst c'],
+    ['<code>a ?? b</code>', 'a, außer a ist null oder undefined'],
+    ['<code>a?.b</code>', 'Liest b ohne Absturz, wenn a fehlt']
+  ]
 },
 {
   id: 'b04', akt: 'B', title: 'TypeScript: Klassen', tag: 'class · constructor · this · get · extends · abstract', xp: 60,
@@ -2699,7 +2768,14 @@ export class Bug extends Aufgabe {
       { name: 'kurz rechnet mit den Feldern', run: T => { const B = T.get('Bug'); T.eq([new B('Login reparieren', 3).kurz, new B('Export bauen', 5).kurz], ['Login reparieren (3 h)', 'Export bauen (5 h)'], 'kurz soll Titel und Stunden so zeigen: Login reparieren (3 h).'); } },
       { name: 'Bug erbt von Aufgabe', run: T => { const b = new (T.get('Bug'))('x', 1); T.ok(b instanceof T.get('Aufgabe'), 'Bug muss mit extends Aufgabe von Aufgabe erben.'); T.eq(b.art(), 'Bug', 'art() soll in Bug den Text Bug zurückgeben.'); } }
     ] },
-  merke: ['class = Bauplan, new baut ein Objekt danach.', 'constructor setzt Startwerte, this ist das Objekt selbst.', 'get name() liest sich wie ein Feld und rechnet bei jedem Lesen.', 'extends erbt alles. abstract = nur Vorlage, Lücken füllen die Erben.']
+  merke: ['class = Bauplan, new baut ein Objekt danach.', 'constructor setzt Startwerte, this ist das Objekt selbst.', 'get name() liest sich wie ein Feld und rechnet bei jedem Lesen.', 'extends erbt alles. abstract = nur Vorlage, Lücken füllen die Erben.'],
+  paare: [
+    ['<code>class</code>', 'Bauplan für Objekte'],
+    ['<code>new</code>', 'Baut ein Objekt nach dem Bauplan'],
+    ['<code>constructor</code>', 'Setzt die Startwerte beim Bauen'],
+    ['<code>get name()</code>', 'Liest sich wie ein Feld, rechnet bei jedem Lesen'],
+    ['<code>abstract</code>', 'Nur Vorlage zum Erben, nicht selbst baubar']
+  ]
 },
 {
   id: 'b05', akt: 'B', title: 'TypeScript: Listen und Objekte', tag: 'map · filter · reduce · Spread · Destrukturierung', xp: 70,
@@ -2855,7 +2931,14 @@ export function zeile(t: Ticket): string {
         T.ok(/\{\s*(titel\s*,\s*stunden|stunden\s*,\s*titel)\s*\}\s*[=:]/.test(T.code), 'Pack die Felder mit const { titel, stunden } = t; aus.');
       } }
     ] },
-  merke: ['map verwandelt jedes Element, filter siebt aus. Beide geben eine neue Liste.', 'reduce((zwischen, x) => …, start) macht aus einer Liste einen Wert.', '[...liste, neu] und { ...obj, feld: wert } = Kopie mit Änderung.', 'const { a } = obj und const [x, y] = liste packen aus.']
+  merke: ['map verwandelt jedes Element, filter siebt aus. Beide geben eine neue Liste.', 'reduce((zwischen, x) => …, start) macht aus einer Liste einen Wert.', '[...liste, neu] und { ...obj, feld: wert } = Kopie mit Änderung.', 'const { a } = obj und const [x, y] = liste packen aus.'],
+  paare: [
+    ['<code>map</code>', 'Verwandelt jedes Element, gibt eine neue Liste'],
+    ['<code>filter</code>', 'Siebt Elemente aus, gibt eine neue Liste'],
+    ['<code>reduce</code>', 'Macht aus einer Liste einen einzigen Wert'],
+    ['<code>{ ...obj, a: 1 }</code>', 'Kopie des Objekts mit einer Änderung'],
+    ['<code>const { a } = obj</code>', 'Packt das Feld a in eine eigene Variable']
+  ]
 },
 {
   id: 'b06', akt: 'B', title: 'TypeScript: Warten können', tag: 'Promise · async · await · try/catch', xp: 60,
@@ -2937,7 +3020,13 @@ export async function teamText(api: () => Promise<string[]>): Promise<string> {
         T.eq(r, 'Server nicht erreichbar', 'Bei einem Fehler soll Server nicht erreichbar kommen.');
       } }
     ] },
-  merke: ['Promise = Wert für später, oder ein Fehler.', 'async function darf warten und gibt ein Promise zurück.', 'await wartet auf ein Promise und gibt sein Ergebnis.', 'try/catch fängt Fehler beim Warten ab. Immer an den Fehlerfall denken.']
+  merke: ['Promise = Wert für später, oder ein Fehler.', 'async function darf warten und gibt ein Promise zurück.', 'await wartet auf ein Promise und gibt sein Ergebnis.', 'try/catch fängt Fehler beim Warten ab. Immer an den Fehlerfall denken.'],
+  paare: [
+    ['Promise', 'Ein Wert, der später kommt, oder ein Fehler'],
+    ['<code>async</code>', 'Funktion darf warten und gibt ein Promise zurück'],
+    ['<code>await</code>', 'Wartet auf ein Promise und gibt sein Ergebnis'],
+    ['<code>try/catch</code>', 'Fängt Fehler beim Warten ab']
+  ]
 },
 {
   id: 'b07', akt: 'B', title: 'Die Werkbank', tag: 'Terminal · npm · ng · git · DevTools', xp: 60,
@@ -3039,7 +3128,14 @@ export function nodeReicht(ausgabe: string): boolean {
       { name: 'nodeReicht: alte Versionen', run: T => { const f = T.get('nodeReicht'); T.eq([f('v18.20.4'), f('v20.19.0')], [false, false], 'Unter Version 22 soll false kommen.'); } },
       { name: 'nodeReicht: Zahlen, nicht Texte', run: T => { const f = T.get('nodeReicht'); T.eq([f('v8.17.0'), f('v100.0.0')], [false, true], 'Als Text verglichen wäre "8" größer als "22". Mach mit Number() eine Zahl daraus.'); } }
     ] },
-  merke: ['Terminal: pwd = wo bin ich, ls = was liegt hier, cd = Ordner wechseln.', 'node -v prüfen, npm install, npm start.', 'ng new legt an, ng serve startet auf localhost:4200.', 'Git: status, add, commit, push. DevTools: Console, Elements, Network, Breakpoint.']
+  merke: ['Terminal: pwd = wo bin ich, ls = was liegt hier, cd = Ordner wechseln.', 'node -v prüfen, npm install, npm start.', 'ng new legt an, ng serve startet auf localhost:4200.', 'Git: status, add, commit, push. DevTools: Console, Elements, Network, Breakpoint.'],
+  paare: [
+    ['<code>pwd</code>', 'Zeigt, in welchem Ordner du gerade bist'],
+    ['<code>npm install</code>', 'Lädt alle Pakete aus package.json'],
+    ['<code>ng serve</code>', 'Startet die App auf localhost:4200'],
+    ['<code>git commit</code>', 'Speichert einen Schnappschuss deines Codes'],
+    ['Network-Tab', 'Zeigt jede Anfrage mit Statuscode']
+  ]
 }
 );
 
@@ -3102,7 +3198,14 @@ export function gruss(name: string): string {
       { name: 'gruss("Kerim") stimmt', run: T => T.eq(T.get('gruss')('Kerim'), 'Willkommen im Team, Kerim!', 'Text stimmt noch nicht. Achte auf Komma und Ausrufezeichen.') },
       { name: 'Klappt mit jedem Namen', run: T => T.eq(T.get('gruss')('Leon'), 'Willkommen im Team, Leon!', 'Steht "Kerim" fest drin? Nimm die Variable name.') }
     ] },
-  merke: ['App = Bausteine (Komponenten).', 'Komponente = Klasse (Daten) + Template (Aussehen).', '`Text ${wert}` setzt Werte ein.']
+  merke: ['App = Bausteine (Komponenten).', 'Komponente = Klasse (Daten) + Template (Aussehen).', '`Text ${wert}` setzt Werte ein.'],
+  paare: [
+    ['Komponente', 'Ein Baustein der App'],
+    ['Klasse', 'Hält die Daten der Komponente'],
+    ['Template', 'Beschreibt das Aussehen als HTML'],
+    ['Funktion', 'Etwas rein, etwas raus'],
+    ['<code>`Hallo ${name}`</code>', 'Setzt einen Wert in einen Text ein']
+  ]
 });
 
 CH.push({
@@ -3184,7 +3287,14 @@ export function brauchtTraining(entwickler: Entwickler): boolean {
       { name: 'brauchtTraining rechnet richtig', run: T => { const f = T.get('brauchtTraining'); T.eq([f(T.get('mo')), f(T.get('leon'))], [true, false], 'Mo (1 Ticket) braucht Training, Leon (12) nicht.'); } },
       { name: 'Genau 2 Tickets = kein Training', run: T => T.eq(T.get('brauchtTraining')({ id: 9, name: 'X', position: 'Frontend', tickets: 2 }), false, 'Bei 2 Tickets soll false kommen. Nimm < statt <=.') }
     ] },
-  merke: ['interface = Vorlage für Objekte.', "'A' | 'B' = nur A oder B.", '? = optional. any vermeiden.']
+  merke: ['interface = Vorlage für Objekte.', "'A' | 'B' = nur A oder B.", '? = optional. any vermeiden.'],
+  paare: [
+    ['<code>interface</code>', 'Vorlage: welche Felder ein Objekt haben muss'],
+    ['<code>\'A\' | \'B\'</code>', 'Nur genau einer dieser Werte ist erlaubt'],
+    ['<code>name?: string</code>', 'Optionales Feld, darf fehlen'],
+    ['<code>any</code>', 'Schaltet alle Typ-Prüfungen ab'],
+    ['<code>unknown</code>', 'Form unbekannt: erst prüfen, dann benutzen']
+  ]
 });
 
 CH.push({
@@ -3265,7 +3375,13 @@ export class EntwicklerKarte {}
       { name: '<h2> zeigt Leon', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('h2'), 'Kein <h2> gefunden. Schreib <h2>Leon</h2> zwischen die Backticks.'); T.eq(f.q('h2').textContent.trim(), 'Leon', 'Im <h2> soll genau Leon stehen.'); } },
       { name: '<p> zeigt Frontend', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('p'), 'Kein <p> gefunden. Schreib <p>Frontend</p> unter das h2.'); T.eq(f.q('p').textContent.trim(), 'Frontend', 'Im <p> soll genau Frontend stehen.'); } }
     ] },
-  merke: ['@Component macht eine Klasse zum Baustein.', 'selector = Tag-Name, template = HTML.', 'Standalone ist Standard.']
+  merke: ['@Component macht eine Klasse zum Baustein.', 'selector = Tag-Name, template = HTML.', 'Standalone ist Standard.'],
+  paare: [
+    ['<code>@Component</code>', 'Macht eine Klasse zum Baustein'],
+    ['<code>selector</code>', 'Der Tag-Name, unter dem man ihn benutzt'],
+    ['<code>template</code>', 'Das HTML des Bausteins'],
+    ['<code>imports</code>', 'Bausteine, die das Template benutzen darf']
+  ]
 });
 
 CH.push({
@@ -3349,7 +3465,13 @@ export class EntwicklerKarte {
       { name: 'p.punkte rechnet mal 100', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('p.punkte'), 'Kein <p class="punkte"> gefunden.'); T.eq(f.q('p.punkte').textContent.replace(/\s+/g, ' ').trim(), '300 Punkte', 'Bei 3 Tickets soll p.punkte „300 Punkte“ zeigen.'); T.ok(/\{\{\s*(this\.)?tickets\s*\*\s*100\s*\}\}|\{\{\s*100\s*\*\s*(this\.)?tickets\s*\}\}/.test(T.code), 'Die 300 soll im Template gerechnet werden. Steht {{ tickets * 100 }} im p.punkte?'); } },
       { name: 'Button hängt an krank', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('button'), 'Kein Button gefunden.'); T.eq(f.q('button').disabled, false, 'krank ist false, also soll der Button frei sein.'); T.ok(/\[disabled\]\s*=\s*"\s*(this\.)?krank\s*"/.test(T.code), 'Der Button soll an krank hängen. Steht [disabled]="krank" am Button?'); } }
     ] },
-  merke: ['{{ x }} zeigt einen Wert.', '[eigenschaft]="x" setzt eine Eigenschaft.', 'Daten fließen: Klasse → Bildschirm.']
+  merke: ['{{ x }} zeigt einen Wert.', '[eigenschaft]="x" setzt eine Eigenschaft.', 'Daten fließen: Klasse → Bildschirm.'],
+  paare: [
+    ['<code>{{ name }}</code>', 'Zeigt einen Wert aus der Klasse als Text'],
+    ['<code>[src]="bild"</code>', 'Setzt die Eigenschaft src des Elements'],
+    ['<code>[disabled]="voll"</code>', 'Knopf ist gesperrt, solange voll true ist'],
+    ['Signal', 'Nötig, damit sich die Anzeige von selbst ändert']
+  ]
 });
 
 CH.push({
@@ -3456,7 +3578,14 @@ export class SprintZaehler {
       { name: 'Zähler ändert sich von selbst', run: async T => { const f = T.mount(T.cmp('SprintZaehler')); f.instance.erledigt(); await T.flush(); T.ok(f.q('p.stand'), 'Kein <p class="stand">.'); T.eq(f.q('p.stand').textContent.trim(), '1', 'Zähler zeigt nicht 1. Liest das Template tickets()?'); } },
       { name: 'reset() setzt 0', run: T => { const f = T.mount(T.cmp('SprintZaehler')); f.instance.erledigt(); f.instance.reset(); T.eq(f.instance.tickets(), 0, 'Nach reset() soll 0 sein.'); T.ok(/tickets\.set\s*\(/.test(T.code), 'Nimm this.tickets.set(0).'); } }
     ] },
-  merke: ['signal(start) erstellt ein Signal.', 'Lesen s(), setzen s.set(v), ändern s.update(f).', 'Arrays neu bauen, nie push.']
+  merke: ['signal(start) erstellt ein Signal.', 'Lesen s(), setzen s.set(v), ändern s.update(f).', 'Arrays neu bauen, nie push.'],
+  paare: [
+    ['<code>signal(0)</code>', 'Erstellt ein Signal mit Startwert 0'],
+    ['<code>zahl()</code>', 'Liest den aktuellen Wert'],
+    ['<code>zahl.set(5)</code>', 'Setzt einen ganz neuen Wert'],
+    ['<code>zahl.update(n => n + 1)</code>', 'Ändert den Wert anhand des alten'],
+    ['<code>liste.update(l => [...l, x])</code>', 'Baut eine neue Liste, statt push']
+  ]
 });
 
 
@@ -3557,7 +3686,14 @@ export class KudosWand {
       { name: 'Feld ist nach Löschen leer', run: async T => { const f = T.mount(T.cmp('KudosWand')); await f.type('input', 'Kerim'); await f.click('button.loeschen'); T.eq(f.q('input').value, '', 'Nach Löschen soll auch das Eingabefeld leer sein. Hat das input [value]="name()"?'); } },
       { name: 'Kudos-Knopf zählt', run: async T => { const f = T.mount(T.cmp('KudosWand')); await f.click('button.kudos'); await f.click('button.kudos'); T.eq(f.q('span.kudos').textContent.trim(), '2', 'Nach 2 Klicks soll span.kudos 2 zeigen. Hat button.kudos ein (click) mit kudos.update(...)?'); } }
     ] },
-  merke: ['(event)="code" = HTML meldet an Klasse.', '$event = das Ereignis.', '[ ] rein, ( ) raus. [( )] für beides lernst du später mit model().']
+  merke: ['(event)="code" = HTML meldet an Klasse.', '$event = das Ereignis.', '[ ] rein, ( ) raus. [( )] für beides lernst du später mit model().'],
+  paare: [
+    ['<code>(click)="melden()"</code>', 'Ruft die Methode beim Klick auf'],
+    ['<code>$event</code>', 'Der Zettel mit allen Infos zum Ereignis'],
+    ['<code>$event.target</code>', 'Das Element, an dem es passiert ist'],
+    ['<code>[ ]</code>', 'Wert geht rein ins Element'],
+    ['<code>( )</code>', 'Meldung kommt raus zur Klasse']
+  ]
 });
 
 CH.push({
@@ -3641,7 +3777,13 @@ export class Team {
       { name: 'freiePlaetze nie unter 0', run: T => { const f = T.mount(T.cmp('Team')); T.eq(f.instance.freiePlaetze(), 4, 'Bei 7 Entwicklern sind 4 frei.'); f.instance.frontend.set(20); T.eq(f.instance.freiePlaetze(), 0, 'Bei 23 Entwicklern soll 0 kommen, nicht -12.'); } },
       { name: 'Template zeigt alles', run: async T => { const f = T.mount(T.cmp('Team')); T.eq(f.q('p.gesamt').textContent.trim(), '7', 'p.gesamt soll gesamt zeigen, am Anfang 7. Steht {{ gesamt() }} darin?'); T.ok(/4/.test(f.q('p.voll').textContent) && !/voll!/.test(f.q('p.voll').textContent), 'p.voll soll bei 7 „Noch 4 Plätze frei“ zeigen.'); f.instance.frontend.set(8); await T.flush(); T.ok(/voll/i.test(f.q('p.voll').textContent), 'Bei 11 soll p.voll „Team voll!“ zeigen.'); } }
     ] },
-  merke: ['computed(() => …) = abgeleiteter Wert.', 'Nur lesbar, rechnet selbst neu.', 'Was man ausrechnen kann, speichert man nicht.']
+  merke: ['computed(() => …) = abgeleiteter Wert.', 'Nur lesbar, rechnet selbst neu.', 'Was man ausrechnen kann, speichert man nicht.'],
+  paare: [
+    ['<code>signal([])</code>', 'Hält die Liste, du änderst sie selbst'],
+    ['<code>computed(() => team().length)</code>', 'Zählt von selbst mit, wenn sich team ändert'],
+    ['<code>team()</code>', 'Liest den aktuellen Wert'],
+    ['<code>anzahl.set(3)</code>', 'Geht nicht: ein computed ist nur lesbar']
+  ]
 });
 
 CH.push({
@@ -3755,7 +3897,14 @@ export class Besetzung {
       { name: 'p.viel nur bei mehr als 2', run: async T => { const f = T.mount(T.cmp('Besetzung')); T.ok(f.q('p.viel'), 'Bei 3 Entwicklern soll p.viel da sein.'); f.instance.entwickler.update(l => l.slice(0, 2)); await T.flush(); T.ok(!f.q('p.viel'), 'Bei 2 Entwicklern soll p.viel weg sein.'); } },
       { name: 'Leere Liste zeigt li.leer', run: async T => { const f = T.mount(T.cmp('Besetzung')); await f.click('button'); const lis = f.qa('ul li'); T.eq(lis.length, 1, 'Bei leerer Liste genau ein <li class="leer">. Nimm @empty.'); T.ok(lis[0].classList.contains('leer'), 'Das li braucht class="leer".'); } }
     ] },
-  merke: ['@for (x of liste(); track x.id) wiederholt.', '@empty für leere Listen.', '@if / @else if / @else entscheidet.']
+  merke: ['@for (x of liste(); track x.id) wiederholt.', '@empty für leere Listen.', '@if / @else if / @else entscheidet.'],
+  paare: [
+    ['<code>@for</code>', 'Wiederholt HTML für jedes Element'],
+    ['<code>track x.id</code>', 'Woran Angular jedes Element wiedererkennt'],
+    ['<code>@empty</code>', 'Wird gezeigt, wenn die Liste leer ist'],
+    ['<code>@if</code>', 'Zeigt HTML nur, wenn die Bedingung stimmt'],
+    ['<code>@else</code>', 'Zeigt HTML, wenn die Bedingung nicht stimmt']
+  ]
 });
 
 CH.push({
@@ -3887,7 +4036,13 @@ export class Besetzung {
       { name: 'Seite zeigt 3 Karten', run: T => { T.ok(/imports\s*:\s*\[\s*EntwicklerKarte/.test(T.code), 'Besetzung braucht EntwicklerKarte in imports: [...].'); const f = T.mount(T.cmp('Besetzung')); T.eq(f.qa('app-entwickler-karte').length, 3, 'Für 3 Entwickler sollen 3 <app-entwickler-karte> da sein. Steht die Karte in @for?'); T.eq(f.qa('app-entwickler-karte h3').map(h => h.textContent.trim()), ['Leon', 'Mo', 'Ben'], 'Die Karten sollen der Reihe nach Leon, Mo, Ben zeigen. Gibst du jeder Karte [entwickler]="person" mit?'); } },
       { name: 'Klick auf Mo landet bei der Seite', run: async T => { const f = T.mount(T.cmp('Besetzung')); await f.click(f.qa('app-entwickler-karte button')[1]); T.eq(f.instance.eingeplant(), [2], 'Nach Klick auf Mo soll eingeplant() [2] sein. Hört die Seite mit (einplanen)="rein($event)" zu, und hängt rein() die id an?'); T.ok(/1 eingeplant/.test(f.q('p.zaehler').textContent), 'p.zaehler soll „1 eingeplant“ zeigen, gefunden: „' + f.q('p.zaehler').textContent.trim() + '“.'); } }
     ] },
-  merke: ['input(): Daten von oben, lesen mit ().', 'output() + emit(): Ruf nach oben, kommt als $event.', 'Kinder in imports eintragen.']
+  merke: ['input(): Daten von oben, lesen mit ().', 'output() + emit(): Ruf nach oben, kommt als $event.', 'Kinder in imports eintragen.'],
+  paare: [
+    ['<code>input()</code>', 'Bekommt Daten vom Eltern-Baustein'],
+    ['<code>output()</code>', 'Kanal für Meldungen nach oben'],
+    ['<code>emit(wert)</code>', 'Schickt die Meldung jetzt ab'],
+    ['<code>$event</code>', 'Der gesendete Wert beim Eltern-Baustein']
+  ]
 });
 
 CH.push({
@@ -4015,7 +4170,14 @@ export class Kopfzeile {
       { name: 'team ist von außen nicht änderbar', run: T => { const s = T.inject(T.get('TeamService')); T.ok(typeof s.team === 'function' && !s.team.set, 'team hat noch .set(). Nimm this._team.asReadonly().'); } },
       { name: 'Kopfzeile nutzt den Service', run: async T => { T.ok(/inject\s*\(\s*TeamService\s*\)/.test(T.code), 'Kopfzeile soll inject(TeamService) benutzen.'); const f = T.mount(T.cmp('Kopfzeile')); T.eq(f.q('p.anzahl').textContent.trim(), '3 im Team', 'p.anzahl soll „3 im Team“ zeigen. Steht {{ service.anzahl() }} darin?'); T.inject(T.get('TeamService')).abziehen(1); await T.flush(); T.eq(f.q('p.anzahl').textContent.trim(), '2 im Team', 'Nach dem Abziehen im Service soll die Kopfzeile „2 im Team“ zeigen.'); } }
     ] },
-  merke: ['Service = geteilte Daten + Logik.', "@Service() = eine Instanz für die ganze App.", 'inject(X) nur im Injection Context.', 'Privat ändern, öffentlich readonly.']
+  merke: ['Service = geteilte Daten + Logik.', "@Service() = eine Instanz für die ganze App.", 'inject(X) nur im Injection Context.', 'Privat ändern, öffentlich readonly.'],
+  paare: [
+    ['Service', 'Geteilte Daten und Logik an einer Stelle'],
+    ['<code>@Service()</code>', 'Eine Instanz für die ganze App'],
+    ['<code>inject(X)</code>', 'Fordert den Service an'],
+    ['<code>private</code>', 'Nur der Service selbst darf ändern'],
+    ['<code>asReadonly()</code>', 'Alle anderen dürfen nur lesen']
+  ]
 });
 
 CH.push({
@@ -4145,7 +4307,13 @@ export class RecruitingService {
       { name: 'umschalten und anzahl klappen noch', run: T => { const s = T.inject(T.get('RecruitingService')); s.umschalten(1); s.umschalten(3); T.eq(s.merkliste(), [1, 3], 'Nach umschalten(1), umschalten(3) soll [1,3] drin sein.'); T.eq(s.anzahl(), 2, 'Bei 2 gemerkten Bewerbern soll anzahl 2 sein.'); s.umschalten(1); T.eq(s.merkliste(), [3], 'Nochmal umschalten(1) soll 1 entfernen.'); } },
       { name: 'Kein effect, der Signals setzt', run: T => T.ok(!/effect\s*\(\s*\(\s*\)\s*=>\s*\{?[^}]*\.(set|update)\(/.test(T.code), 'Im effect wird ein Signal gesetzt. Der effect soll nur speichern.') }
     ] },
-  merke: ['effect = Nebenwirkung bei Änderung.', 'Läuft am Anfang und danach bei jeder Änderung.', 'Ableiten immer mit computed.']
+  merke: ['effect = Nebenwirkung bei Änderung.', 'Läuft am Anfang und danach bei jeder Änderung.', 'Ableiten immer mit computed.'],
+  paare: [
+    ['<code>effect()</code>', 'Führt Code aus, wenn ein gelesenes Signal sich ändert'],
+    ['<code>computed()</code>', 'Rechnet einen neuen Wert aus Signals aus'],
+    ['<code>localStorage.setItem(…)</code>', 'Speichern im Browser: typische Arbeit für effect'],
+    ['Signal im effect setzen', 'Warnzeichen: das ist ein verkleidetes computed']
+  ]
 });
 
 CH.push({
@@ -4189,7 +4357,14 @@ export class Team {
     { q: 'Warum hilft Dependency Injection beim Testen?', options: ['DI schreibt die Tests automatisch', 'Man kann echte Services leicht gegen Fakes tauschen', 'Mit DI braucht man keinen Test-Runner mehr', 'DI prüft beim Bauen, ob alle Services fehlerfrei sind'], correct: 1, why: 'Im Test tauschst du den echten Service gegen einen Fake. So braucht der Test keinen echten Server und bleibt schnell und stabil.' },
     { q: 'Im Code deiner Firma steht *ngFor. Was ist das?', options: ['Ein Tippfehler, der den Build bricht', 'Die alte Schreibweise von @for', 'Ein RxJS-Operator für Listen', 'Eine neue Schreibweise seit Angular 22'], correct: 1, why: '*ngFor funktioniert noch, ist aber die alte Schreibweise von @for. Die Angular CLI kann solchen Code automatisch auf @for umbauen.' }
   ],
-  merke: ['Angular ist „opinionated“: ein empfohlener Weg für fast alles.', 'Immer TypeScript, Decorators, DI, und RxJS ist eingebaut.', 'Altes Angular (NgModule, *ngIf, @Input) und neues (standalone, @if, input()) musst du beide lesen können.', 'Regelmäßig neue Hauptversionen (bis Angular 22 alle 6 Monate, seitdem alle 12 Monate). Bei Anleitungen aufs Datum achten.']
+  merke: ['Angular ist „opinionated“: ein empfohlener Weg für fast alles.', 'Immer TypeScript, Decorators, DI, und RxJS ist eingebaut.', 'Altes Angular (NgModule, *ngIf, @Input) und neues (standalone, @if, input()) musst du beide lesen können.', 'Regelmäßig neue Hauptversionen (bis Angular 22 alle 6 Monate, seitdem alle 12 Monate). Bei Anleitungen aufs Datum achten.'],
+  paare: [
+    ['Opinionated', 'Ein empfohlener Weg für fast alles'],
+    ['Dependency Injection', 'Angular liefert Services, du fragst nur danach'],
+    ['<code>*ngIf</code>', 'Alte Schreibweise, heute @if'],
+    ['<code>@Input()</code>', 'Alter Decorator, heute input()'],
+    ['Zone.js', 'Weckte Angular früher bei jedem Klick und Timer']
+  ]
 });
 
 /* ================= Phase: WIE DAS WEB FUNKTIONIERT =================
@@ -4295,7 +4470,14 @@ export function zerlege(adresse: string) {
       { name: 'Pfad stimmt', run: T => T.eq(T.get('zerlege')('https://pixelwerk.de/team/leon?tab=zeiten').pfad, '/team/leon', 'pfad soll "/team/leon" sein.') },
       { name: 'Query als Objekt', run: T => T.eq(T.get('zerlege')('https://pixelwerk.de/t?tab=zeiten&monat=mai').query, { tab: 'zeiten', monat: 'mai' }, 'query soll { tab: "zeiten", monat: "mai" } sein.') }
     ] },
-  merke: ['URL = Protokoll + Host + Port + Pfad + Query + Anker.', 'DNS → Verbindung → TLS → Anfrage → Antwort.', 'HTTP kommt immer als Paar: Request und Response.', 'F12 → Network ist dein bester Freund.']
+  merke: ['URL = Protokoll + Host + Port + Pfad + Query + Anker.', 'DNS → Verbindung → TLS → Anfrage → Antwort.', 'HTTP kommt immer als Paar: Request und Response.', 'F12 → Network ist dein bester Freund.'],
+  paare: [
+    ['DNS', 'Telefonbuch: Name zu IP-Adresse'],
+    ['TLS', 'Verschlüsselt die Verbindung'],
+    ['Request', 'Die Frage des Browsers an den Server'],
+    ['Response', 'Die Antwort des Servers'],
+    ['Query <code>?q=angular</code>', 'Zusatzangaben hinter dem Fragezeichen']
+  ]
 },
 {
   id: 'w02', akt: 'W', title: 'HTTP: Methoden & Statuscodes', tag: 'GET · POST · 200 · 404 · 500', xp: 60,
@@ -4366,7 +4548,14 @@ export function darfWiederholen(methode: string): boolean {
       { name: 'GET, PUT, DELETE dürfen wiederholt werden', run: T => { const f = T.get('darfWiederholen'); T.eq(['GET', 'PUT', 'DELETE', 'get'].map(f), [true, true, true, true], 'GET, PUT, DELETE (auch klein geschrieben) sollen true sein.'); } },
       { name: 'POST und PATCH nicht', run: T => { const f = T.get('darfWiederholen'); T.eq(['POST', 'PATCH'].map(f), [false, false], 'POST und PATCH sind nicht idempotent → false.'); } }
     ] },
-  merke: ['GET holen, POST anlegen, PUT ersetzen, PATCH teilweise ändern, DELETE löschen.', '2xx gut, 3xx woanders, 4xx du, 5xx Server.', '401 = nicht eingeloggt, 403 = nicht erlaubt.', 'Nur idempotente Anfragen automatisch wiederholen.']
+  merke: ['GET holen, POST anlegen, PUT ersetzen, PATCH teilweise ändern, DELETE löschen.', '2xx gut, 3xx woanders, 4xx du, 5xx Server.', '401 = nicht eingeloggt, 403 = nicht erlaubt.', 'Nur idempotente Anfragen automatisch wiederholen.'],
+  paare: [
+    ['GET', 'Holen, ändert nichts'],
+    ['POST', 'Etwas neu anlegen'],
+    ['401', 'Nicht eingeloggt'],
+    ['403', 'Eingeloggt, aber nicht erlaubt'],
+    ['500', 'Fehler auf dem Server']
+  ]
 },
 {
   id: 'w03', akt: 'W', title: 'Header, JSON & REST', tag: 'Wie man mit APIs redet', xp: 60,
@@ -4435,7 +4624,14 @@ export function anfrage(aktion: Aktion, id?: number) {
       { name: 'aendern → PUT mit id', run: T => T.eq(T.get('anfrage')('aendern', 3), { methode: 'PUT', url: '/api/entwickler/3' }, 'Ändern = PUT /api/entwickler/3.') },
       { name: 'loeschen → DELETE mit id', run: T => T.eq(T.get('anfrage')('loeschen', 9), { methode: 'DELETE', url: '/api/entwickler/9' }, 'Löschen = DELETE /api/entwickler/9.') }
     ] },
-  merke: ['Header = Zusatzinfos: Content-Type, Accept, Authorization, Cache-Control.', 'JSON ist Text. stringify hin, parse zurück. Kein Datum, keine Funktionen.', 'REST: URL = Ding, Methode = Aktion. Keine Verben in der URL.']
+  merke: ['Header = Zusatzinfos: Content-Type, Accept, Authorization, Cache-Control.', 'JSON ist Text. stringify hin, parse zurück. Kein Datum, keine Funktionen.', 'REST: URL = Ding, Methode = Aktion. Keine Verben in der URL.'],
+  paare: [
+    ['Content-Type', 'Was im Body steckt, z. B. application/json'],
+    ['Authorization', 'Der Ausweis, z. B. ein Bearer-Token'],
+    ['<code>JSON.parse</code>', 'Macht aus JSON-Text ein Objekt'],
+    ['<code>JSON.stringify</code>', 'Macht aus einem Objekt JSON-Text'],
+    ['<code>DELETE /api/entwickler/7</code>', 'Entwickler 7 löschen, sauber im REST-Stil']
+  ]
 },
 {
   id: 'w04', akt: 'W', title: 'CORS', tag: 'Same-Origin · Preflight · Proxy', xp: 80,
@@ -4528,7 +4724,14 @@ export function darfRein(origin: string, allow: string | null): boolean {
       { name: 'Nur das genaue Origin', run: T => { const f = T.get('darfRein'); T.eq([f('http://localhost:4200', 'http://localhost:4200'), f('http://evil.de', 'http://localhost:4200')], [true, false], 'Genau gleich → true, anderes → false.'); } },
       { name: 'Kein Header → draußen', run: T => T.eq(T.get('darfRein')('http://localhost:4200', null), false, 'allow ist null → false.') }
     ] },
-  merke: ['Origin = Protokoll + Host + Port.', 'CORS ist ein Browser-Schutz. Der SERVER erlaubt per Access-Control-Allow-Origin.', 'Bei JSON-Anfragen klopft der Browser vorher mit OPTIONS an (Preflight).', 'Beim Entwickeln: proxy.conf.json mit ng serve.']
+  merke: ['Origin = Protokoll + Host + Port.', 'CORS ist ein Browser-Schutz. Der SERVER erlaubt per Access-Control-Allow-Origin.', 'Bei JSON-Anfragen klopft der Browser vorher mit OPTIONS an (Preflight).', 'Beim Entwickeln: proxy.conf.json mit ng serve.'],
+  paare: [
+    ['Origin', 'Protokoll + Host + Port'],
+    ['Same-Origin-Policy', 'JavaScript liest nur Antworten vom eigenen Origin'],
+    ['Access-Control-Allow-Origin', 'Damit erlaubt der Server ein fremdes Origin'],
+    ['Preflight', 'Der Browser fragt vorher mit OPTIONS'],
+    ['Proxy', 'ng serve reicht /api durch: gleiches Origin']
+  ]
 },
 {
   id: 'w05', akt: 'W', title: 'Cookies, Storage & Tokens', tag: 'Login verstehen · JWT', xp: 80,
@@ -4603,7 +4806,14 @@ export function abgelaufen(inhalt: { exp: number }, jetztSek: number): boolean {
       { name: 'Abgelaufen erkannt', run: T => { const f = T.get('abgelaufen'); T.eq([f({ exp: 100 }, 200), f({ exp: 200 }, 200)], [true, true], 'exp 100 bei jetzt 200 → abgelaufen. Genau gleich auch.'); } },
       { name: 'Noch gültig erkannt', run: T => T.eq(T.get('abgelaufen')({ exp: 300 }, 200), false, 'exp 300 bei jetzt 200 → noch gültig → false.') }
     ] },
-  merke: ['HTTP vergisst alles: Cookie oder Token bei jeder Anfrage.', 'Cookie-Flags: HttpOnly, Secure, SameSite.', 'JWT = Kopf.Inhalt.Stempel. Inhalt ist für alle lesbar, prüfen kann nur der Server.', 'Interceptor hängt den Token an jede Anfrage.']
+  merke: ['HTTP vergisst alles: Cookie oder Token bei jeder Anfrage.', 'Cookie-Flags: HttpOnly, Secure, SameSite.', 'JWT = Kopf.Inhalt.Stempel. Inhalt ist für alle lesbar, prüfen kann nur der Server.', 'Interceptor hängt den Token an jede Anfrage.'],
+  paare: [
+    ['Cookie', 'Der Server legt es ab, der Browser schickt es mit'],
+    ['localStorage', 'Bleibt für immer, JavaScript kann es lesen'],
+    ['sessionStorage', 'Weg, sobald der Tab zu ist'],
+    ['HttpOnly', 'JavaScript kommt an dieses Cookie nicht ran'],
+    ['JWT', 'Kopf.Inhalt.Stempel, der Inhalt ist für alle lesbar']
+  ]
 },
 {
   id: 'g06', akt: 'W', title: 'Sicherheit', tag: 'Was Angular schützt, was nicht', xp: 70,
@@ -4642,7 +4852,14 @@ name = signal('<img src=x onerror="klauDaten()">');
     { q: 'Ein Nutzer gibt als Namen <img onerror="…"> ein. Was zeigt das Template an der Stelle {{ name() }}?', options: ['Der Browser führt das Script aus', 'Die Eingabe erscheint als harmloser Text', 'Es erscheint ein kaputtes Bild', 'Angular entfernt den Tag, es erscheint nichts'], correct: 1, why: 'Angular wandelt Sonderzeichen in {{ }} automatisch in harmlosen Text um (Escaping). Das ist der eingebaute Schutz vor XSS.' },
     { q: 'Ein Knopf ist mit [disabled] gesperrt. Ist die Aktion damit sicher verboten?', options: ['Ja, ein gesperrter Knopf kann nichts auslösen', 'Nein, der Server muss es prüfen', 'Ja, wenn zusätzlich ein Route Guard die Seite sperrt', 'Ja, solange der Code minifiziert ist'], correct: 1, why: 'Jeder kann die Anfrage auch ohne Knopf direkt an den Server schicken. Echten Schutz gibt es deshalb nur auf dem Server.' }
   ],
-  merke: ['Alles im Browser ist sichtbar und änderbar. Geheimnisse gehören auf den Server.', 'Echte Prüfung passiert immer auf dem Server, nie nur im Frontend.', 'Angular schützt automatisch vor XSS, solange du nicht bypassSecurityTrust… benutzt oder innerHTML direkt am DOM setzt.', 'Tokens gut aufbewahren, Pakete aktuell halten.']
+  merke: ['Alles im Browser ist sichtbar und änderbar. Geheimnisse gehören auf den Server.', 'Echte Prüfung passiert immer auf dem Server, nie nur im Frontend.', 'Angular schützt automatisch vor XSS, solange du nicht bypassSecurityTrust… benutzt oder innerHTML direkt am DOM setzt.', 'Tokens gut aufbewahren, Pakete aktuell halten.'],
+  paare: [
+    ['XSS', 'Fremdes JavaScript läuft in deiner Seite'],
+    ['<code>bypassSecurityTrust…</code>', 'Schaltet Angulars Schutz bewusst ab'],
+    ['<code>[disabled]</code>', 'Nur Komfort, kein Schutz'],
+    ['HttpOnly-Cookie', 'Token, an das kein Script rankommt'],
+    ['Server', 'Prüft Rechte und Daten, immer']
+  ]
 },
 {
   id: 'w06', akt: 'W', title: 'npm & Dependencies', tag: 'package.json · Versionen · Lockfile', xp: 80,
@@ -4745,7 +4962,14 @@ export function passt(bereich: string, version: string): boolean {
       { name: 'Nicht älter als die Angabe', run: T => { const f = T.get('passt'); T.eq([f('^21.2.0', '21.1.9'), f('~7.8.3', '7.8.1')], [false, false], '21.1.9 ist älter als 21.2.0 → false.'); } },
       { name: 'Exakt heißt exakt', run: T => { const f = T.get('passt'); T.eq([f('5.4.5', '5.4.5'), f('5.4.5', '5.4.6')], [true, false], 'Ohne Zeichen nur genau gleich.'); } }
     ] },
-  merke: ['npm lädt Pakete in node_modules. Nie ins Git, nie per Hand ändern.', 'dependencies = braucht die App zur Laufzeit, devDependencies = nur zum Bauen/Testen. Ins Bundle kommt nur, was importiert wird.', 'MAJOR.MINOR.PATCH. ^ erlaubt MINOR+PATCH, ~ nur PATCH.', 'package-lock.json gehört ins Git. npm ci für exakt gleiche Versionen.']
+  merke: ['npm lädt Pakete in node_modules. Nie ins Git, nie per Hand ändern.', 'dependencies = braucht die App zur Laufzeit, devDependencies = nur zum Bauen/Testen. Ins Bundle kommt nur, was importiert wird.', 'MAJOR.MINOR.PATCH. ^ erlaubt MINOR+PATCH, ~ nur PATCH.', 'package-lock.json gehört ins Git. npm ci für exakt gleiche Versionen.'],
+  paare: [
+    ['MAJOR', 'Kann deinen Code kaputt machen'],
+    ['PATCH', 'Nur Fehler behoben'],
+    ['<code>^21.0.0</code>', 'Erlaubt 21.x.x, aber nicht 22'],
+    ['<code>~7.8.0</code>', 'Erlaubt nur 7.8.x'],
+    ['<code>npm ci</code>', 'Installiert genau die Versionen aus dem Lockfile']
+  ]
 },
 {
   id: 'w07', akt: 'W', title: 'HTTPS & Caching', tag: 'Verschlüsselung · Cache · CDN', xp: 50,
@@ -4771,7 +4995,14 @@ export function passt(bereich: string, version: string): boolean {
     { q: 'Warum darf der Browser eine Datei wie main-AB12CD.js aus dem Angular-Build beliebig lange cachen?', options: ['Weil die Datei klein ist', 'Weil sich bei jeder Änderung der Dateiname ändert', 'Weil alte Versionen niemanden stören', 'Das darf er gar nicht'], correct: 1, why: 'Ändert sich der Code, bekommt die Datei einen neuen Namen. Der Browser lädt sie dann neu herunter.' },
     { q: 'Was bedeutet der HTTP-Statuscode 304?', options: ['Auf dem Server ist ein Fehler passiert', 'Nichts hat sich geändert, nimm deine gespeicherte Kopie', 'Die Ressource wurde gelöscht', 'Die Adresse hat sich dauerhaft geändert'], correct: 1, why: '304 heißt Not Modified: Der Browser benutzt seine Kopie aus dem Cache und lädt nichts neu.' }
   ],
-  merke: ['HTTPS = verschlüsselt, echt, unverändert.', 'Cache-Control sagt, wie lange gespeichert wird.', 'Angular-Dateien haben Fingerabdrücke im Namen → ewig cachen ok.', 'CDN + Kompression = schnell überall.']
+  merke: ['HTTPS = verschlüsselt, echt, unverändert.', 'Cache-Control sagt, wie lange gespeichert wird.', 'Angular-Dateien haben Fingerabdrücke im Namen → ewig cachen ok.', 'CDN + Kompression = schnell überall.'],
+  paare: [
+    ['HTTPS', 'HTTP mit Verschlüsselung'],
+    ['<code>max-age=31536000</code>', 'Ein Jahr lang behalten'],
+    ['<code>no-cache</code>', 'Speichern, aber vor jeder Nutzung nachfragen'],
+    ['<code>no-store</code>', 'Gar nicht speichern'],
+    ['CDN', 'Kopien deiner Dateien weltweit, nah am Nutzer']
+  ]
 },
 {
   id: 'w08', akt: 'W', title: 'Die Event Loop', tag: 'Call Stack · Microtasks · Timer', xp: 90,
@@ -4924,7 +5155,14 @@ export const ausgabe4: string[] = ['A', 'C', 'B'];
       { name: 'Schnipsel 3: ein Timer stößt ein Promise an', run: T => elVorhersage(T, 3, 'Was passiert direkt nach dem ersten Timer, bevor der zweite drankommt?') },
       { name: 'Schnipsel 4: Mias Bug', run: T => elVorhersage(T, 4, 'Auch ein Promise, das schon fertig ist, ruft then nicht sofort auf. Wer ist trotzdem schneller als ein Timer?') }
     ] },
-  merke: ['JavaScript macht eins nach dem anderen. Laufender Code wird immer zu Ende ausgeführt.', 'Reihenfolge: laufender Code → alle Microtasks → EINE Macrotask → wieder alle Microtasks.', 'Promise.then und alles nach await sind Microtasks, setTimeout ist eine Macrotask.', 'setTimeout(…, 0) ist kein Fix, nur eine andere Reihenfolge.']
+  merke: ['JavaScript macht eins nach dem anderen. Laufender Code wird immer zu Ende ausgeführt.', 'Reihenfolge: laufender Code → alle Microtasks → EINE Macrotask → wieder alle Microtasks.', 'Promise.then und alles nach await sind Microtasks, setTimeout ist eine Macrotask.', 'setTimeout(…, 0) ist kein Fix, nur eine andere Reihenfolge.'],
+  paare: [
+    ['Call Stack', 'Der Code, der gerade läuft'],
+    ['Microtask', 'Promise.then und alles nach await'],
+    ['Macrotask', 'Ein Timer, ein Klick: genau einer pro Runde'],
+    ['Long Task', 'Läuft über 50 ms, die Seite friert ein'],
+    ['<code>setTimeout(…, 0)</code>', 'Kein Fix, nur eine andere Reihenfolge']
+  ]
 }
 ];
 CH.push(...WEB_CH);
@@ -5025,7 +5263,14 @@ export function vorhang(): Observable<string> {
       { name: 'vorhang kommt nach ~50 ms', run: async T => { const r = await T.collect(T.get('vorhang')(), 150); T.eq(r.vals, ['Vorhang!'], 'Es soll „Vorhang!“ kommen.'); T.ok(r.complete, 'Danach complete.'); } },
       { name: 'Früh abbestellt = nichts', run: async T => { const got = []; const sub = T.get('vorhang')().subscribe(v => got.push(v)); await T.flush(10); sub.unsubscribe(); await T.flush(80); T.eq(got, [], 'Nach unsubscribe kam trotzdem was. Gib eine Aufräum-Funktion mit clearTimeout zurück.'); } }
     ] },
-  merke: ['Observable = Werte über Zeit: next, error, complete.', 'Lazy: ohne subscribe passiert nichts.', 'Aufräum-Funktion läuft beim unsubscribe.']
+  merke: ['Observable = Werte über Zeit: next, error, complete.', 'Lazy: ohne subscribe passiert nichts.', 'Aufräum-Funktion läuft beim unsubscribe.'],
+  paare: [
+    ['Observable', 'Schickt Werte über die Zeit'],
+    ['<code>subscribe</code>', 'Startet das Zuhören, vorher passiert nichts'],
+    ['<code>next</code>', 'Liefert einen neuen Wert'],
+    ['<code>complete</code>', 'Fertig, es kommt nichts mehr'],
+    ['<code>unsubscribe</code>', 'Hört auf, die Aufräum-Funktion läuft']
+  ]
 });
 
 CH.push({
@@ -5116,7 +5361,14 @@ export function nurPosition(pos: string) {
       { name: 'nurPosition("Frontend")', run: async T => { const sp = T.rx.from([{ name: 'Leon', position: 'Frontend' }, { name: 'Mo', position: 'Backend' }, { name: 'Ben', position: 'Frontend' }]); const r = await T.collect(sp.pipe(T.get('nurPosition')('Frontend'))); T.eq(r.vals.map(s => s.name), ['Leon', 'Ben'], 'Nur Leon und Ben sollen durch.'); } },
       { name: 'nurPosition("Backend")', run: async T => { const sp = T.rx.from([{ name: 'Leon', position: 'Frontend' }, { name: 'Mo', position: 'Backend' }]); const r = await T.collect(sp.pipe(T.get('nurPosition')('Backend'))); T.eq(r.vals.map(s => s.name), ['Mo'], 'Nur Mo soll durch.'); } }
     ] },
-  merke: ['pipe(op1, op2): oben nach unten.', 'map umwandeln, filter sieben, take begrenzen, tap gucken.', 'Eigener Operator = Funktion Observable → Observable.']
+  merke: ['pipe(op1, op2): oben nach unten.', 'map umwandeln, filter sieben, take begrenzen, tap gucken.', 'Eigener Operator = Funktion Observable → Observable.'],
+  paare: [
+    ['<code>pipe()</code>', 'Steckt Operatoren hintereinander'],
+    ['<code>map</code>', 'Wandelt jeden Wert um'],
+    ['<code>filter</code>', 'Lässt nur passende Werte durch'],
+    ['<code>take(3)</code>', 'Nimmt drei Werte, dann ist Schluss'],
+    ['<code>tap</code>', 'Guckt nur zu, ändert nichts']
+  ]
 });
 
 CH.push({
@@ -5194,7 +5446,13 @@ export class TicketService {
       { name: 'anzahl$ zählt mit', run: async T => { const s = T.inject(T.get('TicketService')); const got = []; s.anzahl$.subscribe(v => got.push(v)); s.kaufen('A'); s.kaufen('B'); s.stornieren('A'); T.eq(got, [0, 1, 2, 1], 'anzahl$ soll 0, 1, 2, 1 schicken.'); } },
       { name: 'meldungen: „X gekauft“', run: T => { const s = T.inject(T.get('TicketService')); const got = []; T.ok(s.meldungen && s.meldungen.subscribe, 'meldungen fehlt.'); s.meldungen.subscribe(m => got.push(m)); s.kaufen('C3'); T.eq(got, ['C3 gekauft'], 'Falsche Meldung.'); } }
     ] },
-  merke: ['Subject: Mikro, nur für Anwesende.', 'BehaviorSubject: Startwert, Neue kriegen den letzten Wert.', 'Intern privat, außen asObservable().']
+  merke: ['Subject: Mikro, nur für Anwesende.', 'BehaviorSubject: Startwert, Neue kriegen den letzten Wert.', 'Intern privat, außen asObservable().'],
+  paare: [
+    ['Subject', 'Durchsage: nur wer gerade zuhört, hört sie'],
+    ['BehaviorSubject', 'Hat einen Startwert, Neue bekommen den letzten'],
+    ['<code>next(x)</code>', 'Ins Mikro sprechen'],
+    ['<code>asObservable()</code>', 'Nach außen nur zum Zuhören']
+  ]
 });
 
 CH.push({
@@ -5311,7 +5569,14 @@ export function bieten(
       { name: 'Alte Anfrage wird abgebrochen', run: async T => { const s = new T.rx.Subject(); const api = q => T.rx.timer(500).pipe(T.op.map(() => ['Ergebnis ' + q])); const got = []; T.get('liveSuche')(s, api).subscribe(v => got.push(v)); s.next('Leon'); await T.flush(350); s.next('Mo'); await T.flush(1000); T.eq(got, [['Ergebnis Mo']], 'Das alte Ergebnis für "Leon" kam auch. Nimm switchMap.'); } },
       { name: 'bieten ignoriert Doppelklicks', run: async T => { const k = new T.rx.Subject(); let calls = 0; const api = () => { calls++; return T.rx.timer(100).pipe(T.op.map(() => 'ok')); }; const got = []; T.get('bieten')(k, api).subscribe(v => got.push(v)); k.next(); k.next(); k.next(); await T.flush(150); k.next(); await T.flush(150); T.eq(calls, 2, '3 schnelle Klicks = 1 Angebot, späterer Klick = 2. Nimm exhaustMap.'); T.eq(got, ['ok', 'ok'], 'Ergebnisse stimmen nicht.'); } }
     ] },
-  merke: ['map mit einer Anfrage ergibt ein Observable im Observable. Die vier …Map-Operatoren machen es flach.', 'switchMap: neu bricht alt ab (Suche).', 'concatMap: der Reihe nach. mergeMap: parallel.', 'exhaustMap: ignorieren, solange beschäftigt (Submit).', 'debounceTime + distinctUntilChanged = Live-Suche.']
+  merke: ['map mit einer Anfrage ergibt ein Observable im Observable. Die vier …Map-Operatoren machen es flach.', 'switchMap: neu bricht alt ab (Suche).', 'concatMap: der Reihe nach. mergeMap: parallel.', 'exhaustMap: ignorieren, solange beschäftigt (Submit).', 'debounceTime + distinctUntilChanged = Live-Suche.'],
+  paare: [
+    ['<code>switchMap</code>', 'Neu bricht alt ab: Live-Suche'],
+    ['<code>mergeMap</code>', 'Alle laufen gleichzeitig'],
+    ['<code>concatMap</code>', 'Eine nach der anderen: Speichern'],
+    ['<code>exhaustMap</code>', 'Ignoriert Neues, solange eine läuft: Bezahlen'],
+    ['<code>debounceTime</code>', 'Wartet, bis eine Weile nichts mehr kam']
+  ]
 });
 
 CH.push({
@@ -5422,7 +5687,13 @@ export class Team {
       { name: 'toSignal benutzt', run: T => T.ok(/toSignal\s*\(/.test(T.code), 'Nimm toSignal(...) als Brücke.') },
       { name: 'anzahlFrontend zählt', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(100); T.ok(T.isComputed(f.instance.anzahlFrontend), 'anzahlFrontend soll computed sein.'); T.eq(f.instance.anzahlFrontend(), 2, 'Es gibt 2 Frontend-Devs.'); } }
     ] },
-  merke: ['HttpClient gibt cold Observables.', 'toSignal(obs$, { initialValue }) = Brücke, räumt selbst auf.', 'httpResource() für reaktives Laden.']
+  merke: ['HttpClient gibt cold Observables.', 'toSignal(obs$, { initialValue }) = Brücke, räumt selbst auf.', 'httpResource() für reaktives Laden.'],
+  paare: [
+    ['HttpClient', 'Holt Daten und gibt ein cold Observable'],
+    ['<code>toSignal(obs$)</code>', 'Macht aus einem Observable ein Signal'],
+    ['<code>initialValue</code>', 'Gilt, bis die erste Antwort da ist'],
+    ['<code>httpResource</code>', 'Lädt neu, wenn sich ein Signal in der Adresse ändert']
+  ]
 });
 
 CH.push({
@@ -5524,7 +5795,13 @@ export class Stoppuhr {
       { name: 'Stoppuhr tickt', run: async T => { const f = T.mount(T.cmp('Stoppuhr')); await T.flush(90); T.ok(f.instance.ticks() >= 2, 'Nach ~90 ms soll ticks mindestens 2 sein.'); } },
       { name: 'Stoppuhr stoppt beim Zerstören', run: async T => { const f = T.mount(T.cmp('Stoppuhr')); await T.flush(50); f.destroy(); const v = f.instance.ticks(); await T.flush(80); T.eq(f.instance.ticks(), v, 'Nach dem Zerstören läuft die Uhr weiter: Memory-Leak! Nimm takeUntilDestroyed().'); T.ok(/takeUntilDestroyed\s*\(/.test(T.code), 'Benutze takeUntilDestroyed().'); } }
     ] },
-  merke: ['error beendet den Stream.', 'retry = nochmal, catchError = Plan B.', 'Keine Leaks: toSignal, sonst takeUntilDestroyed.']
+  merke: ['error beendet den Stream.', 'retry = nochmal, catchError = Plan B.', 'Keine Leaks: toSignal, sonst takeUntilDestroyed.'],
+  paare: [
+    ['<code>retry</code>', 'Nochmal versuchen'],
+    ['<code>catchError</code>', 'Plan B liefern'],
+    ['<code>error</code>', 'Beendet den Stream'],
+    ['<code>takeUntilDestroyed</code>', 'Abo endet, wenn der Baustein verschwindet']
+  ]
 });
 
 CH.push({
@@ -5609,7 +5886,12 @@ export function dashboard(api: { entwickler(): Observable<Entwickler[]>; stunden
       { name: 'stundenSumme zählt mit', run: async T => { const r = await T.collect(T.get('stundenSumme')(T.rx.from([2, 1, 3]))); T.eq(r.vals, [2, 3, 6], 'Laufende Summe soll 2, 3, 6 sein.'); } },
       { name: 'dashboard lädt parallel', run: async T => { let par = 0, max = 0; const slow = v => T.rx.defer(() => { par++; max = Math.max(max, par); return T.rx.timer(50).pipe(T.op.map(() => { par--; return v; })); }); const api = { entwickler: () => slow([{}, {}, {}]), stunden: () => slow([2, 1, 3]) }; const r = await T.collect(T.get('dashboard')(api), 300); T.eq(r.vals, [{ anzahlEntwickler: 3, summe: 6 }], 'dashboard soll { anzahlEntwickler: 3, summe: 6 } liefern.'); T.eq(max, 2, 'Die Anfragen sollen parallel laufen (forkJoin).'); } }
     ] },
-  merke: ['combineLatest: neuester Stand von allen.', 'forkJoin: einmal, wenn alle fertig sind.', 'scan: laufender Zustand.']
+  merke: ['combineLatest: neuester Stand von allen.', 'forkJoin: einmal, wenn alle fertig sind.', 'scan: laufender Zustand.'],
+  paare: [
+    ['<code>combineLatest</code>', 'Neuester Stand von allen, bei jeder Änderung'],
+    ['<code>forkJoin</code>', 'Einmal, wenn alle fertig sind'],
+    ['<code>scan</code>', 'Laufender Zustand, wie reduce über die Zeit']
+  ]
 });
 
 /* ================= AUSBLICK ================= */
@@ -5644,7 +5926,14 @@ CH.push({
     { q: 'Welcher Befehl startet deine App lokal zum Entwickeln?', options: ['ng build', 'ng new', 'ng serve', 'ng test'], correct: 2, why: 'Der Befehl ng serve startet einen Entwicklungs-Server und lädt die App bei jeder Änderung neu.' },
     { q: 'Wofür ist die Datei team.spec.ts in einem Angular-Projekt da?', options: ['Sie enthält die Styles der Komponente', 'Sie enthält die Tests der Komponente', 'Sie enthält die Typen (Interfaces) der Komponente', 'Sie enthält die Konfiguration für den Build'], correct: 1, why: 'Die Endung .spec.ts steht für Tests. Sie beschreiben, was die Komponente können muss.' }
   ],
-  merke: ['Angular bringt alles mit: Router, Formulare, HTTP, Tests, CLI.', 'Die CLI (ng …) legt an, startet, baut, testet und updatet.', 'Jede Komponente: .ts, .html, .css, .spec.ts.', 'Gleiche Struktur überall → du findest dich in jedem Angular-Projekt zurecht.']
+  merke: ['Angular bringt alles mit: Router, Formulare, HTTP, Tests, CLI.', 'Die CLI (ng …) legt an, startet, baut, testet und updatet.', 'Jede Komponente: .ts, .html, .css, .spec.ts.', 'Gleiche Struktur überall → du findest dich in jedem Angular-Projekt zurecht.'],
+  paare: [
+    ['Router', 'Seiten unter verschiedenen Adressen'],
+    ['HttpClient', 'Mit dem Server reden'],
+    ['i18n', 'Die App in mehreren Sprachen'],
+    ['<code>ng generate component</code>', 'Neue Komponente mit allen Dateien'],
+    ['<code>.spec.ts</code>', 'Die Datei mit den Tests']
+  ]
 });
 
 CH.push({
@@ -5793,7 +6082,14 @@ export const routes: Routes = [
       { name: 'Guard schickt Fremde zum Login', run: T => { T.inject(T.get('Auth')).eingeloggt.set(false); const r = T.inCtx(() => T.get('nurMitarbeiter')({}, {})); T.ok(T.isUrlTree(r, '/login'), 'Nicht eingeloggt → createUrlTree(["/login"]) zurückgeben.'); } },
       { name: 'Guard lässt Mitarbeiter rein', run: T => { T.inject(T.get('Auth')).eingeloggt.set(true); T.eq(T.inCtx(() => T.get('nurMitarbeiter')({}, {})), true, 'Eingeloggt → true.'); } }
     ] },
-  merke: ['Routes = Liste Pfad → Komponente. Erster Treffer gewinnt, ** ganz unten.', ':id ist ein Platzhalter. Mit withComponentInputBinding kommt er als input().', 'loadComponent / loadChildren laden Seiten erst bei Bedarf.', 'Guard: true oder UrlTree. Schützt nur die Ansicht, nicht die Daten.']
+  merke: ['Routes = Liste Pfad → Komponente. Erster Treffer gewinnt, ** ganz unten.', ':id ist ein Platzhalter. Mit withComponentInputBinding kommt er als input().', 'loadComponent / loadChildren laden Seiten erst bei Bedarf.', 'Guard: true oder UrlTree. Schützt nur die Ansicht, nicht die Daten.'],
+  paare: [
+    ['<code>Routes</code>', 'Liste: welcher Pfad zeigt welche Komponente'],
+    ['<code>:id</code>', 'Platzhalter im Pfad'],
+    ['<code>**</code>', 'Fängt alles Unbekannte, steht ganz unten'],
+    ['<code>loadComponent</code>', 'Lädt eine Seite erst bei Bedarf'],
+    ['Guard', 'Prüft vor dem Betreten: true oder UrlTree']
+  ]
 });
 
 CH.push({
@@ -5928,7 +6224,14 @@ export class Bewerbung {
       { name: 'Fehler erst nach dem Verlassen', run: async T => { const f = T.mount(T.cmp('Bewerbung')); T.ok(f.q('input.name'), 'Im Template fehlt <input class="name" formControlName="name">.'); T.ok(!f.q('p.fehler'), 'Beim Öffnen soll noch kein Fehler zu sehen sein. Prüfst du touched?'); f.q('input.name').dispatchEvent(new Event('blur')); await T.flush(); const p = f.q('p.fehler'); T.ok(p && /Name fehlt/.test(p.textContent), 'Nach dem Verlassen des leeren Namens soll <p class="fehler">Name fehlt.</p> erscheinen. Prüfst du name.touched und hasError(\'required\')?'); await f.type('input.name', 'Leon'); T.ok(!f.q('p.fehler'), 'Mit „Leon“ im Feld soll die Meldung wieder verschwinden.'); } },
       { name: 'Alles richtig → Formular gültig', run: T => { const f = T.get('neuerAntrag')(); T.eq(Object.keys(f.controls).length, 3, 'Erst alle drei Felder anlegen.'); f.setValue({ name: 'Leon', email: 'leon@pixelwerk.de', alter: 23 }); T.ok(f.valid, 'Mit gültigen Werten soll das ganze Formular valid sein.'); } }
     ] },
-  merke: ['FormControl = ein Feld, FormGroup = mehrere. Gruppe ist nur valid, wenn alle valid sind.', 'Validatoren: required, minLength, email, min … als Liste.', 'Eigener Validator: Funktion → null (gut) oder { fehler: true }.', 'Fehler erst zeigen, wenn touched.']
+  merke: ['FormControl = ein Feld, FormGroup = mehrere. Gruppe ist nur valid, wenn alle valid sind.', 'Validatoren: required, minLength, email, min … als Liste.', 'Eigener Validator: Funktion → null (gut) oder { fehler: true }.', 'Fehler erst zeigen, wenn touched.'],
+  paare: [
+    ['FormControl', 'Ein Feld mit Wert und Regeln'],
+    ['FormGroup', 'Bündelt Felder, gültig nur, wenn alle gültig sind'],
+    ['<code>Validators.required</code>', 'Das Feld darf nicht leer sein'],
+    ['Eigener Validator', 'Gibt null oder ein Fehler-Objekt zurück'],
+    ['<code>touched</code>', 'Schon angefasst: jetzt Fehler zeigen']
+  ]
 });
 
 CH.push({
@@ -6038,7 +6341,14 @@ export class LiveUhr implements OnDestroy {
       { name: 'Alle Werte sind Signals', run: T => { const f = T.mount(T.cmp('LiveUhr')); const i = f.instance; T.ok(['minute', 'erledigt', 'offen'].every(k => T.isSignal(i[k])), 'minute, erledigt und offen sollen Signals sein.'); } },
       { name: 'Uhr stoppt beim Verlassen', run: async T => { const f = T.mount(T.cmp('LiveUhr')); await T.flush(150); const i = f.instance; T.ok(typeof i.minute === 'function', 'minute soll ein Signal sein.'); f.destroy(); const vorher = i.minute(); await T.flush(300); T.eq(i.minute(), vorher, 'Nach destroy tickt die Uhr weiter. clearInterval(this.uhr) in ngOnDestroy!'); } }
     ] },
-  merke: ['Angular schaut nur hin bei: Signal-Änderung, Template-Ereignis, async-Pipe, markForCheck.', 'Normales Feld in setTimeout/setInterval → Bildschirm bleibt alt.', 'Früher Zone.js (prüft alles), heute Zoneless + Signals.', 'Signals + OnPush überall. Timer immer aufräumen.']
+  merke: ['Angular schaut nur hin bei: Signal-Änderung, Template-Ereignis, async-Pipe, markForCheck.', 'Normales Feld in setTimeout/setInterval → Bildschirm bleibt alt.', 'Früher Zone.js (prüft alles), heute Zoneless + Signals.', 'Signals + OnPush überall. Timer immer aufräumen.'],
+  paare: [
+    ['Change Detection', 'Angular prüft Daten und malt neu'],
+    ['Zone.js', 'Prüfte früher nach jedem Klick und Timer'],
+    ['Zoneless', 'Angular schaut nur bei echtem Grund hin'],
+    ['OnPush', 'Prüf mich nur bei Inputs, Signals und Ereignissen'],
+    ['Normales Feld in <code>setInterval</code>', 'Der Bildschirm bleibt alt']
+  ]
 });
 
 CH.push({
@@ -6153,7 +6463,14 @@ describe('fliegtRaus', () => {
       { name: 'Fehler 3 gefunden: Platz 16 bleibt drin', run: async T => { const r = await T.suite({ './ranking': { punkte: (s, u, n) => 3 * s + u, fliegtRaus: p => p > 16 } }); T.ok(r.failed.length > 0, 'Ich habe >= zu > gemacht: Platz 16 fliegt nicht mehr raus. Teste genau Platz 16.'); } },
       { name: 'Fehler 4 gefunden: Platz 15 fliegt raus', run: async T => { const r = await T.suite({ './ranking': { punkte: (s, u, n) => 3 * s + u, fliegtRaus: p => p >= 15 } }); T.ok(r.failed.length > 0, 'Jetzt fliegt schon Platz 15 raus. Teste die Grenze von unten: Platz 15.'); } }
     ] },
-  merke: ['Test = Code, der Code prüft. describe → it → expect.', 'Vorbereiten, ausführen, prüfen (Arrange, Act, Assert).', 'Grenzen testen! Dort wohnen die Bugs.', 'Ein guter Test wird rot, wenn der Code kaputt ist. Sonst ist er wertlos.']
+  merke: ['Test = Code, der Code prüft. describe → it → expect.', 'Vorbereiten, ausführen, prüfen (Arrange, Act, Assert).', 'Grenzen testen! Dort wohnen die Bugs.', 'Ein guter Test wird rot, wenn der Code kaputt ist. Sonst ist er wertlos.'],
+  paare: [
+    ['<code>describe</code>', 'Eine Gruppe von Tests'],
+    ['<code>it</code>', 'Ein einzelner Test'],
+    ['<code>expect</code>', 'Ich erwarte, dass …'],
+    ['Grenzfall', 'Platz 15 bleibt drin, 16 fliegt raus'],
+    ['TestBed', 'Eine Mini-App nur für den Test']
+  ]
 });
 
 /* ================= Phase: PROFI-HANDWERK =================
@@ -6317,7 +6634,14 @@ export class Team {
       { name: 'Suchfeld per viewChild', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(10); const s = f.instance.suche; T.ok(T.isSignal(s), 'Es fehlt suche = viewChild.required<ElementRef<HTMLInputElement>>(\'suche\').'); const el = s(); T.ok(el && el.nativeElement && el.nativeElement.tagName === 'INPUT', 'viewChild findet das Feld nicht. Steht #suche am <input>?'); } },
       { name: 'Suchfeld hat den Fokus', run: async T => { const f = T.mount(T.cmp('Team')); await T.flush(20); T.ok(document.activeElement === f.q('input.suche'), 'Nach dem Malen soll das Suchfeld fokussiert sein: afterNextRender(() => this.suche().nativeElement.focus()).'); } }
     ] },
-  merke: ['ng-content reicht Inhalt durch, select macht Fächer.', '#name + viewChild holt ein Element als Signal.', 'DOM erst nach dem Malen: afterNextRender.', 'Im constructor sind Inputs noch leer.', 'animate.enter / animate.leave: CSS-Klasse beim Erscheinen und Verschwinden. @angular/animations ist Altcode.']
+  merke: ['ng-content reicht Inhalt durch, select macht Fächer.', '#name + viewChild holt ein Element als Signal.', 'DOM erst nach dem Malen: afterNextRender.', 'Im constructor sind Inputs noch leer.', 'animate.enter / animate.leave: CSS-Klasse beim Erscheinen und Verschwinden. @angular/animations ist Altcode.'],
+  paare: [
+    ['<code>ng-content</code>', 'Reicht Inhalt vom Eltern-Baustein durch'],
+    ['<code>viewChild</code>', 'Holt ein markiertes Element als Signal'],
+    ['<code>afterNextRender</code>', 'Für Code, der das fertig gemalte DOM braucht'],
+    ['<code>constructor</code>', 'Hier sind die Inputs noch leer'],
+    ['<code>animate.enter</code>', 'CSS-Klasse beim Erscheinen']
+  ]
 });
 
 CH.push({
@@ -6467,7 +6791,14 @@ export class PitchListe {
       { name: 'Farbe kommt aus dem Attribut', run: T => { const f = T.mount(T.cmp('PitchListe')); T.eq(f.q('.leon').style.borderColor, 'red', 'border-color soll red sein: farbe = input(\'gold\', { alias: \'appBadge\' }) und \'[style.border-color]\': \'farbe()\'.'); } },
       { name: 'Hover zeigt die Badge an', run: async T => { const f = T.mount(T.cmp('PitchListe')); f.q('.leon').dispatchEvent(new Event('mouseenter')); await T.flush(); T.ok(f.q('.leon').classList.contains('hover'), 'Nach mouseenter soll .leon die Klasse hover haben.'); f.q('.leon').dispatchEvent(new Event('mouseleave')); await T.flush(); T.ok(!f.q('.leon').classList.contains('hover'), 'Nach mouseleave soll hover wieder weg sein.'); } }
     ] },
-  merke: ['Direktive = Verhalten ohne eigenes HTML, selector in [ ].', 'host: {} statt @HostListener/@HostBinding.', 'Pipe = transform(), pure rechnet nur bei neuer Referenz.', 'Direktiven und Pipes immer in imports.']
+  merke: ['Direktive = Verhalten ohne eigenes HTML, selector in [ ].', 'host: {} statt @HostListener/@HostBinding.', 'Pipe = transform(), pure rechnet nur bei neuer Referenz.', 'Direktiven und Pipes immer in imports.'],
+  paare: [
+    ['Komponente', 'Hat eigenes HTML'],
+    ['Direktive', 'Kein eigenes HTML, hängt Verhalten an ein Element'],
+    ['Pipe', 'Formt einen Wert fürs Anzeigen um'],
+    ['<code>transform()</code>', 'Die Methode, die eine Pipe ausmacht'],
+    ['<code>host: {}</code>', 'Ersetzt @HostListener und @HostBinding']
+  ]
 });
 
 CH.push({
@@ -6637,7 +6968,14 @@ export class Statistik {
       { name: 'Ohne Analytics kein Absturz', run: T => { let s; try { s = T.inject(T.get('Statistik')); } catch (e) { T.ok(false, 'Statistik stürzt ab: ' + e.message + ' Tipp: inject(Analytics, { optional: true })'); } T.ok(s.analytics === null, 'Ohne Provider soll analytics null sein.'); s.tracke('Klick'); } },
       { name: 'Mit Analytics wird gesendet', run: T => { const inj = new T.ng.Injector(null, [T.get('Analytics')]); const s = inj.get(T.get('Statistik')); s.tracke('Klick'); T.eq(s.analytics && s.analytics.gesendet, ['Klick'], 'Gibt es Analytics, soll tracke() senden.'); } }
     ] },
-  merke: ['useValue, useClass, useExisting, useFactory.', 'InjectionToken für alles, was keine Klasse ist.', 'multi: true sammelt alle in einer Liste.', 'providers in der Komponente = eigene Instanz pro Komponente.', 'optional, self, skipSelf, host ändern die Suche.']
+  merke: ['useValue, useClass, useExisting, useFactory.', 'InjectionToken für alles, was keine Klasse ist.', 'multi: true sammelt alle in einer Liste.', 'providers in der Komponente = eigene Instanz pro Komponente.', 'optional, self, skipSelf, host ändern die Suche.'],
+  paare: [
+    ['<code>useValue</code>', 'Gib genau diesen fertigen Wert'],
+    ['<code>useClass</code>', 'Baue dafür diese Klasse'],
+    ['<code>useFactory</code>', 'Rechne den Wert mit einer Funktion aus'],
+    ['<code>multi: true</code>', 'Sammelt alle Provider in einer Liste'],
+    ['InjectionToken', 'Schlüssel für etwas, das keine Klasse ist']
+  ]
 });
 
 CH.push({
@@ -6820,7 +7158,14 @@ export class Sterne implements ControlValueAccessor {
       { name: 'Formular schreibt in die Sterne', run: async T => { const f = T.mount(T.cmp('Sterne')); f.instance.writeValue(2); await T.flush(); T.eq(f.qa('.stern.an').length, 2, 'writeValue(2) → 2 Sterne an.'); f.instance.writeValue(null); await T.flush(); T.eq(f.qa('.stern.an').length, 0, 'writeValue(null) → keiner an.'); T.ok(typeof f.instance.setDisabledState === 'function', 'Es fehlt setDisabledState(aus).'); f.instance.setDisabledState(true); await T.flush(); T.ok(f.qa('.stern').every(b => b.disabled), 'setDisabledState(true) → alle Knöpfe disabled.'); } },
       { name: 'NG_VALUE_ACCESSOR-Provider', run: T => { const S = T.get('Sterne'); const NVA = T.ng.modules['@angular/forms'].NG_VALUE_ACCESSOR; const p = [].concat(T.meta(S).providers || []).find(x => x && x.provide === NVA); T.ok(p, 'providers: [{ provide: NG_VALUE_ACCESSOR, … }] fehlt.'); T.ok(p.multi === true, 'NG_VALUE_ACCESSOR braucht multi: true.'); const ex = T.ng.core.resolveForwardRef(p.useExisting); T.ok(ex === S, 'useExisting: forwardRef(() => Sterne).'); } }
     ] },
-  merke: ['FormArray für Listen: push, removeAt.', 'Gruppen-Validator sieht alle Felder, async-Validator fragt den Server (pending).', 'ControlValueAccessor: writeValue rein, onChange raus.', 'NG_VALUE_ACCESSOR + forwardRef + multi.']
+  merke: ['FormArray für Listen: push, removeAt.', 'Gruppen-Validator sieht alle Felder, async-Validator fragt den Server (pending).', 'ControlValueAccessor: writeValue rein, onChange raus.', 'NG_VALUE_ACCESSOR + forwardRef + multi.'],
+  paare: [
+    ['FormArray', 'Liste von Feldern, wächst zur Laufzeit'],
+    ['Gruppen-Validator', 'Sieht alle Felder: keine Nummer doppelt'],
+    ['async-Validator', 'Fragt den Server, solange ist es pending'],
+    ['ControlValueAccessor', 'Macht deine Komponente zum Formularfeld'],
+    ['<code>writeValue</code>', 'Wert vom Formular in deine Komponente']
+  ]
 });
 
 CH.push({
@@ -6952,7 +7297,14 @@ export class ProfilAnsicht {
       { name: 'Tab springt zurück', run: async T => { const f = T.mount(T.cmp('ProfilAnsicht')); const i = f.instance; i.tab.set('statistik'); T.eq(i.tab(), 'statistik', 'tab soll setzbar sein.'); i.id.set(2); T.eq(i.tab(), 'profil', 'Neuer Entwickler → tab wieder profil. linkedSignal({ source: this.id, computation: () => \'profil\' })'); } },
       { name: 'Protokoll nur bei Entwicklerwechsel', run: async T => { const f = T.mount(T.cmp('ProfilAnsicht')); await T.flush(10); const i = f.instance; const n = i.protokoll.length; T.ok(n === 1, 'Nach dem Start soll genau ein Eintrag im Protokoll stehen.'); await f.click('.klick'); await f.click('.klick'); await T.flush(10); T.eq(i.protokoll.length, n, 'Klicks sollen den effect NICHT auslösen. klicks mit untracked lesen.'); i.id.set(3); await T.flush(10); T.eq(i.protokoll[i.protokoll.length - 1], 'Entwickler 3, Klicks: 2', 'Bei Entwicklerwechsel neuer Eintrag mit aktuellen Klicks.'); } }
     ] },
-  merke: ['Signal = Zustand, Observable = Ablauf über Zeit.', 'rxResource/httpResource: value, isLoading, error, reload.', 'linkedSignal: setzbar, springt bei neuer Quelle zurück.', 'untracked: lesen ohne Abhängigkeit.']
+  merke: ['Signal = Zustand, Observable = Ablauf über Zeit.', 'rxResource/httpResource: value, isLoading, error, reload.', 'linkedSignal: setzbar, springt bei neuer Quelle zurück.', 'untracked: lesen ohne Abhängigkeit.'],
+  paare: [
+    ['Signal', 'Aktueller Zustand, synchron, immer da'],
+    ['Observable', 'Ereignisse über die Zeit'],
+    ['<code>rxResource</code>', 'Lädt neu, wenn sich params ändert'],
+    ['<code>linkedSignal</code>', 'Setzbar, springt bei neuer Quelle zurück'],
+    ['<code>untracked</code>', 'Liest ein Signal, ohne davon abzuhängen']
+  ]
 });
 
 CH.push({
@@ -7079,7 +7431,14 @@ export const STANDORTE = { koeln: 'Köln', berlin: 'Berlin' } satisfies Record<s
       { name: 'istEntwickler prüft wirklich', run: T => { const g = T.get('istEntwickler'); T.ok(g({ id: 9, name: 'Leon' }) === true, 'Echter Entwickler → true.'); T.ok(g({ id: '9', name: 'Leon' }) === false, 'id als Text → false.'); T.ok(g(null) === false && g('Leon') === false && g({ name: 'Leon' }) === false, 'null, Text oder ohne id → false.'); T.ok(T.has(/x\s*:\s*unknown\s*\)\s*:\s*x\s+is\s+Entwickler/), 'Signatur: istEntwickler(x: unknown): x is Entwickler'); } },
       { name: 'satisfies', run: T => { T.eq(T.get('STANDORTE').koeln, 'Köln', 'Werte bleiben gleich.'); T.ok(T.has(/satisfies\s+Record<\s*string\s*,\s*string\s*>/), 'Hänge satisfies Record<string, string> an.'); } }
     ] },
-  merke: ['Generics: <T> ist ein Typ-Platzhalter.', 'Discriminated Union + switch + never = kein Fall vergessen.', 'Server-Daten sind unknown, Type Guard prüft echt.', 'strict: true, unknown statt any, satisfies.']
+  merke: ['Generics: <T> ist ein Typ-Platzhalter.', 'Discriminated Union + switch + never = kein Fall vergessen.', 'Server-Daten sind unknown, Type Guard prüft echt.', 'strict: true, unknown statt any, satisfies.'],
+  paare: [
+    ['Generic <code><T></code>', 'Platzhalter für einen Typ'],
+    ['Discriminated Union', 'Ein Feld sagt, welche Form gerade gilt'],
+    ['<code>never</code>', 'Meldet im switch: ein Fall wurde vergessen'],
+    ['Type Guard', 'Prüft zur Laufzeit und sagt TypeScript Bescheid'],
+    ['<code>satisfies</code>', 'Prüft gegen einen Typ und behält den genauen Typ']
+  ]
 });
 
 CH.push({
@@ -7221,7 +7580,14 @@ export const routes: Routes = [
       { name: 'ungespeichert fragt nur bei Änderungen', run: T => { const g = T.get('ungespeichert'); const d = T.inject(T.get('Dialog')); T.eq(T.inCtx(() => g({ geaendert: () => false })), true, 'Nichts geändert → true.'); d.antwort = false; T.eq(T.inCtx(() => g({ geaendert: () => true })), false, 'Geändert und Dialog sagt nein → false.'); d.antwort = true; T.eq(T.inCtx(() => g({ geaendert: () => true })), true, 'Geändert und Dialog sagt ja → true.'); } },
       { name: 'Planung nur für Leads', run: T => { const m = T.match(T.get('routes'), '/planung'); T.ok(m && m.route.component === T.get('Planung'), '/planung soll Planung zeigen.'); T.ok((m.route.canMatch || []).includes(T.get('nurLeads')), 'canMatch: [nurLeads] fehlt.'); const a = T.inject(T.get('Auth')); a.rolle.set('dev'); T.eq(T.inCtx(() => T.get('nurLeads')({}, [])), false, 'Dev → false.'); a.rolle.set('lead'); T.eq(T.inCtx(() => T.get('nurLeads')({}, [])), true, 'Lead → true.'); } }
     ] },
-  merke: ['children für Bereiche, title für den Tab.', 'Resolver: Daten vorher. canMatch: Route unsichtbar. canDeactivate: vor dem Gehen fragen.', 'Filter und Seite in die URL.', 'Guards schützen nur die Ansicht, der Server schützt die Daten.']
+  merke: ['children für Bereiche, title für den Tab.', 'Resolver: Daten vorher. canMatch: Route unsichtbar. canDeactivate: vor dem Gehen fragen.', 'Filter und Seite in die URL.', 'Guards schützen nur die Ansicht, der Server schützt die Daten.'],
+  paare: [
+    ['<code>children</code>', 'Unterseiten eines Bereichs'],
+    ['Resolver', 'Holt Daten, bevor die Seite erscheint'],
+    ['<code>canMatch</code>', 'Die Route wird gar nicht erst gefunden'],
+    ['<code>canDeactivate</code>', 'Fragt vor dem Verlassen nach'],
+    ['Query-Parameter', 'Filter und Seite in der URL, der Link ist teilbar']
+  ]
 });
 
 CH.push({
@@ -7365,7 +7731,14 @@ export class Feedback {
       { name: 'Klick bei Fehlern zeigt alle Fehler', run: async T => { const f = T.mount(T.cmp('Feedback')); T.ok(!f.q('button.absenden').disabled, 'Der Knopf soll auch bei leerem Formular klickbar sein. Sperr ihn nur während des Speicherns: [disabled]="feedback().submitting()".'); T.ok(!T.has(/\[disabled\]\s*=\s*"[^"]*invalid\(\)/), 'Sperr den Knopf nicht mit invalid(). submit() zeigt beim Klick die Fehler.'); await f.click('button.absenden'); await T.flush(20); T.ok(f.q('p.fehler'), 'Nach dem Klick auf Absenden soll der Fehler am Namen erscheinen. submit() markiert alle Felder als berührt.'); T.eq(f.instance.gesendet().length, 0, 'Ein ungültiges Formular darf nicht abgeschickt werden.'); } },
       { name: 'submit legt ab und leert das Formular', run: async T => { const f = T.mount(T.cmp('Feedback')); f.instance.absenden(); await T.flush(20); T.eq(f.instance.gesendet().length, 0, 'Ein ungültiges Formular darf nicht abgeschickt werden. Nimmst du submit()?'); f.instance.daten.set({ name: 'Lea', mail: 'lea@firma.de', text: 'Sehr verständlich erklärt.' }); f.instance.absenden(); await T.flush(20); T.eq(f.instance.gesendet().map(r => r.name), ['Lea'], 'Nach dem Absenden soll die Rückmeldung in gesendet() stehen.'); T.eq(f.instance.daten(), { name: '', mail: '', text: '' }, 'Danach sollen die Daten wieder leer sein.'); T.eq(f.text().includes('1 Rückmeldung'), true, 'Die Anzahl soll 1 zeigen.'); } }
     ] },
-  merke: ['Signal Forms: erst die Daten als Signal, dann form(daten, regeln).', 'Regeln an einer Stelle: required, email, minLength, validate.', 'Feld aufrufen = Zustand: value(), invalid(), touched(), errors().', 'submit() zeigt alle Fehler und führt die Aktion nur bei gültigem Formular aus.']
+  merke: ['Signal Forms: erst die Daten als Signal, dann form(daten, regeln).', 'Regeln an einer Stelle: required, email, minLength, validate.', 'Feld aufrufen = Zustand: value(), invalid(), touched(), errors().', 'submit() zeigt alle Fehler und führt die Aktion nur bei gültigem Formular aus.'],
+  paare: [
+    ['<code>form(daten, regeln)</code>', 'Baut aus einem Signal ein Feld pro Eigenschaft'],
+    ['<code>required</code>', 'Regel: das Feld darf nicht leer sein'],
+    ['<code>touched()</code>', 'Wurde das Feld schon angefasst?'],
+    ['<code>errors()</code>', 'Die Fehler eines Felds'],
+    ['<code>submit()</code>', 'Zeigt alle Fehler, führt nur gültig aus']
+  ]
 });
 
 /* ================= Phase: DER GROSSKUNDE ================= */
@@ -7508,7 +7881,14 @@ export class Bestseller {
       { name: 'track s.id', run: T => T.ok(T.has(/track\s+s\.id/), 'Im @for bitte track s.id statt track $index.') },
       { name: '@defer mit @placeholder', run: T => T.ok(T.has(/@defer/) && T.has(/@placeholder/), 'Pack die Liste in @defer (on viewport) { ... } @placeholder { ... }.') }
     ] },
-  merke: ['Drei Schubladen: zu viel laden, zu viel rechnen, zu viel malen. Erst messen.', 'Keine teuren Methoden im Template. computed() merkt sich das Ergebnis.', '@defer lädt Teile später, mit @placeholder und @loading.', 'track s.id, OnPush, NgOptimizedImage, Virtual Scrolling.']
+  merke: ['Drei Schubladen: zu viel laden, zu viel rechnen, zu viel malen. Erst messen.', 'Keine teuren Methoden im Template. computed() merkt sich das Ergebnis.', '@defer lädt Teile später, mit @placeholder und @loading.', 'track s.id, OnPush, NgOptimizedImage, Virtual Scrolling.'],
+  paare: [
+    ['Zu viel laden', 'Riesiges JavaScript schon beim Start'],
+    ['Zu viel rechnen', 'Teure Methode läuft bei jedem Neuzeichnen'],
+    ['Zu viel malen', 'Lange Liste wird komplett neu gebaut'],
+    ['<code>@defer</code>', 'Lädt einen Teil erst, wenn er gebraucht wird'],
+    ['<code>@placeholder</code>', 'Steht da, bis der Teil geladen wird']
+  ]
 });
 
 CH.push({
@@ -7598,7 +7978,14 @@ export function ruckler(frames: number[], fps = 60): number {
       { name: 'Ruckler bei 60 fps', run: T => T.eq(T.get('ruckler')([10, 20, 16, 40, 16.6]), 2, 'Budget 16,7 ms: nur 20 und 40 sind zu lang.') },
       { name: 'Ruckler bei 120 fps', run: T => T.eq(T.get('ruckler')([8, 9, 5, 12], 120), 2, 'Budget 8,3 ms: 9 und 12 sind zu lang.') }
     ] },
-  merke: ['Strecke pro Bild: DOM → Style → Layout → Paint → Composite.', 'Erst alles lesen, dann alles schreiben. Sonst Layout Thrashing.', 'Animiere transform und opacity, nicht width, height oder top.', 'Core Web Vitals: LCP < 2,5 s, INP < 200 ms, CLS < 0,1.']
+  merke: ['Strecke pro Bild: DOM → Style → Layout → Paint → Composite.', 'Erst alles lesen, dann alles schreiben. Sonst Layout Thrashing.', 'Animiere transform und opacity, nicht width, height oder top.', 'Core Web Vitals: LCP < 2,5 s, INP < 200 ms, CLS < 0,1.'],
+  paare: [
+    ['Layout', 'Wo steht jedes Element, wie groß ist es?'],
+    ['Composite', 'Nur Ebenen verschieben: transform, opacity'],
+    ['Layout Thrashing', 'Lesen, schreiben, lesen in einer Schleife'],
+    ['LCP', 'Wann ist das größte Element zu sehen?'],
+    ['CLS', 'Wie sehr springt der Inhalt?']
+  ]
 });
 
 CH.push({
@@ -7686,7 +8073,14 @@ export class Merkzettel {
       { name: 'Auf dem Server: speichern stürzt nicht ab', run: T => { const core = T.ng.modules['@angular/core']; T.ng.root.add({ provide: core.PLATFORM_ID, useValue: 'server' }); const undo = fakeStorage(true); try { const m = T.inject(T.get('Merkzettel')); try { m.speichern(['Leon']); } catch (e) { T.ok(false, 'Auf dem Server abgestürzt: ' + e.message); } } finally { undo(); } } },
       { name: 'Benutzt isPlatformBrowser', run: T => T.ok(T.has(/isPlatformBrowser\s*\(\s*inject\s*\(\s*PLATFORM_ID\s*\)\s*\)/), 'Frag Angular nach der Plattform: isPlatformBrowser(inject(PLATFORM_ID)).') }
     ] },
-  merke: ['CSR baut im Browser, SSR auf dem Server, Prerender beim Build.', 'Hydration weckt Server-HTML auf, statt es neu zu bauen.', 'Auf dem Server: kein window, document, localStorage. isPlatformBrowser / afterNextRender.', 'HttpClient-Antworten reisen im HTML mit, keine doppelten Anfragen.']
+  merke: ['CSR baut im Browser, SSR auf dem Server, Prerender beim Build.', 'Hydration weckt Server-HTML auf, statt es neu zu bauen.', 'Auf dem Server: kein window, document, localStorage. isPlatformBrowser / afterNextRender.', 'HttpClient-Antworten reisen im HTML mit, keine doppelten Anfragen.'],
+  paare: [
+    ['CSR', 'Der Browser baut alles mit JavaScript'],
+    ['SSR', 'Der Server baut bei jeder Anfrage fertiges HTML'],
+    ['Prerendering', 'HTML entsteht einmal beim Build'],
+    ['Hydration', 'Server-HTML aufwecken statt neu bauen'],
+    ['Event Replay', 'Ein früher Klick wird gemerkt und nachgespielt']
+  ]
 });
 
 CH.push({
@@ -7806,7 +8200,14 @@ export class PitchStore {
       { name: 'Zurücksetzen', run: T => { const st = T.inject(T.get('PitchStore')); st.eintragen({ wir: 5, andere: 0 }); st.zuruecksetzen(); T.eq([st.pitches().length, st.punkte ? st.punkte() : -1], [0, 0], 'Nach zuruecksetzen(): keine Pitches, 0 Punkte.'); } },
       { name: 'Von außen nur lesen', run: T => { const st = T.inject(T.get('PitchStore')); T.ok(!st.pitches.set && (!st.punkte || !st.punkte.set), 'pitches und punkte sollen computed sein, ohne set().'); T.ok(!T.has(/^\s*(public\s+)?state\s*=/m), 'state soll private sein.'); } }
     ] },
-  merke: ['Jede Information hat EINEN Ort. Der Rest ist computed.', 'Store = privates Signal + computed zum Lesen + Methoden zum Ändern.', 'Nie push/direkt ändern. Immer neue Objekte/Listen (Spread).', 'NgRx SignalStore für größere Apps, klassisches NgRx im Bestandscode.']
+  merke: ['Jede Information hat EINEN Ort. Der Rest ist computed.', 'Store = privates Signal + computed zum Lesen + Methoden zum Ändern.', 'Nie push/direkt ändern. Immer neue Objekte/Listen (Spread).', 'NgRx SignalStore für größere Apps, klassisches NgRx im Bestandscode.'],
+  paare: [
+    ['Lokaler State', 'signal() in der Komponente'],
+    ['Geteilter State', 'Ein Service als Store'],
+    ['Server-State', 'resource() oder HttpClient'],
+    ['Store', 'Privates Signal, computed zum Lesen, Methoden zum Ändern'],
+    ['NgRx SignalStore', 'Fertige Bibliothek für große Apps']
+  ]
 });
 
 CH.push({
@@ -7951,7 +8352,13 @@ export class Vorschau {
       { name: 'deaktiviert als leeres Attribut sperrt den Schalter', run: async T => { const f = T.mount(T.cmp('Schalter'), { inputs: { label: 'X', deaktiviert: '' } }); T.ok(f.instance.deaktiviert() === true, 'deaktiviert="" (das leere Attribut) soll true ergeben. Fehlt transform: booleanAttribute?'); await f.click(f.host); T.ok(f.instance.an() === false, 'Ein gesperrter Schalter darf beim Klick nicht umschalten.'); } },
       { name: 'label ist Pflicht', run: T => { T.ok(/label\s*=\s*input\.required\s*<\s*string\s*>\s*\(/.test(T.code), 'label soll input.required<string>() sein. Ein Schalter ohne Beschriftung soll gar nicht erst bauen.'); } }
     ] },
-  merke: ['model() = Wert rein und Änderung raus, auf der Seite [(wert)].', 'transform: booleanAttribute, damit ein leeres Attribut true ist.', 'host setzt Rolle, ARIA, Klassen und Ereignisse am Baustein selbst.', 'Ein Baustein für alle braucht eine API, die man nicht falsch benutzen kann.']
+  merke: ['model() = Wert rein und Änderung raus, auf der Seite [(wert)].', 'transform: booleanAttribute, damit ein leeres Attribut true ist.', 'host setzt Rolle, ARIA, Klassen und Ereignisse am Baustein selbst.', 'Ein Baustein für alle braucht eine API, die man nicht falsch benutzen kann.'],
+  paare: [
+    ['<code>model()</code>', 'Wert rein und Änderung raus'],
+    ['<code>[(wert)]</code>', 'Two-Way-Binding auf der Seite'],
+    ['<code>booleanAttribute</code>', 'Ein leeres Attribut wird true'],
+    ['<code>host</code>', 'Rolle, ARIA und Klassen am Baustein selbst']
+  ]
 });
 
 /* ================= Phase: AGENTUR-ALLTAG =================
@@ -8125,7 +8532,14 @@ describe('TeamZahl', () => {
       { name: 'Fehler 2 gefunden: Filter verdreht', run: async T => { const r = await T.suite({ './entwickler-api': ENTWICKLER_API('filter') }); T.ok(r.failed.length > 0, 'frontendDevs() liefert jetzt alle AUSSER Frontend-Devs. Keiner deiner Tests merkt es.'); } },
       { name: 'Fehler 3 gefunden: Komponente zählt falsch', run: async T => { const r = await T.suite({ './entwickler-api': ENTWICKLER_API('zahl') }); T.ok(r.failed.length > 0, 'TeamZahl zeigt jetzt eins zu viel. Teste die Komponente mit einem Fake-Service.'); } }
     ] },
-  merke: ['Verhalten testen, nicht Implementierung.', 'TestBed + providers: echte Teile gegen Fakes tauschen.', 'HttpTestingController: expectOne, flush, verify.', 'Wenige E2E-Tests für die wichtigsten Wege.']
+  merke: ['Verhalten testen, nicht Implementierung.', 'TestBed + providers: echte Teile gegen Fakes tauschen.', 'HttpTestingController: expectOne, flush, verify.', 'Wenige E2E-Tests für die wichtigsten Wege.'],
+  paare: [
+    ['TestBed + providers', 'Echte Teile gegen Fakes tauschen'],
+    ['HttpTestingController', 'Fängt Anfragen ab, du antwortest selbst'],
+    ['<code>expectOne</code>', 'Genau diese eine Anfrage wird erwartet'],
+    ['<code>flush</code>', 'Schickt die Antwort auf die Anfrage'],
+    ['<code>verify</code>', 'Prüft, dass keine Anfrage offen blieb']
+  ]
 });
 
 CH.push({
@@ -8269,7 +8683,14 @@ export class TeamListe {
       { name: 'input()/output() statt Decorators', run: T => { T.ok(!T.has(/@Input|@Output|EventEmitter/), '@Input, @Output und EventEmitter raus.'); T.ok(T.has(/input\.required\s*</) && T.has(/output\s*</), 'input.required<Entwickler>() und output<number>() benutzen.'); } },
       { name: 'inject() und Signals', run: T => { T.ok(!T.has(/constructor\s*\(\s*(public|private|protected)/), 'Kein Konstruktor-Parameter mehr: team = inject(TeamService).'); T.ok(!T.has(/@Injectable/) && T.has(/@Service\s*\(/), 'TeamService: @Service() statt @Injectable({ providedIn: \'root\' }).'); const f = T.mount(T.cmp('TeamListe')); T.ok(T.isSignal(f.instance.auswahl), 'auswahl soll ein Signal sein.'); T.ok(T.isSignal(T.inject(T.get('TeamService')).entwickler), 'TeamService.entwickler soll ein Signal sein.'); } }
     ] },
-  merke: ['Altcode lesen: NgModule, *ngIf, @Input, Konstruktor-DI, Zone.js.', 'ng update Version für Version, dann Schematics, je ein PR.', 'Erst Tests, dann migrieren. Kein Big Bang.', 'Erst fragen: Was bringt die Migration?']
+  merke: ['Altcode lesen: NgModule, *ngIf, @Input, Konstruktor-DI, Zone.js.', 'ng update Version für Version, dann Schematics, je ein PR.', 'Erst Tests, dann migrieren. Kein Big Bang.', 'Erst fragen: Was bringt die Migration?'],
+  paare: [
+    ['<code>@NgModule</code>', 'Heute standalone, imports in der Komponente'],
+    ['<code>*ngFor</code>', 'Heute @for mit track'],
+    ['<code>@Output()</code> + EventEmitter', 'Heute output()'],
+    ['Konstruktor-DI', 'Heute inject()'],
+    ['<code>ng update</code>', 'Hebt die Version, eine nach der anderen']
+  ]
 });
 
 CH.push({
@@ -8425,7 +8846,14 @@ export const ciSchritte: string[] = ['npm ci', 'npm run lint', 'npm test', 'npm 
       { name: 'Dateien mit Fingerabdruck ewig cachen', run: T => { const c = T.get('cacheRegel'); T.eq(c('main-AB12CD34.js'), 'public, max-age=31536000, immutable', 'main-AB12CD34.js hat einen Fingerabdruck.'); T.eq(c('styles-9F8E7D6C.css'), 'public, max-age=31536000, immutable', 'Auch CSS mit Fingerabdruck.'); T.eq(c('logo.png'), 'no-cache', 'Ohne Fingerabdruck lieber no-cache.'); } },
       { name: 'CI in der richtigen Reihenfolge', run: T => { const s = T.get('ciSchritte'); T.eq(s[0], 'npm ci', 'Zuerst npm ci (nicht npm install).'); const i = w => s.findIndex(x => x.includes(w)); T.ok(i('lint') > 0 && i('test') > i('lint') && i('build') > i('test'), 'Danach lint, dann test, dann build.'); } }
     ] },
-  merke: ['angular.json: configurations, budgets, outputHashing.', 'Einmal bauen, Konfig zur Laufzeit (provideAppInitializer).', 'CI: npm ci, lint, test, build bei jedem PR.', 'Server: SPA-Fallback auf index.html, index.html no-cache, gehashte Dateien immutable.']
+  merke: ['angular.json: configurations, budgets, outputHashing.', 'Einmal bauen, Konfig zur Laufzeit (provideAppInitializer).', 'CI: npm ci, lint, test, build bei jedem PR.', 'Server: SPA-Fallback auf index.html, index.html no-cache, gehashte Dateien immutable.'],
+  paare: [
+    ['<code>configurations</code>', 'Varianten des Builds in angular.json'],
+    ['<code>budgets</code>', 'Warnschwellen für die Größe'],
+    ['CI', 'Baut, prüft und testet jeden PR'],
+    ['SPA-Fallback', 'Unbekannte Pfade bekommen index.html'],
+    ['<code>outputHashing</code>', 'Fingerabdruck im Dateinamen, ewig cachebar']
+  ]
 });
 
 CH.push({
@@ -8567,7 +8995,14 @@ export const fehlerProvider = { provide: ErrorHandler, useClass: GlobalerFehler 
       { name: '404 bleibt Sache der Komponente', run: async T => { const r = await durchInterceptor(T, 'fehlerInterceptor', { status: 404 }); T.eq(T.inject(T.get('Meldungen')).letzte(), null, 'Bei 404 keine globale Meldung.'); T.ok(r.error && r.error.status === 404, 'Aber weiterwerfen!'); } },
       { name: 'Eigener ErrorHandler', run: T => { const p = T.get('fehlerProvider'); const EH = T.ng.core.ErrorHandler; T.ok(p && p.provide === EH, 'fehlerProvider = { provide: ErrorHandler, useClass: GlobalerFehler }'); const inj = new T.ng.Injector(null, [p]); const h = inj.get(EH); T.ok(h instanceof T.get('GlobalerFehler'), 'Für ErrorHandler soll GlobalerFehler kommen.'); h.handleError(new Error('Kaputt')); T.eq(inj.get(T.get('Monitoring')).fehler.length, 1, 'handleError soll Monitoring.melde(e) aufrufen.'); T.eq(inj.get(T.get('Meldungen')).letzte(), 'Ups, da ist was schiefgelaufen.', 'Und dem Nutzer eine Meldung zeigen.'); } }
     ] },
-  merke: ['Jede Anzeige: Laden, Fehler, Leer, Daten.', 'HTTP-Fehler zentral im Interceptor, immer weiterwerfen.', 'Eigener ErrorHandler → Monitoring.', 'Source Maps hochladen, keine persönlichen Daten in Fehlerberichte.']
+  merke: ['Jede Anzeige: Laden, Fehler, Leer, Daten.', 'HTTP-Fehler zentral im Interceptor, immer weiterwerfen.', 'Eigener ErrorHandler → Monitoring.', 'Source Maps hochladen, keine persönlichen Daten in Fehlerberichte.'],
+  paare: [
+    ['Vier Zustände', 'Laden, Fehler, Leer, Daten'],
+    ['Interceptor', 'Fängt HTTP-Fehler aller Anfragen'],
+    ['ErrorHandler', 'Fängt alle anderen Fehler ab'],
+    ['Source Maps', 'Machen main-AB12.js:1:48213 wieder lesbar'],
+    ['Monitoring', 'Fehler sehen, bevor Kunden sie melden']
+  ]
 });
 
 CH.push({
@@ -8711,7 +9146,14 @@ export function nurRolle(r: Rolle): CanActivateFn {
       { name: '/auth/ bleibt unberührt', run: async T => { const r = await durchInterceptor(T, 'authInterceptor', { url: '/auth/refresh', next: q => T.rx.of(q.headers.get('Authorization')) }); T.eq(r.vals, [null], 'Anfragen an /auth/ ohne Token und ohne Refresh weiterschicken.'); } },
       { name: 'Rollen-Guard', run: T => { const a = T.inject(T.get('Auth')); const g = T.get('nurRolle')('admin'); a.rolle.set('admin'); T.eq(T.inCtx(() => g({}, {})), true, 'Admin → true.'); a.rolle.set('kunde'); const r = T.inCtx(() => g({}, {})); T.ok(T.isUrlTree(r, '/kein-zutritt'), 'Kunde → createUrlTree([\'/kein-zutritt\']).'); } }
     ] },
-  merke: ['Login macht ein Identity Provider (OIDC + PKCE).', 'Kurzer Access-Token, Refresh im Interceptor, Anfrage wiederholen.', '/auth/ nie refreshen, bei kaputtem Refresh logout.', 'Rollen in der UI sind Komfort, der Server prüft.']
+  merke: ['Login macht ein Identity Provider (OIDC + PKCE).', 'Kurzer Access-Token, Refresh im Interceptor, Anfrage wiederholen.', '/auth/ nie refreshen, bei kaputtem Refresh logout.', 'Rollen in der UI sind Komfort, der Server prüft.'],
+  paare: [
+    ['OIDC + PKCE', 'Login über einen Identity Provider'],
+    ['Access-Token', 'Kurz gültig, geht mit jeder Anfrage mit'],
+    ['Refresh-Token', 'Holt einen neuen Access-Token ohne Login'],
+    ['401 im Interceptor', 'Still neuen Token holen, Anfrage wiederholen'],
+    ['Rollen in der UI', 'Nur Komfort, der Server prüft']
+  ]
 });
 
 CH.push({
@@ -8825,7 +9267,14 @@ export class LiveDashboard {
       { name: 'Timer stoppt', run: async T => { const f = T.mount(T.cmp('LiveDashboard')); await T.flush(50); const i = f.instance; f.destroy(); const v = i.ticks(); await T.flush(90); T.eq(i.ticks(), v, 'Nach destroy zählt ticks weiter: clearInterval(uhr) in onDestroy.'); } },
       { name: 'Abo endet', run: async T => { const f = T.mount(T.cmp('LiveDashboard')); await T.flush(50); const i = f.instance; f.destroy(); const v = i.pings; await T.flush(90); T.eq(i.pings, v, 'Nach destroy kommen noch Pings an: .pipe(takeUntilDestroyed()).'); } }
     ] },
-  merke: ['Erst messen: Profiler, Performance-Tab, Heap Snapshots, Web Vitals.', 'Lecks: Abos, Timer, Listener, Fremd-Bibliotheken.', 'DestroyRef.onDestroy + takeUntilDestroyed.', 'HTTP und (click) sind keine Lecks.']
+  merke: ['Erst messen: Profiler, Performance-Tab, Heap Snapshots, Web Vitals.', 'Lecks: Abos, Timer, Listener, Fremd-Bibliotheken.', 'DestroyRef.onDestroy + takeUntilDestroyed.', 'HTTP und (click) sind keine Lecks.'],
+  paare: [
+    ['Profiler', 'Welche Komponente wird wie oft geprüft?'],
+    ['Heap Snapshot', 'Speicher vorher und nachher vergleichen'],
+    ['<code>DestroyRef</code>', 'Der eine Ort fürs Aufräumen'],
+    ['<code>takeUntilDestroyed</code>', 'Beendet Abos automatisch'],
+    ['Listener an <code>window</code>', 'Lebt ewig, wenn du nicht aufräumst']
+  ]
 });
 
 CH.push({
@@ -8953,7 +9402,14 @@ export class Bewerbersuche {
       { name: 'Suchbegriff kommt heil an', run: async T => { let kam = null; T.ng.backend.routes['GET /api/bewerber'] = ({ q }) => { kam = q.get('q'); return []; }; const f = T.mount(T.cmp('Bewerbersuche')); await f.type('.suche', 'Müller & Söhne'); await T.flush(80); T.eq(kam, 'Müller & Söhne', 'Beim Server kam „' + kam + '“ an. Das & zerlegt die URL. Schick den Begriff mit { params: { q } }.'); } },
       { name: 'Keine any mehr', run: T => { T.ok(!T.has(/\bany\b(?!\()/), 'any raus (außer $any im Template).'); } }
     ] },
-  merke: ['Reihenfolge: korrekt, sicher, Lecks, Zustand, lesbar, schnell.', 'Kommentar: was, warum, Vorschlag, Muss/Nit/Frage.', 'Kleine PRs fordern, Lob nicht vergessen.', 'Typische Funde: Abo im Abo, subscribe ohne Ende, Methode im Template, bypassSecurityTrust, any.']
+  merke: ['Reihenfolge: korrekt, sicher, Lecks, Zustand, lesbar, schnell.', 'Kommentar: was, warum, Vorschlag, Muss/Nit/Frage.', 'Kleine PRs fordern, Lob nicht vergessen.', 'Typische Funde: Abo im Abo, subscribe ohne Ende, Methode im Template, bypassSecurityTrust, any.'],
+  paare: [
+    ['1. Korrekt?', 'Race Conditions, Randfälle, Fehlerfall'],
+    ['2. Sicher?', 'innerHTML, Geheimnisse, Rechte'],
+    ['3. Lecks?', 'subscribe ohne Ende, Timer, Listener'],
+    ['Nit', 'Kleinigkeit, kein Muss'],
+    ['Guter Kommentar', 'Was, warum und ein Vorschlag']
+  ]
 });
 
 /* ================= Phase: TECH LEAD =================
@@ -9080,7 +9536,14 @@ export class TeamSeite {
       { name: 'EntwicklerListe ist dumm (kein inject)', run: T => { const m = T.code.match(/class\s+EntwicklerListe\b[\s\S]*?\n}/); T.ok(m && !/inject\s*\(/.test(m[0]), 'In EntwicklerListe darf kein inject(...) stehen. Daten kommen per input().'); } },
       { name: 'TeamSeite verbindet alles', run: async T => { const f = T.mount(T.cmp('TeamSeite')); T.eq(f.qa('li').map(l => l.textContent.trim()), ['Leon', 'Mo', 'Ben'], 'TeamSeite soll die Entwickler aus dem Service an die Liste geben.'); await f.click(f.qa('li')[1]); T.ok(/Gewählt:\s*Mo/.test(f.q('.gewaehlt').textContent), 'Nach Klick auf Mo soll „Gewählt: Mo“ stehen.'); } }
     ] },
-  merke: ['Smart (Container) holt und entscheidet, Dumb (Presentational) zeigt und meldet.', 'Ordner nach Fachbereich: team/, tickets/, shared/, core/.', 'Abhängigkeiten nur in eine Richtung. Nx kann das erzwingen.', 'Micro-Frontends nur, wenn es wirklich viele unabhängige Teams gibt.']
+  merke: ['Smart (Container) holt und entscheidet, Dumb (Presentational) zeigt und meldet.', 'Ordner nach Fachbereich: team/, tickets/, shared/, core/.', 'Abhängigkeiten nur in eine Richtung. Nx kann das erzwingen.', 'Micro-Frontends nur, wenn es wirklich viele unabhängige Teams gibt.'],
+  paare: [
+    ['Smart / Container', 'Holt Daten und entscheidet'],
+    ['Dumb / Presentational', 'Nur input() und output()'],
+    ['Ordner nach Fachbereich', 'team/, tickets/, shared/, core/'],
+    ['Nx', 'Erzwingt, wer wen benutzen darf'],
+    ['Micro-Frontends', 'Nur bei vielen unabhängigen Teams']
+  ]
 });
 
 CH.push({
@@ -9187,7 +9650,14 @@ export function pruefeGrenzen(projekte: Record<string, string[]>, importe: Impor
       { name: 'Beide Regeln verletzt: zwei Meldungen, in Reihenfolge', run: T => { const P = { 'team-ui': ['type:ui', 'scope:team'], 'tickets-feature': ['type:feature', 'scope:tickets'], 'shared-util': ['type:util', 'scope:shared'] }; T.eq(T.get('pruefeGrenzen')(P, [{ von: 'team-ui', nach: 'tickets-feature' }, { von: 'team-ui', nach: 'shared-util' }]), ['team-ui → tickets-feature: ui darf kein feature benutzen', 'team-ui → tickets-feature: scope team darf nicht scope tickets benutzen'], 'Erst die Typ-Meldung, dann die Scope-Meldung. Der erlaubte zweite Import bringt nichts.'); } },
       { name: 'Projekt ohne Tags gibt genau eine klare Meldung', run: T => { const P = { 'team-feature': ['type:feature', 'scope:team'], 'altes-zeug': [] }; T.eq(T.get('pruefeGrenzen')(P, [{ von: 'team-feature', nach: 'altes-zeug' }, { von: 'team-feature', nach: 'gibt-es-nicht' }]), ['team-feature → altes-zeug: Projekt altes-zeug hat keine Tags', 'team-feature → gibt-es-nicht: Projekt gibt-es-nicht hat keine Tags'], 'Fehlen die Tags oder das Projekt, soll nur diese eine Meldung kommen.'); } }
     ] },
-  merke: ['Jede Library bekommt type und scope als Etikett.', 'Abhängigkeiten zeigen nach unten: feature → data/ui → util, nie zurück.', 'Fachbereiche benutzen nur sich selbst und shared.', 'Regeln gehören in den Build, nicht ins Wiki. Alte Verstöße in Stufen abbauen.']
+  merke: ['Jede Library bekommt type und scope als Etikett.', 'Abhängigkeiten zeigen nach unten: feature → data/ui → util, nie zurück.', 'Fachbereiche benutzen nur sich selbst und shared.', 'Regeln gehören in den Build, nicht ins Wiki. Alte Verstöße in Stufen abbauen.'],
+  paare: [
+    ['<code>type:feature</code>', 'Seiten und Abläufe, darf ui, data und util'],
+    ['<code>type:ui</code>', 'Dumme Bausteine, nie data'],
+    ['<code>type:data</code>', 'Services, Stores und API'],
+    ['<code>type:util</code>', 'Reine Funktionen'],
+    ['<code>scope</code>', 'Zu welchem Fachbereich die Library gehört']
+  ]
 });
 
 CH.push({
@@ -9218,7 +9688,14 @@ CH.push({
     { q: 'Kann Angular selbst Daten in einer Datenbank speichern?', options: ['Ja, Angular hat eine Datenbank eingebaut', 'Nein, dafür braucht es einen Server (Backend)', 'Ja, mit dem HttpClient direkt in die Datenbank', 'Ja, in Signals bleiben Daten dauerhaft gespeichert'], correct: 1, why: 'Angular ist nur das Frontend. Die Daten gehen per HTTP an ein Backend, und erst das speichert sie in der Datenbank.' },
     { q: 'Welcher dieser Punkte ist eine echte Schwäche von Angular?', options: ['Angular unterstützt kein TypeScript', 'Die Lernkurve ist steil, es gibt viele Begriffe', 'Jede Version wird nur 3 Monate gepflegt', 'Angular hat keinen eingebauten Router'], correct: 1, why: 'Am Anfang kommt bei Angular viel auf einmal. Darum lernst du hier Schritt für Schritt.' }
   ],
-  merke: ['Stark: große Teams, alles dabei, TypeScript, lange gepflegt, testbar.', 'Schwach: Lernkurve, mehr Code, RxJS schwer, viele alte Anleitungen.', 'Grenze: Angular ist nur Frontend. Datenbank und Backend sind andere Werkzeuge.', 'Ein Senior begründet, WARUM ein Werkzeug passt.']
+  merke: ['Stark: große Teams, alles dabei, TypeScript, lange gepflegt, testbar.', 'Schwach: Lernkurve, mehr Code, RxJS schwer, viele alte Anleitungen.', 'Grenze: Angular ist nur Frontend. Datenbank und Backend sind andere Werkzeuge.', 'Ein Senior begründet, WARUM ein Werkzeug passt.'],
+  paare: [
+    ['Große Teams', 'Stärke: alle schreiben gleich'],
+    ['Steile Lernkurve', 'Schwäche: viele Begriffe auf einmal'],
+    ['Datenbank', 'Grenze: dafür braucht es einen Server'],
+    ['Kleine Webseite', 'Eher nicht Angular'],
+    ['Firmen-App mit vielen Formularen', 'Ja, hier passt Angular']
+  ]
 });
 
 CH.push({
@@ -9319,7 +9796,14 @@ export class TicketBereich {
       { name: 'Eingabefeld hat ein Label', run: T => { const f = T.mount(T.cmp('TicketBereich')); const i = f.q('input.anzahl'); T.ok(i && i.id, 'Das Eingabefeld braucht eine id, z. B. id="anzahl".'); const l = f.q('label[for="' + i.id + '"]'); T.ok(l && l.textContent.trim(), 'Es fehlt <label for="' + i.id + '">Text</label>.'); } },
       { name: 'Icon-Button hat einen Namen', run: T => { const f = T.mount(T.cmp('TicketBereich')); const b = f.q('.leeren'); const n = b && (b.getAttribute('aria-label') || ''); T.ok(n.trim().length >= 3, 'Der 🗑️-Button braucht aria-label="…".'); } }
     ] },
-  merke: ['Security-Kette: XSS-Schutz nicht umgehen, CSP, Server prüft, keine Geheimnisse im Frontend.', 'a11y: echte Buttons, alt-Texte, Labels, aria-label für Icons, Tastatur testen.', 'i18n: i18n-Attribut, $localize, Pipes für Zahl/Geld/Datum.']
+  merke: ['Security-Kette: XSS-Schutz nicht umgehen, CSP, Server prüft, keine Geheimnisse im Frontend.', 'a11y: echte Buttons, alt-Texte, Labels, aria-label für Icons, Tastatur testen.', 'i18n: i18n-Attribut, $localize, Pipes für Zahl/Geld/Datum.'],
+  paare: [
+    ['XSS-Schutz', 'Angular escaped {{ }} automatisch'],
+    ['CSP', 'Der Browser führt nur erlaubte Scripts aus'],
+    ['<code>aria-label</code>', 'Name für einen Knopf, der nur ein Icon hat'],
+    ['alt-Text', 'Beschreibt ein Bild für den Screenreader'],
+    ['i18n', 'Texte markieren und pro Sprache übersetzen']
+  ]
 });
 
 CH.push({
@@ -9375,7 +9859,14 @@ Folgen:      + weniger Code, schneller Einstieg
     { q: 'Ein Kollege will für einen einfachen Zähler NgRx einbauen. Was antwortet ein Senior?', options: ['Gute Idee, dann ist es gleich skalierbar', 'Ein signal() reicht hier, wir bleiben einfach', 'Lieber ein Service mit BehaviorSubject', 'Erst NgRx einbauen, später zurückbauen'], correct: 1, why: 'Das Werkzeug muss zum Problem passen. Jede zusätzliche Komplexität kostet.' },
     { q: 'Was macht dich laut Toni zum Senior?', options: ['Jede API auswendig zu kennen', 'Andere besser zu machen und gute Entscheidungen zu erklären', 'Am meisten Code zu schreiben', 'Nie Fragen zu stellen'], correct: 1, why: 'Und genau das kannst du jetzt.' }
   ],
-  merke: ['Review-Kultur: Checkliste im Repo, Pipeline prüft Kleinkram, schnell und freundlich antworten.', 'Typische Funde: subscribe ohne Ende, Abo im Abo, Methoden im Template.', 'Migrationen mit ng update Schritt für Schritt, Tests zuerst.', 'Entscheidungen als ADR aufschreiben, Aufwand als Spanne schätzen.', 'Senior = entscheiden, erklären, teilen. Du bist bereit.']
+  merke: ['Review-Kultur: Checkliste im Repo, Pipeline prüft Kleinkram, schnell und freundlich antworten.', 'Typische Funde: subscribe ohne Ende, Abo im Abo, Methoden im Template.', 'Migrationen mit ng update Schritt für Schritt, Tests zuerst.', 'Entscheidungen als ADR aufschreiben, Aufwand als Spanne schätzen.', 'Senior = entscheiden, erklären, teilen. Du bist bereit.'],
+  paare: [
+    ['ADR', 'Große Entscheidung, kurz aufgeschrieben'],
+    ['Schätzung', 'Als Spanne, nicht aus dem Bauch'],
+    ['Trade-off', 'A ist schneller gebaut, B leichter zu pflegen'],
+    ['Pipeline', 'Prüft Format, Lint, Tests und Budgets'],
+    ['Migration', 'ng update Schritt für Schritt, Tests zuerst']
+  ]
 });
 
 /* ================= Phase: DEIN NÄCHSTER SCHRITT =================
@@ -9886,7 +10377,13 @@ Workshops (Seite)
       { name: 'Die Suche filtert nach Titel und Thema', run: async T => { const f = T.mount(T.cmp('Workshops')); T.ok(T.isComputed(f.instance.gefiltert), 'gefiltert soll ein computed() sein.'); await f.type('input.suche', 'http'); T.eq(f.qa('.titel').map(t => t.textContent.trim()), ['HTTP verstehen'], '„http“ soll nur „HTTP verstehen“ finden, auch bei kleiner Schreibweise.'); await f.type('input.suche', 'angular'); T.eq(f.qa('app-workshop-karte').length, 2, '„angular“ soll beide Angular-Workshops über das Thema finden.'); await f.type('input.suche', 'xyz'); T.ok(f.q('p.leer'), 'Ohne Treffer soll <p class="leer"> erscheinen.'); } },
       { name: 'Anmelden zählt hoch', run: async T => { const f = T.mount(T.cmp('Workshops')); await f.click(f.q('app-workshop-karte button.anmelden')); T.eq(f.instance.liste()[0].belegt, 4, 'Nach einem Klick soll der erste Workshop 4 belegte Plätze haben.'); T.ok(f.q('app-workshop-karte .frei').textContent.includes('4 frei'), 'Die Karte soll danach „4 frei“ zeigen.'); } }
     ] },
-  merke: ['Eine App von innen nach außen bauen: erst die kleinste Komponente.', 'Data down, events up: input() rein, output() raus.', 'Was sich ergibt, ist computed(), nicht gespeichert.', 'Signals mit neuen Werten ändern, nicht das alte Objekt.']
+  merke: ['Eine App von innen nach außen bauen: erst die kleinste Komponente.', 'Data down, events up: input() rein, output() raus.', 'Was sich ergibt, ist computed(), nicht gespeichert.', 'Signals mit neuen Werten ändern, nicht das alte Objekt.'],
+  paare: [
+    ['Von innen nach außen', 'Erst die Karte, dann die Seite'],
+    ['<code>input()</code>', 'Daten rein in die Karte'],
+    ['<code>output()</code>', 'Meldung raus aus der Karte'],
+    ['<code>computed()</code>', 'Was sich ergibt, wird nicht gespeichert']
+  ]
 });
 
 CH.push({
@@ -9931,7 +10428,14 @@ this.daten.reload();`,
       { name: 'Anmelden geht zum Server und lädt neu', run: async T => { const f = T.mount(T.cmp('Workshops')); await T.flush(100); await f.click(f.q('app-workshop-karte button.anmelden')); await T.flush(200); T.eq(posts(T, '/api/workshops/1/anmeldung').length, 1, 'Ein Klick soll über die API anmelden.'); T.ok(T.ng.backend.calls.filter(c => c.method === 'GET' && c.url === '/api/workshops').length >= 2, 'Danach soll die Liste neu geladen werden (daten.reload()).'); T.ok(f.q('app-workshop-karte .frei').textContent.includes('4 frei'), 'Die Karte soll danach den Stand vom Server zeigen: „4 frei“.'); } },
       { name: 'httpResource lädt die Liste', run: T => T.ok(/httpResource\s*</.test(T.code) || /httpResource\s*\(/.test(T.code), 'Lade die Liste mit httpResource(() => \'/api/workshops\').') }
     ] },
-  merke: ['Alles, was zum Server geht, steht in einem Service.', 'Jede Seite mit Server-Daten hat drei Zustände: lädt, Fehler, Daten.', 'httpResource zum Lesen, HttpClient im Service zum Schreiben.', 'Nach einer Änderung den Stand vom Server neu holen.']
+  merke: ['Alles, was zum Server geht, steht in einem Service.', 'Jede Seite mit Server-Daten hat drei Zustände: lädt, Fehler, Daten.', 'httpResource zum Lesen, HttpClient im Service zum Schreiben.', 'Nach einer Änderung den Stand vom Server neu holen.'],
+  paare: [
+    ['Service', 'Alles, was zum Server geht'],
+    ['<code>httpResource</code>', 'Lesen, mit Signal für Laden und Fehler'],
+    ['HttpClient', 'Schreiben im Service, etwa POST'],
+    ['Drei Zustände', 'Lädt, Fehler, Daten'],
+    ['<code>reload()</code>', 'Nach einer Änderung den Stand neu holen']
+  ]
 });
 
 CH.push({
@@ -9976,7 +10480,13 @@ speichern() {
       { name: 'Speichern schickt, meldet und leert', run: async T => { const f = T.mount(T.cmp('NeuerWorkshop')); const got = []; T.ok(f.instance.angelegt && typeof f.instance.angelegt.subscribe === 'function', 'angelegt soll ein output<Workshop>() sein.'); f.instance.angelegt.subscribe(w => got.push(w)); f.instance.daten.set(GUELTIG); f.instance.speichern(); await T.flush(5); T.ok(f.q('button.speichern').disabled, 'Während gespeichert wird, soll der Knopf gesperrt sein: [disabled]="neu().submitting()".'); await T.flush(120); T.ok(!f.q('button.speichern').disabled, 'Nach dem Speichern soll der Knopf wieder frei sein.'); const p = posts(T, '/api/workshops'); T.eq(p.length, 1, 'Es soll genau ein POST an /api/workshops gehen.'); T.eq(p[0].body, GUELTIG, 'Im POST sollen genau die Daten aus dem Formular stehen.'); T.eq(got.map(w => w.titel), ['Angular testen'], 'Danach soll angelegt den neuen Workshop vom Server melden.'); T.eq(f.instance.daten().titel, '', 'Danach soll der Titel wieder leer sein.'); } },
       { name: 'Die Liste zeigt den neuen Workshop', run: async T => { const f = T.mount(T.cmp('Workshops')); await T.flush(100); T.ok(f.q('app-neuer-workshop'), 'Die Seite soll <app-neuer-workshop> enthalten.'); await f.type('app-neuer-workshop input.titel', 'Angular testen'); await f.click('app-neuer-workshop button.speichern'); await T.flush(250); T.eq(f.qa('app-workshop-karte').length, 5, 'Nach dem Anlegen soll die Liste neu laden und 5 Workshops zeigen.'); } }
     ] },
-  merke: ['Formulare als eigene Komponente: speichern und per output melden.', 'Regeln für Zahlen: min und max.', 'submit() schützt den Server vor ungültigen Daten.', 'firstValueFrom macht aus einem Observable ein Promise.']
+  merke: ['Formulare als eigene Komponente: speichern und per output melden.', 'Regeln für Zahlen: min und max.', 'submit() schützt den Server vor ungültigen Daten.', 'firstValueFrom macht aus einem Observable ein Promise.'],
+  paare: [
+    ['Formular-Komponente', 'Speichert und meldet per output'],
+    ['<code>min</code> und <code>max</code>', 'Regeln für Zahlen'],
+    ['<code>submit()</code>', 'Schickt nur gültige Daten an den Server'],
+    ['<code>firstValueFrom</code>', 'Macht aus einem Observable ein Promise']
+  ]
 });
 
 CH.push({
@@ -10023,7 +10533,13 @@ export class WorkshopDetail {
       { name: 'Der Guard lässt nur die Orga rein', run: T => { const a = T.inject(T.get('Auth')); a.rolle.set('teilnehmer'); T.ok(T.isUrlTree(T.inCtx(() => T.get('nurOrga')({}, {})), '/'), 'Teilnehmer sollen per createUrlTree([\'/\']) zur Liste.'); a.rolle.set('orga'); T.eq(T.inCtx(() => T.get('nurOrga')({}, {})), true, 'Die Orga soll rein dürfen.'); } },
       { name: 'Die id kommt als input', run: T => T.ok(/withComponentInputBinding\s*\(\s*\)/.test(T.code), 'In appConfig fehlt provideRouter(routes, withComponentInputBinding()).') }
     ] },
-  merke: ['Jede Seite eine Adresse, Details mit :id.', 'withComponentInputBinding: Platzhalter kommen als input().', 'Guard: true oder UrlTree. Der Server prüft trotzdem.', '** ganz unten fängt alles Unbekannte.']
+  merke: ['Jede Seite eine Adresse, Details mit :id.', 'withComponentInputBinding: Platzhalter kommen als input().', 'Guard: true oder UrlTree. Der Server prüft trotzdem.', '** ganz unten fängt alles Unbekannte.'],
+  paare: [
+    ['<code>:id</code>', 'Platzhalter für die Detailseite'],
+    ['<code>withComponentInputBinding</code>', 'Der Platzhalter kommt als input() an'],
+    ['Guard', 'Gibt true oder einen UrlTree zurück'],
+    ['<code>**</code>', 'Fängt alles Unbekannte, ganz unten']
+  ]
 });
 })();
 
@@ -10089,7 +10605,14 @@ jobs:
     { q: 'Was bedeutet „feat(team): …“ in einer Commit-Nachricht?', options: ['Der Commit liegt auf dem Branch team', 'Das ist ein Conventional Commit: ein neues Feature im Bereich team', 'Ein Feature-Flag namens team wird eingeschaltet', 'Ein Release-Tag für das Team'], correct: 1, why: 'So sehen alle Nachrichten einheitlich aus, und daraus lassen sich Changelogs erzeugen.' },
     { q: 'Wann ist eine Aufgabe „Done“?', options: ['Wenn sie auf deinem Rechner läuft', 'Wenn Tests, Review, grüne Pipeline und Fehlerfälle erfüllt sind', 'Wenn der Pull Request geöffnet ist', 'Sobald der Commit gemacht ist'], correct: 1, why: 'Die Definition of Done gilt für alle im Team gleich.' }
   ],
-  merke: ['Eigenes Projekt mit ng new: Liste, Formular, Login, Auswertung.', 'Git im Team: Branch, kleiner Pull Request, Review, Conventional Commits.', 'CI bei jedem PR: npm ci, lint, test, build. Deploy bei Merge.', 'Done = Tests + Review + grüne Pipeline + Fehlerfälle.']
+  merke: ['Eigenes Projekt mit ng new: Liste, Formular, Login, Auswertung.', 'Git im Team: Branch, kleiner Pull Request, Review, Conventional Commits.', 'CI bei jedem PR: npm ci, lint, test, build. Deploy bei Merge.', 'Done = Tests + Review + grüne Pipeline + Fehlerfälle.'],
+  paare: [
+    ['Branch', 'Eigener Zweig für jede Änderung'],
+    ['Pull Request', 'Bitte um Review vor dem Merge'],
+    ['CI', 'npm ci, lint, test, build bei jedem PR'],
+    ['Definition of Done', 'Tests, Review, grüne Pipeline, Fehlerfälle'],
+    ['Conventional Commits', 'Nachrichten wie „feat: …“ oder „fix: …“']
+  ]
 });
 
 CH.push({
@@ -10127,7 +10650,14 @@ CH.push({
     { q: 'Im Fachgespräch mit dem Team fragt man dich: „Wie findest du ein Speicherleck?“ Welche Antwort ist die beste?', options: ['Ich prüfe den Lighthouse-Score', 'Im Memory-Tab der DevTools vergleiche ich Heap Snapshots vor und nach der Navigation, dann suche ich offene Abos, Timer und Listener', 'Ich ersetze alle subscribe durch Promises', 'Ich schreibe überall console.log hinein'], correct: 1, why: 'Erst messen, dann gezielt aufräumen, zum Beispiel mit DestroyRef und takeUntilDestroyed.' },
     { q: 'Im Code-Review-Gespräch fragt Jonas: „Warum lädst du die Liste mit httpResource?“ Welche Antwort ist die beste?', options: ['„Das macht man heute so.“', '„Die Liste wird nur gelesen, und httpResource gibt mir Laden, Fehler und Daten als Signals. Der Preis: Nach jeder Änderung rufe ich reload() auf.“', '„Das hat Toni gesagt.“', '„Ich kann es auch wieder ändern, wenn du willst.“'], correct: 1, why: 'Ziel, Grund und Preis in zwei Sätzen. So kann das Team die Entscheidung prüfen.' }
   ],
-  merke: ['STAR: Situation, Aufgabe, deine Aktion, Ergebnis mit Zahl.', 'Fachfragen in 3 Stufen: Definition, Beispiel, Trade-off.', 'Live-Coding: laut denken, nachfragen, erst einfach, dann schön.', 'Im Review: Ziel, Entscheidung, Preis. Rückfragen annehmen, selbst fragen.']
+  merke: ['STAR: Situation, Aufgabe, deine Aktion, Ergebnis mit Zahl.', 'Fachfragen in 3 Stufen: Definition, Beispiel, Trade-off.', 'Live-Coding: laut denken, nachfragen, erst einfach, dann schön.', 'Im Review: Ziel, Entscheidung, Preis. Rückfragen annehmen, selbst fragen.'],
+  paare: [
+    ['S: Situation', '„Unsere Teamliste lud 8 Sekunden.“'],
+    ['T: Task', '„Ich sollte sie unter 1 Sekunde bringen.“'],
+    ['A: Action', '„Ich habe gemessen und @defer eingebaut.“'],
+    ['R: Result', '„0,7 Sekunden, Absprünge −30 %.“'],
+    ['Den Preis nennen', '„Dafür lädt die Liste nach jeder Anmeldung neu.“']
+  ]
 });
 
 /* ================= WERKSTATT: Inhalte =================
@@ -12317,8 +12847,8 @@ function leFaelligIn(tage, ab) {
 const leTageBis = t => Math.round((leFaelligIn(0, t) - leFaelligIn(0)) / DAY);
 const leWann = t => { const n = leTageBis(t); return n <= 1 ? 'morgen' : 'in ' + n + ' Tagen'; };
 
-/* Karten: q:<kapitel>:<nr> Quizfrage · m:<kapitel> Merksätze aus dem Kopf · x:<kapitel> Übung aus dem Kopf.
-   Sie entstehen, sobald ein Kapitel geschafft ist. Die erste Wiederholung kommt nach 1, 2 oder 4 Tagen. */
+/* Karten: q:<kapitel>:<nr> Quizfrage · m:<kapitel> Merksätze aus dem Kopf · z:<kapitel> Zuordnen (zuordnen.js) · x:<kapitel> Übung aus dem Kopf.
+   Sie entstehen, sobald ein Kapitel geschafft ist. Die erste Wiederholung kommt nach 1, 2, 3 oder 4 Tagen. */
 function srsSeed() {
   const c = srs();
   CH.forEach(ch => {
@@ -12326,6 +12856,8 @@ function srsSeed() {
     const add = (k, tage) => { if (!c[k]) c[k] = { s: 0, n: 0, l: 0, due: leFaelligIn(tage, typeof d === 'number' ? d : Date.now()) }; };
     ch.quiz.forEach((q, i) => add('q:' + ch.id + ':' + i, 1));
     if (ch.merke && ch.merke.length) add('m:' + ch.id, 2);
+    /* Zuordnen: mit Fehlern im Kapitel schon nach 1 Tag, sonst nach 3 */
+    if (zuHat(ch)) add('z:' + ch.id, (S.zu || {})[ch.id] ? 1 : 3);
     /* Übung, die nur mit Lösung oder nach vielen Fehlversuchen klappte: schon nach 2 Tagen aus dem Kopf */
     const e = ch.ex && (S.ex || {})[ch.ex.id];
     if (ch.ex) add('x:' + ch.id, e && (e.usedSolution || e.fails >= 3) ? 2 : 4);
@@ -12337,6 +12869,7 @@ function srsCard(k) {
   if (p[0] === 'q') { const q = ch.quiz[+p[2]]; return q ? { t: 'q', k, ch, q, i: +p[2] } : null; }
   if (p[0] === 'm') return ch.merke && ch.merke.length ? { t: 'm', k, ch } : null;
   if (p[0] === 'x') return ch.ex ? { t: 'x', k, ch } : null;
+  if (p[0] === 'z') return zuHat(ch) ? { t: 'z', k, ch } : null;
   return null;
 }
 function srsDue(now) { srsSeed(); const c = srs(); now = now || Date.now(); return Object.keys(c).filter(k => c[k].due <= now && srsCard(k)); }
@@ -12432,22 +12965,27 @@ function leMischen(keys) {
   }
   return out;
 }
-/* Fällige Karten für eine Runde: die am längsten überfälligen zuerst, höchstens 15, davon 3 Merksatz-Karten und 1 Übung (am Schluss).
+/* Fällige Karten für eine Runde: die am längsten überfälligen zuerst, höchstens 15, davon 3 Merksatz-Karten, 2 zum Zuordnen und 1 Übung (am Schluss).
    Karten aus Themen, die bei dir wackeln (staerken.js), rücken nach vorn: Sie zählen bis zu doppelt so dringend. */
 function wdhRunde() {
   const c = srs(), now = Date.now(), sw = schwachKarte(), dran = k => (now - c[k].due + DAY) / Math.max(1, c[k].s) * (1 + (sw[k.split(':')[1]] || 0));
-  const pick = []; let nm = 0, nx = 0;
-  srsDue(now).sort((a, b) => dran(b) - dran(a)).forEach(k => { if (pick.length >= 15) return; if (k[0] === 'm') { if (nm >= 3) return; nm++; } if (k[0] === 'x') { if (nx >= 1) return; nx++; } pick.push(k); });
+  const pick = []; let nm = 0, nx = 0, nz = 0;
+  srsDue(now).sort((a, b) => dran(b) - dran(a)).forEach(k => { if (pick.length >= 15) return; if (k[0] === 'm') { if (nm >= 3) return; nm++; } if (k[0] === 'z') { if (nz >= 2) return; nz++; } if (k[0] === 'x') { if (nx >= 1) return; nx++; } pick.push(k); });
   return leMischen(pick.filter(k => k[0] !== 'x')).concat(pick.filter(k => k[0] === 'x'));
 }
 /* Freie Runde: bis zu 7 Quizfragen aus gespielten Kapiteln. Was du in freien Runden falsch hattest (S.weak), wird öfter gezogen.
    Eine Frage, die im Kapitel erst im zweiten Anlauf saß (S.quiz > 1), zählt wie ein solcher Fehler.
-   Dazu zieht jedes Thema, das bei dir wackelt (staerken.js), bis zu drei Lose mehr pro Frage. */
+   Dazu zieht jedes Thema, das bei dir wackelt (staerken.js), bis zu drei Lose mehr pro Frage.
+   Zuordnen (z:<kapitel>) ist mit im Topf, als Abwechslung höchstens zweimal pro Runde. Fehler dort zählen in S.weak['<kapitel>:zu']. */
 function leFreiPool() {
   const lose = [], sw = schwachKarte();
-  CH.filter(c => S.done[c.id] || S.steps[c.id]).forEach(c => c.quiz.forEach((q, i) => { const k = c.id + ':' + i, w = Math.min(((S.weak || {})[k] || 0) + (S.quiz[k] > 1 ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('q:' + c.id + ':' + i); }));
-  const pick = new Set(), max = Math.min(7, new Set(lose).size);
-  while (pick.size < max) pick.add(lose[Math.floor(Math.random() * lose.length)]);
+  CH.filter(c => S.done[c.id] || S.steps[c.id]).forEach(c => {
+    c.quiz.forEach((q, i) => { const k = c.id + ':' + i, w = Math.min(((S.weak || {})[k] || 0) + (S.quiz[k] > 1 ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('q:' + c.id + ':' + i); });
+    if (zuHat(c)) { const w = Math.min(((S.weak || {})[c.id + ':zu'] || 0) + ((S.zu || {})[c.id] ? 1 : 0), 3); for (let n = 0; n < 1 + w * 2 + Math.round((sw[c.id] || 0) * 3); n++) lose.push('z:' + c.id); }
+  });
+  const qs = new Set(lose.filter(k => k[0] === 'q')).size, zs = new Set(lose.filter(k => k[0] === 'z')).size;
+  const pick = new Set(), max = Math.min(7, qs + Math.min(2, zs));
+  while (pick.size < max) { const k = lose[Math.floor(Math.random() * lose.length)]; if (k[0] !== 'z' || pick.has(k) || [...pick].filter(x => x[0] === 'z').length < 2) pick.add(k); }
   return leMischen([...pick]);
 }
 const leKopf = (titel, stand) => `<header class="le-kopf"><div class="ort"><a href="#start">← Schreibtisch</a>${stand ? '<p id="leStand" aria-live="polite"></p>' : ''}</div><h1>${titel}</h1>${stand ? '<div class="le-balken" aria-hidden="true"><i id="wdhBar"></i></div>' : ''}</header>`;
@@ -12493,10 +13031,10 @@ function leRunde(main, keys, frei, titel) {
         const u = S.ux || (S.ux = {}), st = u[card.ch.id] || (u[card.ch.id] = { r: 0, f: 0 }); st[g ? 'r' : 'f']++;
         if (g) xp += 20;
       } else if (frei) {
-        const w = S.weak || (S.weak = {}), wk = card.ch.id + ':' + card.i;
+        const w = S.weak || (S.weak = {}), wk = card.ch.id + ':' + (card.t === 'z' ? 'zu' : card.i);
         if (g) { xp += 5; if (++serie === 5) xp += 15; if (w[wk] > 1) w[wk]--; else delete w[wk]; }
         else { serie = 0; w[wk] = (w[wk] || 0) + 1; }
-      } else { srsGrade(item.k, g); xp += x ? (g ? 20 : 5) : 3; }
+      } else { srsGrade(item.k, g); xp += x ? (g ? 20 : 5) : card.t === 'z' ? (g ? 8 : 3) : 3; }
     }
     /* Nochmal, bis es sitzt: Was daneben war, kommt in dieser Runde wieder (höchstens zweimal) */
     if (g === 0 && item.again < 2 && !x) queue.splice(Math.min(queue.length, 3 + Math.floor(Math.random() * 2)), 0, { k: item.k, again: item.again + 1 });
@@ -12534,6 +13072,12 @@ function leRunde(main, keys, frei, titel) {
           weiterKnopf(body.firstElementChild);
         };
         if (frei || item.again) aufloesen(null); else askConf($('.conf-slot', body), aufloesen);
+      });
+    } else if (card.t === 'z') {
+      /* Zuordnen: die Fehler bestimmen die Bewertung (zuNote), ohne Sicherheitsfrage */
+      zuKarte(body, ch, label(ch.title), f => {
+        $('.zu-host', body).insertAdjacentHTML('afterend', `<div class="le-warum"><b>${f ? (f === 1 ? 'Fast.' : 'Daneben.') : 'Sitzt.'}</b> Alle Paare gefunden, ${zuFehlerText(f)}.</div>`);
+        fertig(item, zuNote(f)); weiterKnopf(body.firstElementChild);
       });
     } else if (card.t === 'm') {
       body.innerHTML = `<div class="le-karte">${label('Merksätze')}<h2 class="le-frage" tabindex="-1">Was nimmst du aus „${esc(ch.title)}“ mit?</h2><p class="le-hinweis">Erst aus dem Kopf. Stichworte reichen, im Kopf aufsagen zählt auch.</p>
@@ -12602,7 +13146,7 @@ function leRunde(main, keys, frei, titel) {
 const LE_DOI = 'https://doi.org/';
 const WISSEN = [
   { t: 'Verteilt wiederholen', was: 'Quizfragen kommen nach 1 Tag wieder, Merksätze nach 2, die Übung nach 4. Sitzt es, wächst der Abstand: etwa 3, 7, 18 Tage.', warum: 'Über Tage verteilt bleibt meist mehr hängen als alles an einem Stück.', q: [['Cepeda u. a. 2006, Psychological Bulletin (Meta-Analyse)', '10.1037/0033-2909.132.3.354'], ['Carpenter, Pan & Butler 2022, Nature Reviews Psychology (Überblick)', '10.1038/s44159-022-00089-1']] },
-  { t: 'Abrufen statt nachlesen', was: 'Quiz, „Was nimmst du mit?“ und Code aus dem Kopf: Du holst das Wissen selbst hervor.', warum: 'Sich zu erinnern festigt meist besser, als denselben Text nochmal zu lesen.', q: [['Roediger & Karpicke 2006, Psychological Science', '10.1111/j.1467-9280.2006.01693.x'], ['Yang u. a. 2021, Psychological Bulletin (Meta-Analyse, Unterricht)', '10.1037/bul0000309']] },
+  { t: 'Abrufen statt nachlesen', was: 'Quiz, Zuordnen, „Was nimmst du mit?“ und Code aus dem Kopf: Du holst das Wissen selbst hervor.', warum: 'Sich zu erinnern festigt meist besser, als denselben Text nochmal zu lesen.', q: [['Roediger & Karpicke 2006, Psychological Science', '10.1111/j.1467-9280.2006.01693.x'], ['Yang u. a. 2021, Psychological Bulletin (Meta-Analyse, Unterricht)', '10.1037/bul0000309']] },
   { t: 'Nochmal, bis es sitzt', was: 'Eine falsche Karte kommt in derselben Runde wieder und am nächsten Tag noch einmal.', warum: 'Bis zum Treffer üben und das an späteren Tagen wiederholen hält Wissen meist lange.', q: [['Rawson & Dunlosky 2022, Current Directions in Psychological Science (Überblick)', '10.1177/09637214221100484']] },
   { t: 'Mehr Übung, wo es hakt', was: 'Die App rechnet aus deinen Antworten, welche Themen wackeln. Die kommen öfter dran, und in Übungen kommt Hilfe früher.', warum: 'Übung, die sich nach deinem Stand richtet, bringt meist mehr als für alle die gleiche.', q: [['Kulik & Fletcher 2016, Review of Educational Research (Meta-Analyse, Tutor-Systeme)', '10.3102/0034654315581420']] },
   { t: 'Wie sicher bist du?', was: 'Beim Wiederholen sagst du vor der Auflösung, ob du sicher bist. Geratenes kommt früher wieder.', warum: 'Richtig geraten ist noch nicht gewusst. Und wer sicher war und danebenlag, behält die Korrektur meist besonders gut.', q: [['Metcalfe 2017, Annual Review of Psychology (Überblick)', '10.1146/annurev-psych-010416-044022']] },
@@ -12758,15 +13302,23 @@ const stripHtml = h => { const d = document.createElement('div'); d.innerHTML = 
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
 
 /* ---------- Zustand ---------- */
-const DEFAULT_STATE = { ich: {}, xp: 0, steps: {}, done: {}, quiz: {}, ex: {}, code: {}, days: [], badges: [], updated: 0, srs: {}, cal: { sr: 0, sw: 0, ur: 0, uw: 0 }, schrank: [], schrankNeu: [], pre: {}, offen: {}, gen: {}, reflect: {}, zeile: {}, profil: {}, eigene: {}, arena: { bug: {}, out: {}, rev: {}, iv: [] } };
+const DEFAULT_STATE = { ich: {}, xp: 0, steps: {}, done: {}, quiz: {}, ex: {}, code: {}, days: [], badges: [], updated: 0, srs: {}, cal: { sr: 0, sw: 0, ur: 0, uw: 0 }, schrank: [], schrankNeu: [], pre: {}, offen: {}, gen: {}, zu: {}, reflect: {}, zeile: {}, profil: {}, eigene: {}, arena: { bug: {}, out: {}, rev: {}, iv: [] } };
 /* Frische Kopie der Vorgaben, damit nie zwei Zustände dasselbe Objekt teilen. Ein bekanntes Feld mit falscher Art (etwa null
    aus einer kaputten Datei) fällt auf die Vorgabe zurück, damit ein alter oder beschädigter Spielstand die App nicht anhält.
    Felder, die hier nicht stehen, bleiben, wie sie sind. */
 const withDefaults = v => {
   const d = JSON.parse(JSON.stringify(DEFAULT_STATE));
   if (v && typeof v === 'object') Object.keys(v).forEach(k => { const x = v[k]; if (!(k in d) || (x != null && typeof x === typeof d[k] && Array.isArray(x) === Array.isArray(d[k]))) d[k] = x; });
+  zuSchritteVerschieben(d);
   return d;
 };
+/* Seit es im Kapitel den Schritt „Zuordnen“ nach dem Quiz gibt, liegen Übung und Abschluss einen Schritt weiter.
+   Ältere Spielstände merken sich den Schritt noch nach der alten Zählung: einmal umrechnen, dann zuV = 1. */
+function zuSchritteVerschieben(d) {
+  if (d.zuV) return;
+  CH.forEach(c => { const n = d.steps[c.id], quizEnde = c.slides.length + c.quiz.length; if (typeof n === 'number' && n > quizEnde && zuHat(c)) d.steps[c.id] = n + 1; });
+  d.zuV = 1;
+}
 let S = load();
 function load() { try { const v = JSON.parse(localStorage.getItem('ngfc.v1')); if (v) return withDefaults(v); } catch (e) {} return withDefaults(); }
 /* Angezeigte Nummer einer Phase: ihre Position (1, 2, 3 …). Eigene Kapitel haben keine Nummer. Die Grundlagen heißen nur
@@ -13462,10 +14014,12 @@ function buildSteps(ch) {
   const st = [{ t: 'story' }];
   ch.slides.forEach((s, i) => st.push({ t: 'slide', i }));
   ch.quiz.forEach((q, i) => st.push({ t: 'quiz', i }));
+  /* Zuordnen: Abwechslung zum Quiz (zuordnen.js). Schiebt Übung und Abschluss um einen Schritt, siehe zuSchritteVerschieben. */
+  if (zuHat(ch)) st.push({ t: 'zu' });
   if (ch.ex) st.push({ t: 'code' }); st.push({ t: 'end' });
   return st;
 }
-const STEP_LABEL = { story: 'Ticket', slide: 'Verstehen', quiz: 'Quiz', code: 'Umsetzen', end: 'Abschluss' };
+const STEP_LABEL = { story: 'Ticket', slide: 'Verstehen', quiz: 'Quiz', zu: 'Zuordnen', code: 'Umsetzen', end: 'Abschluss' };
 /* Die Szene, die sich gerade abspielt (für die Leertaste), sonst null */
 var kpSzene = null;
 /* Fokus nur dann versetzen, wenn er gerade im Schritt liegt oder verloren ging. So springt beim Lesen nichts. */
@@ -13525,12 +14079,13 @@ function renderChapter(main, ch) {
     aktFolie = st.t === 'slide' ? { ch, s: ch.slides[st.i] } : null;
     /* Am Ende entscheidet der Abschluss selbst (Nächstes Kapitel oder Schreibtisch), darum dort kein „Weiter“ */
     next.hidden = i === steps.length - 1; prev.disabled = i === 0;
-    /* Im Quiz ist „Weiter“ erst Hauptknopf, wenn die Frage richtig beantwortet ist. Überspringen geht trotzdem. */
-    next.classList.toggle('primary', st.t !== 'quiz' || !!S.quiz[ch.id + ':' + st.i]);
+    /* Im Quiz ist „Weiter“ erst Hauptknopf, wenn die Frage richtig beantwortet ist, beim Zuordnen, wenn alle Paare stehen. Überspringen geht trotzdem. */
+    next.classList.toggle('primary', st.t === 'quiz' ? !!S.quiz[ch.id + ':' + st.i] : st.t === 'zu' ? (S.zu || {})[ch.id] != null : true);
     let szene = null;
     if (st.t === 'story') szene = renderStory(body, ch, () => show(i + 1));
     if (st.t === 'slide') renderSlide(body, ch.slides[st.i], ch);
     if (st.t === 'quiz') renderQuiz(body, ch.quiz[st.i], ch, st.i);
+    if (st.t === 'zu') renderZuordnen(body, ch);
     if (st.t === 'code') renderCode(body, ch.ex, ch);
     if (st.t === 'end') renderEnd(body, ch, schauen, () => show(kpOffenZiel(ch, steps)));
     highlightIn(body); wireAnno(body);
@@ -13827,6 +14382,120 @@ function renderEnd(body, ch, nurLesen, zuOffen) {
     kpFokus($('#kpNaechstes') || $('#kpHeim'));
   };
   $('#dumpGo').onclick = zeig; $('#dumpSkip').onclick = zeig;
+}
+
+/* ===== Zuordnen: links Begriffe, rechts Aussagen, die passenden Paare finden =====
+   Eine Abwechslung zum Quiz. Die Paare stehen im Kapitel: paare: [[links, rechts], …], 3 bis 6 Stück, HTML wie im Quiz (<code>).
+   Jede Aussage rechts passt zu genau einem Begriff links.
+   Bedienung: einen Begriff antippen, dann die Aussage (oder andersherum). Passt es, bleibt das Paar mit gleicher Nummer und Farbe
+   stehen. Passt es nicht, wackeln beide kurz, und es zählt als Fehler. Alles mit Tastatur bedienbar, die Zahlentasten bleiben frei.
+   Wo es vorkommt:
+   - im Kapitel als Schritt „Zuordnen“ nach dem Quiz (kapitel.js). Gemerkt in S.zu[kapitel] = Fehler im ersten Durchgang.
+   - beim Wiederholen als Karte z:<kapitel> (lernen.js): 0 Fehler = sitzt, 1 Fehler = wackelig, ab 2 = daneben.
+   - in freien Runden und beim Üben eines Themas, Fehler dort in S.weak['<kapitel>:zu'] wie bei Quizfragen.
+   Fehler zählen fürs Thema wie falsche Quizantworten (staerken.js). */
+/* Als function deklariert: basis.js braucht zuHat schon beim Laden des Spielstands (zuSchritteVerschieben) */
+function zuPaare(ch) { return (ch && Array.isArray(ch.paare) ? ch.paare : []).filter(p => Array.isArray(p) && typeof p[0] === 'string' && typeof p[1] === 'string' && p[0] && p[1]).slice(0, 6); }
+function zuHat(ch) { return zuPaare(ch).length >= 3; }
+/* Fehler einer Runde → Bewertung wie beim Wiederholen: 2 = sitzt, 1 = wackelig, 0 = daneben */
+const zuNote = f => f === 0 ? 2 : f === 1 ? 1 : 0;
+const zuFehlerText = f => f === 0 ? 'ohne Fehler' : f === 1 ? 'mit 1 Fehler' : 'mit ' + f + ' Fehlern';
+
+/* Das Spiel in host. opts.fertig(fehler) kommt einmal, wenn alle Paare stehen. opts.geloest = gleich aufgelöst zeigen
+   (Kapitel schon gespielt). Rückgabe: { fehler() } */
+function zuSpiel(host, paare, opts) {
+  opts = opts || {};
+  const n = paare.length, links = shuffle(paare.map((p, i) => i)), rechts = shuffle(paare.map((p, i) => i));
+  /* Höchstens ein Paar steht zufällig auf gleicher Höhe, sonst wäre es zu leicht */
+  for (let t = 0; t < 20 && rechts.filter((x, k) => x === links[k]).length > 1; t++) shuffle(rechts);
+  const karte = (s, i) => `<li><button type="button" class="zu-k" data-s="${s}" data-p="${i}" aria-pressed="false"><span class="zu-n" aria-hidden="true"></span><span class="zu-t">${leHtml(paare[i][s === 'l' ? 0 : 1])}</span></button></li>`;
+  host.innerHTML = `<div class="zu">
+    <p class="zu-h">${opts.geloest ? 'So gehören sie zusammen.' : 'Tipp links einen Begriff an, dann rechts die passende Aussage.'}</p>
+    <div class="zu-feld">
+      <ul class="zu-sp zu-links" aria-label="Begriffe">${links.map(i => karte('l', i)).join('')}</ul>
+      <ul class="zu-sp zu-rechts" aria-label="Aussagen">${rechts.map(i => karte('r', i)).join('')}</ul>
+    </div>
+    <p class="zu-msg" role="status" aria-live="polite"></p>
+  </div>`;
+  const box = $('.zu', host), msg = $('.zu-msg', box), ks = [...box.querySelectorAll('.zu-k')];
+  const gegen = b => ks.find(x => x !== b && x.dataset.p === b.dataset.p);
+  const text = b => $('.zu-t', b).textContent;
+  let wahl = null, fehler = 0, paar = 0, fertig = false;
+  const waehle = b => {
+    if (wahl) { wahl.classList.remove('zu-an'); wahl.setAttribute('aria-pressed', 'false'); }
+    wahl = b || null;
+    if (wahl) { wahl.classList.add('zu-an'); wahl.setAttribute('aria-pressed', 'true'); }
+    box.dataset.wahl = wahl ? wahl.dataset.s : '';
+  };
+  const fest = (a, b, still) => {
+    paar++;
+    [a, b].forEach(x => {
+      x.classList.add('zu-ok'); x.disabled = true; x.setAttribute('aria-pressed', 'false');
+      x.dataset.nr = paar; $('.zu-n', x).textContent = paar;
+      x.setAttribute('aria-label', 'Paar ' + paar + ': ' + text(x));
+      if (!still) jubelHuepf(x);
+    });
+  };
+  const ende = still => {
+    fertig = true; box.classList.add('zu-fertig');
+    if (!still) msg.textContent = 'Alle ' + n + ' Paare gefunden, ' + zuFehlerText(fehler) + '.';
+    if (opts.fertig) opts.fertig(fehler);
+  };
+  if (opts.geloest) {
+    links.forEach(i => { const a = ks.find(x => x.dataset.s === 'l' && +x.dataset.p === i); fest(a, gegen(a), true); });
+    ende(true);
+    return { fehler: () => fehler };
+  }
+  ks.forEach(b => b.onclick = e => {
+    if (fertig || b.disabled || e.detail > 1) return;
+    if (!wahl || wahl === b) { waehle(wahl === b ? null : b); return; }
+    if (wahl.dataset.s === b.dataset.s) { waehle(b); return; }
+    const a = wahl; waehle(null);
+    const l = a.dataset.s === 'l' ? a : b, r = l === a ? b : a;
+    if (a.dataset.p === b.dataset.p) {
+      fest(l, r); jubelTon('klein');
+      if (paar === n) { ende(); return; }
+      msg.textContent = 'Passt: ' + text(l) + ' · ' + text(r);
+      /* Weiter mit dem nächsten offenen Begriff auf derselben Seite, wenn die Tastatur gerade im Spiel ist */
+      const weiter = ks.find(x => x.dataset.s === b.dataset.s && !x.disabled) || ks.find(x => !x.disabled);
+      if (weiter && box.contains(document.activeElement)) weiter.focus({ preventScroll: true });
+    } else {
+      fehler++; jubelDaneben();
+      msg.textContent = 'Passt nicht: ' + text(l) + ' · ' + text(r) + '. Versuch es nochmal.';
+      [a, b].forEach(x => { x.classList.remove('zu-no'); void x.offsetWidth; x.classList.add('zu-no'); });
+      setTimeout(() => [a, b].forEach(x => x.classList.remove('zu-no')), 700);
+    }
+  });
+  return { fehler: () => fehler };
+}
+
+/* ---------- Im Kapitel: Schritt „Zuordnen“ nach dem Quiz ----------
+   Der erste Durchgang zählt: S.zu[kapitel] = Fehler. Ohne Fehler +10 XP wie eine Quizfrage, die sofort sitzt.
+   Später steht das Spiel aufgelöst da, „Nochmal mischen“ spielt es ohne Wertung erneut. */
+function renderZuordnen(body, ch) {
+  const paare = zuPaare(ch), war = (S.zu || {})[ch.id];
+  body.innerHTML = '<div class="zu-kp"><h2 class="q">Was gehört zusammen?</h2><div class="zu-host"></div><div class="zu-unten"></div></div>';
+  const host = $('.zu-host', body), unten = $('.zu-unten', body), next = $('#nextStep');
+  const nochmal = () => {
+    unten.innerHTML = '<p class="zu-act"><button type="button" class="linkbtn" id="zuNochmal">Nochmal mischen</button></p>';
+    $('#zuNochmal', unten).onclick = () => { unten.innerHTML = ''; zuSpiel(host, paare, { fertig: f => { if (!f) jubelRichtig($('.zu-msg', host)); nochmal(); } }); $('.zu-k', host).focus({ preventScroll: true }); };
+  };
+  if (war != null) { zuSpiel(host, paare, { geloest: true }); nochmal(); return; }
+  zuSpiel(host, paare, {
+    fertig: f => {
+      S.zu = S.zu || {}; S.zu[ch.id] = f;
+      if (!f) { jubelRichtig($('.zu-msg', host)); addXp(10, 'Alles richtig zugeordnet'); } else save();
+      if (next) { next.classList.add('primary'); kpFokus(next); }
+      nochmal();
+    }
+  });
+}
+
+/* ---------- Beim Wiederholen, in freien Runden und beim Üben: eine Karte z:<kapitel> ----------
+   label: die Zeile über der Karte. fertig(fehler) nach dem letzten Paar. */
+function zuKarte(body, ch, label, fertig) {
+  body.innerHTML = `<div class="le-karte">${label}<h2 class="le-frage" tabindex="-1">Was gehört zusammen?</h2><div class="zu-host"></div></div>`;
+  zuSpiel($('.zu-host', body), zuPaare(ch), { fertig });
 }
 
 /* ===== Code-Übung: Editor, Vorschau, Tests gegen echtes Angular ===== */
@@ -14382,19 +15051,25 @@ function setupProfil() {
 /* ===== Deine Themen: was sitzt und was wackelt. Ohne KI, nur aus dem Spielstand gerechnet =====
    Quellen je Kapitel: Kapitel-Quiz (S.quiz: Versuche bis richtig), Fehler in freien Runden (S.weak), Fehler beim Wiederholen
    (S.srs[…].l), „sicher, aber daneben“ beim Wiederholen (S.srs[…].sf), Übung (S.ex: Fehlversuche, Lösung angeschaut),
-   Mini-Spiel „Welche Zeile ist das?“ (S.zeile) und Toni-Fragen (S.tf).
+   Mini-Spiel „Welche Zeile ist das?“ (S.zeile), Zuordnen (S.zu im Kapitel, S.weak['<kapitel>:zu'] in freien Runden, zuordnen.js)
+   und Toni-Fragen (S.tf).
    Danach richten sich: Wiederholen und freie Runde (wackelige Themen öfter und früher), die Hilfe in der Übung (früher angeboten),
    der Schreibtisch („Wackelt noch“) und Toni (bekommt die Themen mit). Mit KI schreibt Toni zu einem Thema neue Fragen. */
 
 /* Ein Kapitel: pkt = Fehlerpunkte, n = Beobachtungen, schwach = 0 bis 1, stand = offen | wackelt | mittel | sitzt, gruende = Sätze */
 function themaStand(ch) {
   let pkt = 0, n = 0;
-  const g = { quiz: 0, frei: 0, wdh: 0, sicher: 0, fails: 0, loesung: false, zeile: 0, tf: 0 };
+  const g = { quiz: 0, frei: 0, wdh: 0, sicher: 0, fails: 0, loesung: false, zeile: 0, tf: 0, zu: 0 };
   (ch.quiz || []).forEach((q, i) => {
     const k = ch.id + ':' + i, t = (S.quiz || {})[k], w = (S.weak || {})[k];
     if (t) { n++; if (t > 1) { pkt += Math.min(t - 1, 2); g.quiz++; } }
     if (w) { pkt += w; g.frei += w; n++; }
   });
+  /* Zuordnen zählt wie Quizfragen: jeder Fehler im Kapitel ein Punkt, höchstens zwei je Paar wie bei einer Frage */
+  const zf = (S.zu || {})[ch.id];
+  if (typeof zf === 'number' && zuHat(ch)) { n += zuPaare(ch).length; if (zf) { pkt += Math.min(zf, 2 * zuPaare(ch).length); g.zu = zf; } }
+  const zw = (S.weak || {})[ch.id + ':zu'];
+  if (zw) { pkt += zw; g.frei += zw; n++; }
   Object.keys(S.srs || {}).forEach(k => {
     const c = S.srs[k]; if (!c || k.split(':')[1] !== ch.id) return;
     n += c.n || 0;
@@ -14425,6 +15100,7 @@ function themaStand(ch) {
   const gruende = [];
   if (nurAngeschaut) gruende.push(ch.ex ? 'Übung noch offen' : 'Quiz noch offen');
   if (g.quiz) gruende.push((g.quiz === 1 ? '1 Quizfrage' : g.quiz + ' Quizfragen') + ' erst im zweiten Anlauf');
+  if (g.zu) gruende.push((g.zu === 1 ? '1 Fehler' : g.zu + ' Fehler') + ' beim Zuordnen');
   if (g.frei + g.wdh) gruende.push((g.frei + g.wdh) + '× daneben beim Wiederholen');
   if (g.sicher) gruende.push(g.sicher + '× sicher, aber falsch');
   if (g.loesung) gruende.push('Übung mit der Lösung geschafft');
@@ -14470,7 +15146,10 @@ function hubBaustellenAn(main) { const b = $('#hubBauKi', main); if (b) b.onclic
    Gerade Fehlversuche in der Übung lassen ein Thema oft wackeln, darum gehört der Code mit zur Runde. */
 function renderUeben(main, ch) {
   const x = ch.ex && S.ex[ch.ex.id] && S.ex[ch.ex.id].passed ? ['x:' + ch.id] : [];
-  const keys = shuffle((ch.quiz || []).map((q, i) => 'q:' + ch.id + ':' + i)).slice(0, 7).concat(x);
+  /* Zuordnen kommt als Abwechslung irgendwo zwischen die Quizfragen */
+  const keys = shuffle((ch.quiz || []).map((q, i) => 'q:' + ch.id + ':' + i)).slice(0, 7);
+  if (zuHat(ch)) keys.splice(1 + Math.floor(Math.random() * keys.length), 0, 'z:' + ch.id);
+  keys.push(...x);
   if (!keys.length) { main.innerHTML = leKopf('Üben') + '<div class="card le-ruhe"><h2>Hier gibt es keine Fragen</h2></div>'; return; }
   leRunde(main, keys, true, 'Üben: ' + ch.title);
 }

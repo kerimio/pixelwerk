@@ -24,6 +24,15 @@ ok(!quizKaputt.length, 'Jede Quizfrage hat Optionen, eine gültige richtige Antw
 // Kapitel einer Phase stehen am Stück, in der Reihenfolge der Phasen
 const folge = CH.map(c => c.akt).filter((a, i, l) => i === 0 || l[i - 1] !== a);
 ok(folge.length === new Set(folge).size && folge.every((a, i) => a === AKTE[i].n), 'Kapitel stehen phasenweise in der Reihenfolge von AKTE');
+// Zuordnen (zuordnen.js): 3 bis 6 Paare aus zwei Texten, jeder Begriff und jede Aussage nur einmal, sonst wäre die Lösung nicht eindeutig
+const paareKaputt = CH.filter(c => c.paare != null).filter(c => {
+  const p = c.paare, ohne = s => String(s).replace(/<\/?(?:code|b|i|em|strong)>/g, '').trim().toLowerCase();
+  return !Array.isArray(p) || p.length < 3 || p.length > 6 || !p.every(x => Array.isArray(x) && x.length === 2 && x.every(s => typeof s === 'string' && ohne(s))) ||
+    new Set(p.map(x => ohne(x[0]))).size !== p.length || new Set(p.map(x => ohne(x[1]))).size !== p.length;
+}).map(c => c.id);
+ok(!paareKaputt.length, 'Zuordnen: 3 bis 6 Paare, Begriffe und Aussagen je Kapitel eindeutig' + (paareKaputt.length ? ': ' + paareKaputt.join(', ') : ''));
+const ohnePaare = CH.filter(c => !c.paare).map(c => c.id);
+ok(!ohnePaare.length, 'Jedes Kapitel hat Paare zum Zuordnen' + (ohnePaare.length ? ': ' + ohnePaare.join(', ') : ''));
 const exIds = CH.filter(c => c.ex).map(c => c.ex.id);
 ok(new Set(exIds).size === exIds.length, 'Übungs-IDs sind eindeutig');
 

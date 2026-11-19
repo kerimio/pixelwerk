@@ -3,10 +3,12 @@ function buildSteps(ch) {
   const st = [{ t: 'story' }];
   ch.slides.forEach((s, i) => st.push({ t: 'slide', i }));
   ch.quiz.forEach((q, i) => st.push({ t: 'quiz', i }));
+  /* Zuordnen: Abwechslung zum Quiz (zuordnen.js). Schiebt Übung und Abschluss um einen Schritt, siehe zuSchritteVerschieben. */
+  if (zuHat(ch)) st.push({ t: 'zu' });
   if (ch.ex) st.push({ t: 'code' }); st.push({ t: 'end' });
   return st;
 }
-const STEP_LABEL = { story: 'Ticket', slide: 'Verstehen', quiz: 'Quiz', code: 'Umsetzen', end: 'Abschluss' };
+const STEP_LABEL = { story: 'Ticket', slide: 'Verstehen', quiz: 'Quiz', zu: 'Zuordnen', code: 'Umsetzen', end: 'Abschluss' };
 /* Die Szene, die sich gerade abspielt (für die Leertaste), sonst null */
 var kpSzene = null;
 /* Fokus nur dann versetzen, wenn er gerade im Schritt liegt oder verloren ging. So springt beim Lesen nichts. */
@@ -66,12 +68,13 @@ function renderChapter(main, ch) {
     aktFolie = st.t === 'slide' ? { ch, s: ch.slides[st.i] } : null;
     /* Am Ende entscheidet der Abschluss selbst (Nächstes Kapitel oder Schreibtisch), darum dort kein „Weiter“ */
     next.hidden = i === steps.length - 1; prev.disabled = i === 0;
-    /* Im Quiz ist „Weiter“ erst Hauptknopf, wenn die Frage richtig beantwortet ist. Überspringen geht trotzdem. */
-    next.classList.toggle('primary', st.t !== 'quiz' || !!S.quiz[ch.id + ':' + st.i]);
+    /* Im Quiz ist „Weiter“ erst Hauptknopf, wenn die Frage richtig beantwortet ist, beim Zuordnen, wenn alle Paare stehen. Überspringen geht trotzdem. */
+    next.classList.toggle('primary', st.t === 'quiz' ? !!S.quiz[ch.id + ':' + st.i] : st.t === 'zu' ? (S.zu || {})[ch.id] != null : true);
     let szene = null;
     if (st.t === 'story') szene = renderStory(body, ch, () => show(i + 1));
     if (st.t === 'slide') renderSlide(body, ch.slides[st.i], ch);
     if (st.t === 'quiz') renderQuiz(body, ch.quiz[st.i], ch, st.i);
+    if (st.t === 'zu') renderZuordnen(body, ch);
     if (st.t === 'code') renderCode(body, ch.ex, ch);
     if (st.t === 'end') renderEnd(body, ch, schauen, () => show(kpOffenZiel(ch, steps)));
     highlightIn(body); wireAnno(body);

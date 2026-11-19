@@ -6,15 +6,23 @@ const stripHtml = h => { const d = document.createElement('div'); d.innerHTML = 
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); }
 
 /* ---------- Zustand ---------- */
-const DEFAULT_STATE = { ich: {}, xp: 0, steps: {}, done: {}, quiz: {}, ex: {}, code: {}, days: [], badges: [], updated: 0, srs: {}, cal: { sr: 0, sw: 0, ur: 0, uw: 0 }, schrank: [], schrankNeu: [], pre: {}, offen: {}, gen: {}, reflect: {}, zeile: {}, profil: {}, eigene: {}, arena: { bug: {}, out: {}, rev: {}, iv: [] } };
+const DEFAULT_STATE = { ich: {}, xp: 0, steps: {}, done: {}, quiz: {}, ex: {}, code: {}, days: [], badges: [], updated: 0, srs: {}, cal: { sr: 0, sw: 0, ur: 0, uw: 0 }, schrank: [], schrankNeu: [], pre: {}, offen: {}, gen: {}, zu: {}, reflect: {}, zeile: {}, profil: {}, eigene: {}, arena: { bug: {}, out: {}, rev: {}, iv: [] } };
 /* Frische Kopie der Vorgaben, damit nie zwei Zustände dasselbe Objekt teilen. Ein bekanntes Feld mit falscher Art (etwa null
    aus einer kaputten Datei) fällt auf die Vorgabe zurück, damit ein alter oder beschädigter Spielstand die App nicht anhält.
    Felder, die hier nicht stehen, bleiben, wie sie sind. */
 const withDefaults = v => {
   const d = JSON.parse(JSON.stringify(DEFAULT_STATE));
   if (v && typeof v === 'object') Object.keys(v).forEach(k => { const x = v[k]; if (!(k in d) || (x != null && typeof x === typeof d[k] && Array.isArray(x) === Array.isArray(d[k]))) d[k] = x; });
+  zuSchritteVerschieben(d);
   return d;
 };
+/* Seit es im Kapitel den Schritt „Zuordnen“ nach dem Quiz gibt, liegen Übung und Abschluss einen Schritt weiter.
+   Ältere Spielstände merken sich den Schritt noch nach der alten Zählung: einmal umrechnen, dann zuV = 1. */
+function zuSchritteVerschieben(d) {
+  if (d.zuV) return;
+  CH.forEach(c => { const n = d.steps[c.id], quizEnde = c.slides.length + c.quiz.length; if (typeof n === 'number' && n > quizEnde && zuHat(c)) d.steps[c.id] = n + 1; });
+  d.zuV = 1;
+}
 let S = load();
 function load() { try { const v = JSON.parse(localStorage.getItem('ngfc.v1')); if (v) return withDefaults(v); } catch (e) {} return withDefaults(); }
 /* Angezeigte Nummer einer Phase: ihre Position (1, 2, 3 …). Eigene Kapitel haben keine Nummer. Die Grundlagen heißen nur

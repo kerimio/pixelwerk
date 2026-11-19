@@ -122,7 +122,14 @@ export class TeamSeite {
       { name: 'EntwicklerListe ist dumm (kein inject)', run: T => { const m = T.code.match(/class\s+EntwicklerListe\b[\s\S]*?\n}/); T.ok(m && !/inject\s*\(/.test(m[0]), 'In EntwicklerListe darf kein inject(...) stehen. Daten kommen per input().'); } },
       { name: 'TeamSeite verbindet alles', run: async T => { const f = T.mount(T.cmp('TeamSeite')); T.eq(f.qa('li').map(l => l.textContent.trim()), ['Leon', 'Mo', 'Ben'], 'TeamSeite soll die Entwickler aus dem Service an die Liste geben.'); await f.click(f.qa('li')[1]); T.ok(/Gewählt:\s*Mo/.test(f.q('.gewaehlt').textContent), 'Nach Klick auf Mo soll „Gewählt: Mo“ stehen.'); } }
     ] },
-  merke: ['Smart (Container) holt und entscheidet, Dumb (Presentational) zeigt und meldet.', 'Ordner nach Fachbereich: team/, tickets/, shared/, core/.', 'Abhängigkeiten nur in eine Richtung. Nx kann das erzwingen.', 'Micro-Frontends nur, wenn es wirklich viele unabhängige Teams gibt.']
+  merke: ['Smart (Container) holt und entscheidet, Dumb (Presentational) zeigt und meldet.', 'Ordner nach Fachbereich: team/, tickets/, shared/, core/.', 'Abhängigkeiten nur in eine Richtung. Nx kann das erzwingen.', 'Micro-Frontends nur, wenn es wirklich viele unabhängige Teams gibt.'],
+  paare: [
+    ['Smart / Container', 'Holt Daten und entscheidet'],
+    ['Dumb / Presentational', 'Nur input() und output()'],
+    ['Ordner nach Fachbereich', 'team/, tickets/, shared/, core/'],
+    ['Nx', 'Erzwingt, wer wen benutzen darf'],
+    ['Micro-Frontends', 'Nur bei vielen unabhängigen Teams']
+  ]
 });
 
 CH.push({
@@ -229,7 +236,14 @@ export function pruefeGrenzen(projekte: Record<string, string[]>, importe: Impor
       { name: 'Beide Regeln verletzt: zwei Meldungen, in Reihenfolge', run: T => { const P = { 'team-ui': ['type:ui', 'scope:team'], 'tickets-feature': ['type:feature', 'scope:tickets'], 'shared-util': ['type:util', 'scope:shared'] }; T.eq(T.get('pruefeGrenzen')(P, [{ von: 'team-ui', nach: 'tickets-feature' }, { von: 'team-ui', nach: 'shared-util' }]), ['team-ui → tickets-feature: ui darf kein feature benutzen', 'team-ui → tickets-feature: scope team darf nicht scope tickets benutzen'], 'Erst die Typ-Meldung, dann die Scope-Meldung. Der erlaubte zweite Import bringt nichts.'); } },
       { name: 'Projekt ohne Tags gibt genau eine klare Meldung', run: T => { const P = { 'team-feature': ['type:feature', 'scope:team'], 'altes-zeug': [] }; T.eq(T.get('pruefeGrenzen')(P, [{ von: 'team-feature', nach: 'altes-zeug' }, { von: 'team-feature', nach: 'gibt-es-nicht' }]), ['team-feature → altes-zeug: Projekt altes-zeug hat keine Tags', 'team-feature → gibt-es-nicht: Projekt gibt-es-nicht hat keine Tags'], 'Fehlen die Tags oder das Projekt, soll nur diese eine Meldung kommen.'); } }
     ] },
-  merke: ['Jede Library bekommt type und scope als Etikett.', 'Abhängigkeiten zeigen nach unten: feature → data/ui → util, nie zurück.', 'Fachbereiche benutzen nur sich selbst und shared.', 'Regeln gehören in den Build, nicht ins Wiki. Alte Verstöße in Stufen abbauen.']
+  merke: ['Jede Library bekommt type und scope als Etikett.', 'Abhängigkeiten zeigen nach unten: feature → data/ui → util, nie zurück.', 'Fachbereiche benutzen nur sich selbst und shared.', 'Regeln gehören in den Build, nicht ins Wiki. Alte Verstöße in Stufen abbauen.'],
+  paare: [
+    ['<code>type:feature</code>', 'Seiten und Abläufe, darf ui, data und util'],
+    ['<code>type:ui</code>', 'Dumme Bausteine, nie data'],
+    ['<code>type:data</code>', 'Services, Stores und API'],
+    ['<code>type:util</code>', 'Reine Funktionen'],
+    ['<code>scope</code>', 'Zu welchem Fachbereich die Library gehört']
+  ]
 });
 
 CH.push({
@@ -260,7 +274,14 @@ CH.push({
     { q: 'Kann Angular selbst Daten in einer Datenbank speichern?', options: ['Ja, Angular hat eine Datenbank eingebaut', 'Nein, dafür braucht es einen Server (Backend)', 'Ja, mit dem HttpClient direkt in die Datenbank', 'Ja, in Signals bleiben Daten dauerhaft gespeichert'], correct: 1, why: 'Angular ist nur das Frontend. Die Daten gehen per HTTP an ein Backend, und erst das speichert sie in der Datenbank.' },
     { q: 'Welcher dieser Punkte ist eine echte Schwäche von Angular?', options: ['Angular unterstützt kein TypeScript', 'Die Lernkurve ist steil, es gibt viele Begriffe', 'Jede Version wird nur 3 Monate gepflegt', 'Angular hat keinen eingebauten Router'], correct: 1, why: 'Am Anfang kommt bei Angular viel auf einmal. Darum lernst du hier Schritt für Schritt.' }
   ],
-  merke: ['Stark: große Teams, alles dabei, TypeScript, lange gepflegt, testbar.', 'Schwach: Lernkurve, mehr Code, RxJS schwer, viele alte Anleitungen.', 'Grenze: Angular ist nur Frontend. Datenbank und Backend sind andere Werkzeuge.', 'Ein Senior begründet, WARUM ein Werkzeug passt.']
+  merke: ['Stark: große Teams, alles dabei, TypeScript, lange gepflegt, testbar.', 'Schwach: Lernkurve, mehr Code, RxJS schwer, viele alte Anleitungen.', 'Grenze: Angular ist nur Frontend. Datenbank und Backend sind andere Werkzeuge.', 'Ein Senior begründet, WARUM ein Werkzeug passt.'],
+  paare: [
+    ['Große Teams', 'Stärke: alle schreiben gleich'],
+    ['Steile Lernkurve', 'Schwäche: viele Begriffe auf einmal'],
+    ['Datenbank', 'Grenze: dafür braucht es einen Server'],
+    ['Kleine Webseite', 'Eher nicht Angular'],
+    ['Firmen-App mit vielen Formularen', 'Ja, hier passt Angular']
+  ]
 });
 
 CH.push({
@@ -361,7 +382,14 @@ export class TicketBereich {
       { name: 'Eingabefeld hat ein Label', run: T => { const f = T.mount(T.cmp('TicketBereich')); const i = f.q('input.anzahl'); T.ok(i && i.id, 'Das Eingabefeld braucht eine id, z. B. id="anzahl".'); const l = f.q('label[for="' + i.id + '"]'); T.ok(l && l.textContent.trim(), 'Es fehlt <label for="' + i.id + '">Text</label>.'); } },
       { name: 'Icon-Button hat einen Namen', run: T => { const f = T.mount(T.cmp('TicketBereich')); const b = f.q('.leeren'); const n = b && (b.getAttribute('aria-label') || ''); T.ok(n.trim().length >= 3, 'Der 🗑️-Button braucht aria-label="…".'); } }
     ] },
-  merke: ['Security-Kette: XSS-Schutz nicht umgehen, CSP, Server prüft, keine Geheimnisse im Frontend.', 'a11y: echte Buttons, alt-Texte, Labels, aria-label für Icons, Tastatur testen.', 'i18n: i18n-Attribut, $localize, Pipes für Zahl/Geld/Datum.']
+  merke: ['Security-Kette: XSS-Schutz nicht umgehen, CSP, Server prüft, keine Geheimnisse im Frontend.', 'a11y: echte Buttons, alt-Texte, Labels, aria-label für Icons, Tastatur testen.', 'i18n: i18n-Attribut, $localize, Pipes für Zahl/Geld/Datum.'],
+  paare: [
+    ['XSS-Schutz', 'Angular escaped {{ }} automatisch'],
+    ['CSP', 'Der Browser führt nur erlaubte Scripts aus'],
+    ['<code>aria-label</code>', 'Name für einen Knopf, der nur ein Icon hat'],
+    ['alt-Text', 'Beschreibt ein Bild für den Screenreader'],
+    ['i18n', 'Texte markieren und pro Sprache übersetzen']
+  ]
 });
 
 CH.push({
@@ -417,5 +445,12 @@ Folgen:      + weniger Code, schneller Einstieg
     { q: 'Ein Kollege will für einen einfachen Zähler NgRx einbauen. Was antwortet ein Senior?', options: ['Gute Idee, dann ist es gleich skalierbar', 'Ein signal() reicht hier, wir bleiben einfach', 'Lieber ein Service mit BehaviorSubject', 'Erst NgRx einbauen, später zurückbauen'], correct: 1, why: 'Das Werkzeug muss zum Problem passen. Jede zusätzliche Komplexität kostet.' },
     { q: 'Was macht dich laut Toni zum Senior?', options: ['Jede API auswendig zu kennen', 'Andere besser zu machen und gute Entscheidungen zu erklären', 'Am meisten Code zu schreiben', 'Nie Fragen zu stellen'], correct: 1, why: 'Und genau das kannst du jetzt.' }
   ],
-  merke: ['Review-Kultur: Checkliste im Repo, Pipeline prüft Kleinkram, schnell und freundlich antworten.', 'Typische Funde: subscribe ohne Ende, Abo im Abo, Methoden im Template.', 'Migrationen mit ng update Schritt für Schritt, Tests zuerst.', 'Entscheidungen als ADR aufschreiben, Aufwand als Spanne schätzen.', 'Senior = entscheiden, erklären, teilen. Du bist bereit.']
+  merke: ['Review-Kultur: Checkliste im Repo, Pipeline prüft Kleinkram, schnell und freundlich antworten.', 'Typische Funde: subscribe ohne Ende, Abo im Abo, Methoden im Template.', 'Migrationen mit ng update Schritt für Schritt, Tests zuerst.', 'Entscheidungen als ADR aufschreiben, Aufwand als Spanne schätzen.', 'Senior = entscheiden, erklären, teilen. Du bist bereit.'],
+  paare: [
+    ['ADR', 'Große Entscheidung, kurz aufgeschrieben'],
+    ['Schätzung', 'Als Spanne, nicht aus dem Bauch'],
+    ['Trade-off', 'A ist schneller gebaut, B leichter zu pflegen'],
+    ['Pipeline', 'Prüft Format, Lint, Tests und Budgets'],
+    ['Migration', 'ng update Schritt für Schritt, Tests zuerst']
+  ]
 });

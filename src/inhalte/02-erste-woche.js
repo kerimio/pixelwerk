@@ -57,7 +57,14 @@ export function gruss(name: string): string {
       { name: 'gruss("Kerim") stimmt', run: T => T.eq(T.get('gruss')('Kerim'), 'Willkommen im Team, Kerim!', 'Text stimmt noch nicht. Achte auf Komma und Ausrufezeichen.') },
       { name: 'Klappt mit jedem Namen', run: T => T.eq(T.get('gruss')('Leon'), 'Willkommen im Team, Leon!', 'Steht "Kerim" fest drin? Nimm die Variable name.') }
     ] },
-  merke: ['App = Bausteine (Komponenten).', 'Komponente = Klasse (Daten) + Template (Aussehen).', '`Text ${wert}` setzt Werte ein.']
+  merke: ['App = Bausteine (Komponenten).', 'Komponente = Klasse (Daten) + Template (Aussehen).', '`Text ${wert}` setzt Werte ein.'],
+  paare: [
+    ['Komponente', 'Ein Baustein der App'],
+    ['Klasse', 'Hält die Daten der Komponente'],
+    ['Template', 'Beschreibt das Aussehen als HTML'],
+    ['Funktion', 'Etwas rein, etwas raus'],
+    ['<code>`Hallo ${name}`</code>', 'Setzt einen Wert in einen Text ein']
+  ]
 });
 
 CH.push({
@@ -139,7 +146,14 @@ export function brauchtTraining(entwickler: Entwickler): boolean {
       { name: 'brauchtTraining rechnet richtig', run: T => { const f = T.get('brauchtTraining'); T.eq([f(T.get('mo')), f(T.get('leon'))], [true, false], 'Mo (1 Ticket) braucht Training, Leon (12) nicht.'); } },
       { name: 'Genau 2 Tickets = kein Training', run: T => T.eq(T.get('brauchtTraining')({ id: 9, name: 'X', position: 'Frontend', tickets: 2 }), false, 'Bei 2 Tickets soll false kommen. Nimm < statt <=.') }
     ] },
-  merke: ['interface = Vorlage für Objekte.', "'A' | 'B' = nur A oder B.", '? = optional. any vermeiden.']
+  merke: ['interface = Vorlage für Objekte.', "'A' | 'B' = nur A oder B.", '? = optional. any vermeiden.'],
+  paare: [
+    ['<code>interface</code>', 'Vorlage: welche Felder ein Objekt haben muss'],
+    ['<code>\'A\' | \'B\'</code>', 'Nur genau einer dieser Werte ist erlaubt'],
+    ['<code>name?: string</code>', 'Optionales Feld, darf fehlen'],
+    ['<code>any</code>', 'Schaltet alle Typ-Prüfungen ab'],
+    ['<code>unknown</code>', 'Form unbekannt: erst prüfen, dann benutzen']
+  ]
 });
 
 CH.push({
@@ -220,7 +234,13 @@ export class EntwicklerKarte {}
       { name: '<h2> zeigt Leon', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('h2'), 'Kein <h2> gefunden. Schreib <h2>Leon</h2> zwischen die Backticks.'); T.eq(f.q('h2').textContent.trim(), 'Leon', 'Im <h2> soll genau Leon stehen.'); } },
       { name: '<p> zeigt Frontend', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('p'), 'Kein <p> gefunden. Schreib <p>Frontend</p> unter das h2.'); T.eq(f.q('p').textContent.trim(), 'Frontend', 'Im <p> soll genau Frontend stehen.'); } }
     ] },
-  merke: ['@Component macht eine Klasse zum Baustein.', 'selector = Tag-Name, template = HTML.', 'Standalone ist Standard.']
+  merke: ['@Component macht eine Klasse zum Baustein.', 'selector = Tag-Name, template = HTML.', 'Standalone ist Standard.'],
+  paare: [
+    ['<code>@Component</code>', 'Macht eine Klasse zum Baustein'],
+    ['<code>selector</code>', 'Der Tag-Name, unter dem man ihn benutzt'],
+    ['<code>template</code>', 'Das HTML des Bausteins'],
+    ['<code>imports</code>', 'Bausteine, die das Template benutzen darf']
+  ]
 });
 
 CH.push({
@@ -304,7 +324,13 @@ export class EntwicklerKarte {
       { name: 'p.punkte rechnet mal 100', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('p.punkte'), 'Kein <p class="punkte"> gefunden.'); T.eq(f.q('p.punkte').textContent.replace(/\s+/g, ' ').trim(), '300 Punkte', 'Bei 3 Tickets soll p.punkte „300 Punkte“ zeigen.'); T.ok(/\{\{\s*(this\.)?tickets\s*\*\s*100\s*\}\}|\{\{\s*100\s*\*\s*(this\.)?tickets\s*\}\}/.test(T.code), 'Die 300 soll im Template gerechnet werden. Steht {{ tickets * 100 }} im p.punkte?'); } },
       { name: 'Button hängt an krank', run: T => { const f = T.mount(T.cmp('EntwicklerKarte')); T.ok(f.q('button'), 'Kein Button gefunden.'); T.eq(f.q('button').disabled, false, 'krank ist false, also soll der Button frei sein.'); T.ok(/\[disabled\]\s*=\s*"\s*(this\.)?krank\s*"/.test(T.code), 'Der Button soll an krank hängen. Steht [disabled]="krank" am Button?'); } }
     ] },
-  merke: ['{{ x }} zeigt einen Wert.', '[eigenschaft]="x" setzt eine Eigenschaft.', 'Daten fließen: Klasse → Bildschirm.']
+  merke: ['{{ x }} zeigt einen Wert.', '[eigenschaft]="x" setzt eine Eigenschaft.', 'Daten fließen: Klasse → Bildschirm.'],
+  paare: [
+    ['<code>{{ name }}</code>', 'Zeigt einen Wert aus der Klasse als Text'],
+    ['<code>[src]="bild"</code>', 'Setzt die Eigenschaft src des Elements'],
+    ['<code>[disabled]="voll"</code>', 'Knopf ist gesperrt, solange voll true ist'],
+    ['Signal', 'Nötig, damit sich die Anzeige von selbst ändert']
+  ]
 });
 
 CH.push({
@@ -411,5 +437,12 @@ export class SprintZaehler {
       { name: 'Zähler ändert sich von selbst', run: async T => { const f = T.mount(T.cmp('SprintZaehler')); f.instance.erledigt(); await T.flush(); T.ok(f.q('p.stand'), 'Kein <p class="stand">.'); T.eq(f.q('p.stand').textContent.trim(), '1', 'Zähler zeigt nicht 1. Liest das Template tickets()?'); } },
       { name: 'reset() setzt 0', run: T => { const f = T.mount(T.cmp('SprintZaehler')); f.instance.erledigt(); f.instance.reset(); T.eq(f.instance.tickets(), 0, 'Nach reset() soll 0 sein.'); T.ok(/tickets\.set\s*\(/.test(T.code), 'Nimm this.tickets.set(0).'); } }
     ] },
-  merke: ['signal(start) erstellt ein Signal.', 'Lesen s(), setzen s.set(v), ändern s.update(f).', 'Arrays neu bauen, nie push.']
+  merke: ['signal(start) erstellt ein Signal.', 'Lesen s(), setzen s.set(v), ändern s.update(f).', 'Arrays neu bauen, nie push.'],
+  paare: [
+    ['<code>signal(0)</code>', 'Erstellt ein Signal mit Startwert 0'],
+    ['<code>zahl()</code>', 'Liest den aktuellen Wert'],
+    ['<code>zahl.set(5)</code>', 'Setzt einen ganz neuen Wert'],
+    ['<code>zahl.update(n => n + 1)</code>', 'Ändert den Wert anhand des alten'],
+    ['<code>liste.update(l => [...l, x])</code>', 'Baut eine neue Liste, statt push']
+  ]
 });

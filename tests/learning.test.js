@@ -127,9 +127,9 @@ async function lernen(browser, ok, errors) {
     Date.now = echtJetzt; Math.random = echtZufall;
     r.gemischt = true; r.xAmEnde = true;
     S.done = { g02: 1, g03: 1 }; S.srs = {};
-    for (let n = 0; n < 30; n++) { const runde = wdhRunde(), ch = runde.map(k => k.split(':')[1]); if (ch.some((c, i) => i && c === ch[i - 1]) || new Set(runde).size !== 8) r.gemischt = false; }
+    for (let n = 0; n < 30; n++) { const runde = wdhRunde(), ch = runde.map(k => k.split(':')[1]); if (ch.some((c, i) => i && c === ch[i - 1]) || new Set(runde).size !== 10) r.gemischt = false; }
     S.done = { g02: 1, k01: 1 }; S.srs = {};
-    for (let n = 0; n < 30; n++) { const runde = wdhRunde(); if (runde.length !== 9 || runde.indexOf('x:k01') !== 8) r.xAmEnde = false; }
+    for (let n = 0; n < 30; n++) { const runde = wdhRunde(); if (runde.length !== 11 || runde.indexOf('x:k01') !== 10) r.xAmEnde = false; }
     S.done = Object.fromEntries(CH.map(c => [c.id, 1])); S.srs = {};
     const voll = wdhRunde();
     r.deckelRunde = [voll.length, voll.filter(k => k[0] === 'm').length <= 3, voll.filter(k => k[0] === 'x').length <= 1, new Set(voll).size].join();
@@ -154,7 +154,7 @@ async function lernen(browser, ok, errors) {
   ok(L.nichtSofort && L.amMorgen === 'q:g01:0,q:g01:1,q:g01:2,q:k01:0,q:k01:1,q:k01:2', 'Ein spät geschafftes Kapitel ist nicht nach Mitternacht schon wieder fällig, sondern am Morgen');
   ok(L.keineDoppelten, 'Karten entstehen nur einmal');
   ok(L.geister, 'Karten für gelöschte Fragen, Kapitel und Übungen zählen nirgends mit');
-  ok(L.altFaellig === 'm:k01,q:k01:0,q:k01:1,q:k01:2,x:k01', 'Alter Spielstand ohne Zeitstempel: Karten sind gleich fällig');
+  ok(L.altFaellig === 'm:k01,q:k01:0,q:k01:1,q:k01:2,x:k01,z:k01', 'Alter Spielstand ohne Zeitstempel: Karten sind gleich fällig');
   ok(L.erste === '3,3,1.5,2', 'Erster Treffer: sicher kommt nach 3 Tagen wieder, geraten nach 2 (' + L.erste + ')');
   ok(L.zweite === '7.5,8,2', 'Zweiter Treffer: sicher wächst auf etwa 7 Tage, geraten bleibt kurz (' + L.zweite + ')');
   ok(L.fehler === '6,1,1,1', 'Fehler bei einer reifen Karte: morgen wieder, Abstand fällt auf ein Drittel (' + L.fehler + ')');
@@ -169,8 +169,9 @@ async function lernen(browser, ok, errors) {
   await z.context().close();
 
   // 11. Sitzung mit fälligen Karten: Bewertung bestimmt den Abstand, nochmal bis es sitzt, Bilanz
-  /* Dieselbe Runde wie früher: Die später dazugekommenen Fragen von k01 und k02 und die Übung von g01 sind erst in ein paar Tagen dran */
-  const spaeter = { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG }, extra = Object.fromEntries(['q:k01:1', 'q:k01:2', 'q:k02:1', 'q:k02:2', 'x:g01'].map(k => [k, Object.assign({}, spaeter)]));
+  /* Dieselbe Runde wie früher: Die später dazugekommenen Fragen von k01 und k02, die Übung von g01 und das Zuordnen (eigener Test: zuordnen.test.js)
+     sind erst in ein paar Tagen dran */
+  const spaeter = { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG }, extra = Object.fromEntries(['q:k01:1', 'q:k01:2', 'q:k02:1', 'q:k02:2', 'x:g01', 'z:g01', 'z:k01', 'z:k02'].map(k => [k, Object.assign({}, spaeter)]));
   const s = await seite(browser, errors, stand({ g01: alt, k01: alt, k02: alt }, { srs: extra }), 'wdh');
   ok((await s.textContent('.le-kopf h1')) === 'Wiederholen' && (await s.getAttribute('.le-kopf .ort a', 'href')) === '#start' && (await s.textContent('#leStand')) === '0 von 9 geschafft', 'Kopf: leise zurück zum Schreibtisch, Titel, Stand der Sitzung');
   const mNoten = {};
@@ -194,7 +195,7 @@ async function lernen(browser, ok, errors) {
   ok(c['q:g01:0'].l === 1 && c['q:g01:0'].n === 1 && e.tage['q:g01:0'] === 1, 'Daneben: Die Karte kommt morgen wieder, der zweite Versuch in der Runde ändert das nicht');
   ok(e.tage['q:g01:1'] === 2 && e.tage['q:g01:2'] === 3 && c['q:g01:1'].s < c['q:g01:2'].s, 'Richtig, aber geraten kommt früher wieder als sicher gewusst');
   ok(e.tage['m:k01'] === 1 && e.tage['m:g01'] === 3 && e.tage['m:k02'] === 3, 'Merksätze: „Kaum was“ kommt morgen, „Fast alles“ nach 3 Tagen');
-  ok(e.faellig.length === 1 && e.faellig[0][0] === 'x' && Object.values(e.tage).filter(t => t >= 1).length === 9 + 5, 'Alle Karten der Runde sind neu geplant, offen bleibt nur die zweite Übung');
+  ok(e.faellig.length === 1 && e.faellig[0][0] === 'x' && Object.values(e.tage).filter(t => t >= 1).length === 9 + 8, 'Alle Karten der Runde sind neu geplant, offen bleibt nur die zweite Übung');
   ok(e.S.cal.sr === 3 && e.S.cal.sw === 1 && e.S.cal.ur === 1 && !e.S.cal.uw, 'Sicherheit wird nur beim ersten Versuch gezählt');
   ok(e.S.xp === 100 + 8 * 3 + 20, 'XP: 3 je Karte, 20 für die Übung, einmal gutgeschrieben (' + e.S.xp + ')');
   ok(Object.keys(e.S.code).length === 0 && !e.S.weak, 'Code aus dem Kopf überschreibt keinen gespeicherten Code, die Sitzung fasst S.weak nicht an');
@@ -208,7 +209,7 @@ async function lernen(browser, ok, errors) {
   await s.context().close();
 
   // 12. Mittendrin weg: Bewertungen bleiben, XP werden gutgeschrieben, die Zurück-Taste führt nicht in eine halbe Karte
-  const w = await seite(browser, errors, stand({ g01: alt }, { srs: { 'm:g01': { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG }, 'x:g01': { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG } } }), 'start');
+  const w = await seite(browser, errors, stand({ g01: alt }, { srs: { 'm:g01': { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG }, 'x:g01': { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG }, 'z:g01': { s: 3, n: 1, l: 0, due: Date.now() + 5 * TAG } } }), 'start');
   await w.evaluate(() => { location.hash = 'wdh'; }); await w.waitForSelector('.le-opts .opt');
   await w.keyboard.press('1'); await w.keyboard.press('1'); await w.waitForSelector('#wdhWeiter');
   await w.click('#wdhWeiter');
@@ -228,9 +229,10 @@ async function lernen(browser, ok, errors) {
   const fr = await seite(browser, errors, stand({ g01: jetzt, g02: jetzt, k01: jetzt }, { weak: { 'g01:0': 2, 'g01:1': 1 }, cal: { sr: 1, sw: 0, ur: 0, uw: 0 } }), 'wdh');
   const ruhe = await fr.evaluate(() => ({ text: document.querySelector('#main').textContent, knoepfe: [...document.querySelectorAll('#main .btn, #main button')].map(b => b.id).join(), h1: document.querySelector('.le-kopf h1').textContent }));
   ok(ruhe.h1 === 'Wiederholen' && ruhe.text.includes('Nichts zu wiederholen') && ruhe.text.includes('Die nächste Karte kommt morgen') && ruhe.knoepfe === 'leFrei', 'Nichts fällig: ruhige Seite, wann die nächste Karte kommt, ein Knopf „Freie Runde“');
-  /* Fester Pool von genau 7 Fragen wie früher (g01 und g02 je 3, von k01 nur die erste), damit jede Frage einmal drankommt */
+  /* Fester Pool von genau 7 Fragen wie früher (g01 und g02 je 3, von k01 nur die erste), damit jede Frage einmal drankommt.
+     Zuordnen bleibt hier draußen, das prüft zuordnen.test.js. */
   /* Die Seite zieht ihren Pool beim Zeichnen, darum danach neu zeichnen */
-  await fr.evaluate(() => { CH.find(c => c.id === 'k01').quiz.length = 1; renderWdh(document.querySelector('#main')); });
+  await fr.evaluate(() => { CH.find(c => c.id === 'k01').quiz.length = 1; CH.forEach(c => { c.paare = null; }); renderWdh(document.querySelector('#main')); });
   const srsVorher = await fr.evaluate(() => JSON.stringify(S.srs));
   await fr.click('#leFrei');
   ok((await fr.textContent('.le-kopf h1')) === 'Freie Runde' && (await fr.textContent('#leStand')) === '0 von 7 geschafft', 'Freie Runde: dieselbe Karten-Oberfläche, 7 Fragen aus gespielten Kapiteln');
