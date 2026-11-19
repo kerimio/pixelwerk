@@ -52,7 +52,9 @@ Einrichten im Einstieg (Bild „Dein Coach“) oder später im Profil unter **Co
 | Gemini | aistudio.google.com, Get API key (Gratis-Tarif vorhanden) |
 | DeepSeek | platform.deepseek.com, API keys |
 
-- Der Schlüssel liegt nur in deinem Browser (localStorage). Er steht nicht in `fortschritt.json` und nie im Repo. Die Kosten laufen über dein Konto beim Anbieter, am besten setzt du dort ein Ausgabelimit.
+- **Mit `npm start` bleibt dein Schlüssel lokal:** Er liegt nur in `data/secrets.json` (Dateirechte 600, `data/` steht in `.gitignore`), wird nie an den Browser zurückgegeben und nur vom lokalen Server direkt an den gewählten Anbieter geschickt. Der Browser schickt ihn genau einmal beim Prüfen und Speichern an den Server. Fragen an Toni laufen über `/api/ki/chat`. Der Server nimmt nur Aufrufe von `localhost` an und liefert `data/` nie aus. Ein Schlüssel, der von früher noch im Browser lag, zieht beim ersten Start mit Server automatisch nach `data/secrets.json` um und wird im Browser gelöscht.
+- **Ohne Server** (`index.html` direkt geöffnet) geht es auch, dann liegt der Schlüssel in diesem Browser (localStorage) und der Browser ruft den Anbieter selbst auf. Die Einstellungen sagen dann dazu, dass `npm start` sicherer ist. Im Artefakt auf claude.ai gibt es keinen Server: Dort antwortet Toni über Claude im Artefakt, ganz ohne Schlüssel, oder du wählst „Ganz ohne KI“.
+- Der Schlüssel steht nie in `fortschritt.json` und nie im Repo. Die Kosten laufen über dein Konto beim Anbieter, am besten setzt du dort ein Ausgabelimit.
 - Toni bekommt bei jeder Anfrage seine Rolle (`TONI` in `src/app/ki.js`) und dein Niveau aus dem Einstieg mit.
 
 ## Echtes Angular
@@ -85,7 +87,7 @@ npm run build                      # baut index.html aus src/
 npm test                           # baut, dann alle Tests
 ```
 
-`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand und KI-Auswahl.
+`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand, KI-Auswahl und den KI-Schlüssel über den lokalen Server (`tests/ki-server.test.js`).
 
 **Artefakt-Fassung** (claude.ai): `scripts/artefakt/` macht aus `index.html` die Fassung, in der Toni ohne eigenen Schlüssel über Claude im Artefakt antwortet. Dort kann man auch „Ganz ohne KI“ wählen.
 

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "vendor": "node scripts/vendor.js",
-    "test": "npm run build && node tests/aufbau.test.js && node tests/solutions.test.js && node tests/learning.test.js && node tests/coach.test.js && node tests/review.test.js && node tests/arena.test.js && node tests/eigene.test.js && node tests/ich.test.js && node tests/pr.test.js && node tests/ki.test.js && node tests/datei.test.js && node tests/start.test.js && node tests/kapitel.test.js && node tests/uebung.test.js && node tests/einstieg.test.js && node tests/garderobe.test.js && node tests/themen.test.js && node tests/offen.test.js",
+    "test": "npm run build && node tests/aufbau.test.js && node tests/solutions.test.js && node tests/learning.test.js && node tests/coach.test.js && node tests/review.test.js && node tests/arena.test.js && node tests/eigene.test.js && node tests/ich.test.js && node tests/pr.test.js && node tests/ki.test.js && node tests/ki-server.test.js && node tests/datei.test.js && node tests/start.test.js && node tests/kapitel.test.js && node tests/uebung.test.js && node tests/einstieg.test.js && node tests/garderobe.test.js && node tests/themen.test.js && node tests/offen.test.js",
     "start": "node server.js"
   },
   "devDependencies": {
