@@ -33,7 +33,7 @@ const NM = path.join(root, 'node_modules');
     for (const b of BUGS) {
       const ex = b.ex; const box = document.createElement('div'); document.body.appendChild(box);
       const s = await runTests(ex.starter, ex.tests, box, null, ex.modules);
-      const l = await runTests(ex.solution, ex.tests.concat(codePruefungen(ex)), box, null, ex.modules);
+      const l = await runTests(ex.solution, ex.tests.concat(codeChecks(ex)), box, null, ex.modules);
       out.push({ id: b.id, title: ex.title,
         starterFails: s.fatal ? 1 : s.results.filter(x => !x.ok).length,
         starterFatal: s.fatal || null,
@@ -62,11 +62,11 @@ const NM = path.join(root, 'node_modules');
 
   /* ---- Code-Review ---- */
   if (await page.evaluate(() => typeof REVIEWS !== 'undefined')) {
-    const revs = await page.evaluate(() => REVIEWS.map(r => { const n = r.code.split('\n').length; return { id: r.id, bad: r.issues.filter(i => !i.lines.length || i.lines.some(l => l < 1 || l > n) || !i.warum || !i.titel).map(i => i.titel), dup: r.issues.flatMap(i => i.lines).length !== new Set(r.issues.flatMap(i => i.lines)).size, fallen: (r.fallen || []).filter(f => f.line < 1 || r.issues.some(i => i.lines.includes(f.line))).map(f => f.find), n: r.issues.length }; }));
-    for (const r of revs) ok(!r.bad.length && !r.dup && !r.fallen.length && r.n >= 3, r.id + ' Review-Daten gültig', JSON.stringify(r));
+    const revs = await page.evaluate(() => REVIEWS.map(r => { const n = r.code.split('\n').length; return { id: r.id, bad: r.issues.filter(i => !i.lines.length || i.lines.some(l => l < 1 || l > n) || !i.reasonWhy || !i.heading).map(i => i.heading), dup: r.issues.flatMap(i => i.lines).length !== new Set(r.issues.flatMap(i => i.lines)).size, drop: (r.drop || []).filter(f => f.line < 1 || r.issues.some(i => i.lines.includes(f.line))).map(f => f.find), n: r.issues.length }; }));
+    for (const r of revs) ok(!r.bad.length && !r.dup && !r.drop.length && r.n >= 3, r.id + ' Review-Daten gültig', JSON.stringify(r));
   }
   if (await page.evaluate(() => typeof INTERVIEW !== 'undefined')) {
-    const iv = await page.evaluate(() => INTERVIEW.filter(q => !q.q || !q.punkte || q.punkte.length < 3 || !q.thema || !q.stufe).map(q => q.id));
+    const iv = await page.evaluate(() => INTERVIEW.filter(q => !q.q || !q.points || q.points.length < 3 || !q.topic || !q.stage).map(q => q.id));
     ok(!iv.length, 'Interview-Fragen vollständig', iv.join(', '));
   }
 
@@ -77,18 +77,18 @@ const NM = path.join(root, 'node_modules');
     await page.waitForSelector('.arena-grid', { timeout: 3000 });
     if (await page.locator('#main .arena-grid ~ *').count()) throw new Error('Unter den Karten steht noch etwas (die Begründung gehört nach #wissen)');
   });
-  const hauptknoepfe = () => page.evaluate(() => [...document.querySelectorAll('#main .btn.primary')].filter(b => b.offsetParent && !b.disabled).map(b => b.id).join());
+  const mainButtons = () => page.evaluate(() => [...document.querySelectorAll('#main .btn.primary')].filter(b => b.offsetParent && !b.disabled).map(b => b.id).join());
   await ui('Bug-Jagd: Bug öffnen, Lösung einfügen, grün', async () => {
     await page.evaluate(() => { location.hash = '#bug-bug02'; });
     await page.waitForSelector('#runTests', { timeout: 3000 });
     await page.waitForFunction(() => document.querySelector('.CodeMirror'), null, { timeout: 5000 });
-    if ((await hauptknoepfe()) !== 'runTests') throw new Error('Offener Bug: Die eine Hauptaktion soll „Prüfen“ sein, ist aber: ' + await hauptknoepfe());
+    if ((await mainButtons()) !== 'runTests') throw new Error('Offener Bug: Die eine Hauptaktion soll „Prüfen“ sein, ist aber: ' + await mainButtons());
     await page.evaluate(() => document.querySelector('.CodeMirror').CodeMirror.setValue(BUGS[1].ex.solution));
     await page.click('#runTests');
     await page.waitForSelector('.pass', { timeout: 5000 });
     await page.waitForSelector('.bug-why', { timeout: 3000 });
     if (!(await page.evaluate(() => S.arena.bug.bug02))) throw new Error('Bug nicht als gelöst gespeichert');
-    if ((await hauptknoepfe()) !== 'bugNext') throw new Error('Gefixter Bug: Die eine Hauptaktion soll „Nächster Bug“ sein, ist aber: ' + await hauptknoepfe());
+    if ((await mainButtons()) !== 'bugNext') throw new Error('Gefixter Bug: Die eine Hauptaktion soll „Nächster Bug“ sein, ist aber: ' + await mainButtons());
   });
   await ui('Was gibt das aus?: richtige Reihenfolge wird erkannt', async () => {
     await page.evaluate(() => { location.hash = '#ausgabe'; });
@@ -113,10 +113,10 @@ const NM = path.join(root, 'node_modules');
     await page.waitForSelector('.rv-code', { timeout: 3000 });
     const lines = await page.evaluate(() => REVIEWS[0].issues.map(i => i.lines[0]));
     for (const l of lines) await page.click('.rv-line[data-n="' + l + '"]');
-    if ((await hauptknoepfe()) !== 'rvSubmit') throw new Error('Offenes Review: Die eine Hauptaktion soll „Review abschicken“ sein, ist aber: ' + await hauptknoepfe());
+    if ((await mainButtons()) !== 'rvSubmit') throw new Error('Offenes Review: Die eine Hauptaktion soll „Review abschicken“ sein, ist aber: ' + await mainButtons());
     await page.click('#rvSubmit');
     await page.waitForSelector('.rv-result', { timeout: 2000 });
-    if ((await hauptknoepfe()) !== 'rvNext') throw new Error('Abgeschicktes Review: Die eine Hauptaktion soll „Nächster PR“ sein, ist aber: ' + await hauptknoepfe());
+    if ((await mainButtons()) !== 'rvNext') throw new Error('Abgeschicktes Review: Die eine Hauptaktion soll „Nächster PR“ sein, ist aber: ' + await mainButtons());
     const txt = await page.textContent('.rv-result .score');
     if (!txt.startsWith(lines.length + '/' + lines.length)) throw new Error('Punktzahl: ' + txt);
   });
@@ -142,16 +142,16 @@ const NM = path.join(root, 'node_modules');
   });
   await ui('Schreibtisch führt in die Werkstatt, jede Seite der Werkstatt eine Ebene zurück', async () => {
     await page.evaluate(() => { location.hash = '#start'; });
-    await page.waitForSelector('#main a.hub-werk[href="#training"]', { timeout: 3000 });
-    await page.click('#main a.hub-werk');
+    await page.waitForSelector('#main a.hub-work[href="#training"]', { timeout: 3000 });
+    await page.click('#main a.hub-work');
     await page.waitForSelector('.arena-grid', { timeout: 3000 });
-    if ((await page.getAttribute('#main .ort a', 'href')) !== '#start') throw new Error('Werkstatt: Weg zurück zum Schreibtisch fehlt');
+    if ((await page.getAttribute('#main .loc a', 'href')) !== '#start') throw new Error('Werkstatt: Weg zurück zum Schreibtisch fehlt');
     await page.click('.arena-card[href="#bug"]');
     await page.waitForSelector('#main .league', { timeout: 3000 });
-    if ((await page.getAttribute('#main .ort a', 'href')) !== '#training') throw new Error('Bug-Jagd: Weg zurück zur Werkstatt fehlt');
+    if ((await page.getAttribute('#main .loc a', 'href')) !== '#training') throw new Error('Bug-Jagd: Weg zurück zur Werkstatt fehlt');
     await page.click('#main .match');
     await page.waitForSelector('#bugBody #runTests', { timeout: 3000 });
-    if ((await page.getAttribute('#main .ort a', 'href')) !== '#bug') throw new Error('Bug: Weg zurück zur Bug-Jagd fehlt');
+    if ((await page.getAttribute('#main .loc a', 'href')) !== '#bug') throw new Error('Bug: Weg zurück zur Bug-Jagd fehlt');
   });
   ok(!errors.length, 'Keine Seitenfehler', errors.join('\n   '));
   await browser.close();

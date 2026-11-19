@@ -12,7 +12,7 @@ npm start
 
 Dann **http://localhost:4300** öffnen. Du brauchst nur Node (ab Version 20), kein `npm install`.
 
-- Der Spielstand wird mit `npm start` automatisch in `fortschritt.json` im Repo-Ordner gespeichert (steht in `.gitignore`). Die vorige Fassung liegt daneben als `fortschritt.json.bak`. Zusätzlich merkt sich der Browser den Stand.
+- Der Spielstand wird mit `npm start` automatisch in `progress.json` im Repo-Ordner gespeichert (steht in `.gitignore`). Die vorige Fassung liegt daneben als `progress.json.bak`. Zusätzlich merkt sich der Browser den Stand.
 - Ohne Server geht es auch: `index.html` im Browser öffnen. Dann liegt der Spielstand nur im Browser. Sichern und einspielen geht im Profil unter **Spielstand** (Export und Import als JSON). Dort kannst du auch **ganz von vorn anfangen**: Nach einer Rückfrage sind Fortschritt, Profil und Avatar gelöscht, und der Einstieg startet neu. Hell oder dunkel und der KI-Schlüssel bleiben.
 
 ## So läuft es ab
@@ -53,7 +53,7 @@ Einrichten im Einstieg (Bild „Dein Coach“) oder später im Profil unter **Co
 | DeepSeek | platform.deepseek.com, API keys |
 
 - Die Kosten laufen über dein Konto beim Anbieter, am besten setzt du dort ein Ausgabelimit.
-- Toni bekommt bei jeder Anfrage seine Rolle (`TONI` in `src/app/ki.js`) und dein Niveau aus dem Einstieg mit.
+- Toni bekommt bei jeder Anfrage seine Rolle (`TONI` in `src/app/ai.js`) und dein Niveau aus dem Einstieg mit.
 
 ### Ohne KI oder mit KI-Schlüssel?
 
@@ -85,12 +85,12 @@ Browser ◀──(Antwort als Strom, unverändert durchgereicht)── server.js
 ```
 
 - **Speicherort:** `data/secrets.json` im Repo-Ordner, Inhalt `{ "anbieter", "key", "model" }` als Klartext. Die Datei wird mit Rechten `600` angelegt (nur dein Benutzer liest und schreibt), der Ordner `data/` mit `700`. Geschrieben wird erst in eine Zwischendatei, dann umbenannt, damit nie eine halbe Datei entsteht. Hat eine vorhandene Datei zu offene Rechte, stellt der Server sie beim Start wieder auf `600`. Anderer Pfad mit `SECRETS=/pfad/zur/datei npm start`.
-- **Nie im Git:** `data/` steht in `.gitignore`. Der Schlüssel steht auch nie in `fortschritt.json` oder im Spielstand-Export.
+- **Nie im Git:** `data/` steht in `.gitignore`. Der Schlüssel steht auch nie in `progress.json` oder im Spielstand-Export.
 - **Nie zurück an den Browser:** `GET /api/ki` liefert nur `{ server, anbieter, model, schluessel: true/false }`. Es gibt keinen Endpunkt, der den Schlüssel ausgibt. Im Formular bleibt das Feld danach leer („Gespeichert auf deinem Rechner“). Modell ändern geht ohne neuen Schlüssel.
 - **Wann der Schlüssel den Browser verlässt:** nur beim Prüfen (`POST /api/ki/modelle`) und Speichern (`PUT /api/ki`), jeweils an `127.0.0.1`. Das ist unverschlüsseltes HTTP, bleibt aber auf deinem Rechner (Loopback). Danach hält der Browser ihn nicht mehr im Speicher.
 - **Wer mit dem Anbieter spricht:** nur `server.js`, per HTTPS an fest eingetragene Adressen (`ANBIETER` in `server.js`: api.anthropic.com, api.openai.com, api.deepseek.com, generativelanguage.googleapis.com). Der Browser kann keine andere Adresse vorgeben. Der Server liest den Schlüssel bei jeder Anfrage aus der Datei und schreibt ihn in kein Log.
 - **Schutz gegen fremde Seiten:** Der Server lauscht nur auf `127.0.0.1`, nicht im Netzwerk. KI-Aufrufe nimmt er nur an, wenn der `Host`-Header `localhost`, `127.0.0.1` oder `[::1]` ist (gegen DNS-Rebinding), ein mitgeschicktes `Origin` ebenfalls lokal ist und schreibende Aufrufe `Content-Type: application/json` haben. Eine fremde Webseite kann deshalb weder per `fetch` (scheitert am CORS-Preflight, der Server sendet keine CORS-Header) noch per einfachem Formular-POST (kein JSON) deinen Schlüssel benutzen.
-- **Keine statische Auslieferung:** Der Server liefert `data/`, `fortschritt.json*` und alle versteckten Pfade (z. B. `.git`) nicht als Dateien aus, auch nicht über `../`.
+- **Keine statische Auslieferung:** Der Server liefert `data/`, `progress.json*` und alle versteckten Pfade (z. B. `.git`) nicht als Dateien aus, auch nicht über `../`.
 - **Umzug von früher:** Lag ein Schlüssel noch im Browser (`localStorage`, Eintrag `ngfc.ai`), schickt die App ihn beim ersten Start mit Server einmal an `PUT /api/ki` und löscht ihn danach im Browser.
 - **Entfernen:** „Schlüssel entfernen“ ruft `DELETE /api/ki` auf, das löscht `data/secrets.json`.
 - **Grenzen, ehrlich gesagt:** Die Datei ist nicht verschlüsselt. Wer als dein Benutzer (oder root) auf dem Rechner etwas ausführen kann, kann sie lesen oder `127.0.0.1:4300` selbst aufrufen. Backups des Repo-Ordners enthalten die Datei. Schutz davor wäre ein Passwort-Manager oder Schlüsselbund, das ist bewusst nicht eingebaut. Setz beim Anbieter ein Ausgabelimit und nutze einen eigenen Schlüssel nur für Pixelwerk.
@@ -108,7 +108,7 @@ Browser ◀──(Antwort als Strom, unverändert durchgereicht)── server.js
 
 Nur wenn ein Schlüssel eingetragen ist und du Toni etwas fragst oder eine KI-Funktion auslöst. Ohne KI geht nichts nach außen.
 
-- Tonis Rolle (`TONI` in `src/app/ki.js`) und dein Niveau aus dem Einstieg
+- Tonis Rolle (`TONI` in `src/app/ai.js`) und dein Niveau aus dem Einstieg
 - dein Vorname aus dem Profil
 - dein Lernstand: welche Themen sitzen und wackeln, mit Grund (aus `themenNote` und `profilNote`). Das Lernbild aus deinen Fragen nur, solange „Toni darf aus meinen Fragen lernen“ an ist
 - je nach Funktion: deine Frage und die letzten 10 Chat-Nachrichten, die aktuelle Folie, **dein Übungscode und die Testergebnisse**, deine eigene Erklärung oder dein Pull Request
@@ -123,17 +123,17 @@ Die Übungen laufen gegen **echtes Angular 22**, nicht gegen eine Nachbildung. D
 
 Alles liegt in `src/`, daraus entsteht `index.html`. `npm start` baut bei jeder Änderung neu, danach im Browser neu laden.
 
-- **Phasen und Kapitel**: eine Datei pro Phase in `src/inhalte/` (`01-das-grosse-bild.js` …), geladen in der Reihenfolge der Dateinamen. Ein Kapitel hat Ticket, Szene, Folien, Quiz, Übung mit Tests, Merksätze und Paare zum Zuordnen (`paare: [[Begriff, Aussage], …]`, 3 bis 6 Stück, jede Aussage passt zu genau einem Begriff). Am einfachsten kopierst du ein vorhandenes Kapitel. Die Anleitung steht oben in `src/inhalte/00-basis.js`.
+- **Phasen und Kapitel**: eine Datei pro Phase in `src/content/` (`01-the-big-picture.js` …), geladen in der Reihenfolge der Dateinamen. Ein Kapitel hat Ticket, Szene, Folien, Quiz, Übung mit Tests, Merksätze und Paare zum Zuordnen (`paare: [[Begriff, Aussage], …]`, 3 bis 6 Stück, jede Aussage passt zu genau einem Begriff). Am einfachsten kopierst du ein vorhandenes Kapitel. Die Anleitung steht oben in `src/content/00-base.js`.
 - **Doku-Links** eines Kapitels: Feld `doku` im Kapitel (angular.dev, rxjs.dev, MDN, typescriptlang.org).
 - **Kapitel-IDs** (`k07`, `w03` …) sind die Schlüssel im Spielstand. Nie umbenennen. Die angezeigte Nummer kommt aus der Position.
-- **Team und Figuren**: `CAST` in `src/inhalte/00-basis.js`.
-- **Gesichter fürs Team**: `FIGUREN` in `src/app/figuren.js`. Jede Figur ist aus Bausteinen gebaut (Hautton, Frisur, Kleidung, Besonderheiten wie Brille oder Bart).
-- **Sachen für den Avatar**: `SACHEN` in `src/app/garderobe.js` (Pixelbild, Platz, Bedingung). Die `id` steht im Spielstand, nie umbenennen.
-- **Werkstatt-Aufgaben**: `src/werkstatt/aufgaben.js` und `src/werkstatt/review-schule-inhalte.js`.
-- **Erklärkarten** an unterstrichenen Wörtern: `src/app/lexikon.js` und `src/app/html-elemente.js`.
-- **Texte des Einstiegs**: `src/app/einstieg.js`. **Tonis Rolle**: `TONI` in `src/app/ki.js`. **Seite „Wie diese App beim Lernen hilft“**: `WISSEN` in `src/app/lernen.js`.
-- **Aussehen**: CSS in `src/stil/`, je Bereich eine Datei (`01-grund.css`, `03-kapitel.css` …), geladen in der Reihenfolge der Dateinamen. Das Seitengerüst steht in `src/shell.html`.
-- **Neue Version holen**: `git pull`. Dein `fortschritt.json` bleibt unberührt. Meldet `index.html` einen Konflikt: `npm run build`, die Datei wird aus `src/` erzeugt.
+- **Team und Figuren**: `CAST` in `src/content/00-base.js`.
+- **Gesichter fürs Team**: `FIGUREN` in `src/app/figures.js`. Jede Figur ist aus Bausteinen gebaut (Hautton, Frisur, Kleidung, Besonderheiten wie Brille oder Bart).
+- **Sachen für den Avatar**: `SACHEN` in `src/app/wardrobe.js` (Pixelbild, Platz, Bedingung). Die `id` steht im Spielstand, nie umbenennen.
+- **Werkstatt-Aufgaben**: `src/workshop/tasks.js` und `src/workshop/review-school-content.js`.
+- **Erklärkarten** an unterstrichenen Wörtern: `src/app/glossary.js` und `src/app/html-elements.js`.
+- **Texte des Einstiegs**: `src/app/intro.js`. **Tonis Rolle**: `TONI` in `src/app/ai.js`. **Seite „Wie diese App beim Lernen hilft“**: `WISSEN` in `src/app/learning.js`.
+- **Aussehen**: CSS in `src/styles/`, je Bereich eine Datei (`01-base.css`, `03-chapter.css` …), geladen in der Reihenfolge der Dateinamen. Das Seitengerüst steht in `src/shell.html`.
+- **Neue Version holen**: `git pull`. Dein `progress.json` bleibt unberührt. Meldet `index.html` einen Konflikt: `npm run build`, die Datei wird aus `src/` erzeugt.
 - Eigene Erweiterungen am besten auf einem eigenen Branch (`git switch -c mein-umbau`).
 
 ## Entwickeln
@@ -145,53 +145,53 @@ npm run build                      # baut index.html aus src/
 npm test                           # baut, dann alle Tests
 ```
 
-`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand, KI-Auswahl und den KI-Schlüssel über den lokalen Server (`tests/ki-server.test.js`).
+`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand, KI-Auswahl und den KI-Schlüssel über den lokalen Server (`tests/ai-server.test.js`).
 
-**Artefakt-Fassung** (claude.ai): `scripts/artefakt/` macht aus `index.html` die Fassung, in der Toni ohne eigenen Schlüssel über Claude im Artefakt antwortet. Dort kann man auch „Ganz ohne KI“ wählen.
+**Artefakt-Fassung** (claude.ai): `scripts/artifact/` macht aus `index.html` die Fassung, in der Toni ohne eigenen Schlüssel über Claude im Artefakt antwortet. Dort kann man auch „Ganz ohne KI“ wählen.
 
 ```bash
-node scripts/artefakt/1-claude.js index.html /tmp/a.html
-node scripts/artefakt/2-einstieg.js /tmp/a.html /tmp/b.html
-node scripts/artefakt/3-ohne-ki.js /tmp/b.html artefakt.html
+node scripts/artifact/1-claude.js index.html /tmp/a.html
+node scripts/artifact/2-intro.js /tmp/a.html /tmp/b.html
+node scripts/artifact/3-without-ai.js /tmp/b.html artefakt.html
 ```
 
-Neue JS-Dateien trägst du in `scripts/build.js` (`ORDER`) ein, der Build meldet nicht eingebundene Dateien. Neue Phasen in `src/inhalte/` und neue CSS-Dateien in `src/stil/` findet der Build selbst.
+Neue JS-Dateien trägst du in `scripts/build.js` (`ORDER`) ein, der Build meldet nicht eingebundene Dateien. Neue Phasen in `src/content/` und neue CSS-Dateien in `src/styles/` findet der Build selbst.
 
 ```
 src/
   shell.html            Seitengerüst: Kopfzeile, Hauptbereich
-  dialoge.html          Dialoge: Themensuche und Profil (Reiter Du, Aussehen, Coach Toni, Spielstand)
+  dialogs.html          Dialoge: Themensuche und Profil (Reiter Du, Aussehen, Coach Toni, Spielstand)
   chat.html             Chat-Fenster von Coach Toni
-  stil/                 CSS, eine Datei je Bereich (Grund, Start, Kapitel, Übung, Lernen, Werkstatt, Dialoge, Jubel, Chat, Einstieg)
-  kern/engine.js        Übungs-Laufzeit auf echtem Angular (JIT) und Test-Runner
-  inhalte/              Lern-Inhalte, eine Datei pro Phase
-    00-basis.js         Grundgerüst: AKTE, CH, CAST, Anleitung zum Erweitern
-    01-… bis 11-…       die Phasen (01b-grundlagen.js ist die optionale Phase Grundlagen)
+  styles/                 CSS, eine Datei je Bereich (Grund, Start, Kapitel, Übung, Lernen, Werkstatt, Dialoge, Jubel, Chat, Einstieg)
+  core/engine.js        Übungs-Laufzeit auf echtem Angular (JIT) und Test-Runner
+  content/              Lern-Inhalte, eine Datei pro Phase
+    00-base.js         Grundgerüst: AKTE, CH, CAST, Anleitung zum Erweitern
+    01-… bis 11-…       die Phasen (01b-basics.js ist die optionale Phase Grundlagen)
   werkstatt/            Bug-Jagd, Ausgaben, Review-Arena, Review-Schule, Interview (Aufgaben und Oberfläche)
   app/
-    basis.js            Zustand, Speichern, Abgleich mit fortschritt.json
+    base.js            Zustand, Speichern, Abgleich mit progress.json
     start.js            Rahmen, Routing, Schreibtisch, Tastatur
-    einstieg.js         Spiel-Einstieg beim ersten Start
-    kapitel.js          Kapitel-Ablauf: Szene, Folien, Quiz, Abschluss
-    zuordnen.js         Zuordnen: Begriffe und Aussagen paaren, im Kapitel und beim Wiederholen
-    uebung.js           Code-Übung mit Tipp-Leiter
-    code-anzeige.js     Code mit nummerierten Erklärungen und Wortkarten
-    lernen.js           Wiederholen, freie Runde, Vorab-Tipp, Lückentext, Seite „Wie diese App beim Lernen hilft“
-    pruefung.js         Code-Checks: verlangt die Übung wirklich das geübte Konzept?
-    lexikon.js, html-elemente.js   Erklärkarten für Wörter und HTML-Tags im Code
-    ki.js               KI-Anbindung, Rolle von Toni
+    intro.js         Spiel-Einstieg beim ersten Start
+    chapter.js          Kapitel-Ablauf: Szene, Folien, Quiz, Abschluss
+    matching.js         Zuordnen: Begriffe und Aussagen paaren, im Kapitel und beim Wiederholen
+    exercise.js           Code-Übung mit Tipp-Leiter
+    code-view.js     Code mit nummerierten Erklärungen und Wortkarten
+    learning.js           Wiederholen, freie Runde, Vorab-Tipp, Lückentext, Seite „Wie diese App beim Lernen hilft“
+    exam.js         Code-Checks: verlangt die Übung wirklich das geübte Konzept?
+    glossary.js, html-elements.js   Erklärkarten für Wörter und HTML-Tags im Code
+    ai.js               KI-Anbindung, Rolle von Toni
     chat.js, coach.js   Chat mit Toni, Lernprofil
     pr-review.js        Pull Request an Toni
-    eigene.js           Eigene Kapitel
-    suche.js            Themensuche
-    ich.js              Profil-Dialog (Name, Avatar, Farben, Spielstand)
-    figuren.js          Pixel-Gesichter für das Team (Toni, Sara, Jonas, Mia, Leon, Katrin, Ricky)
-    jubel.js            Erfolgsmomente
+    custom-chapters.js           Eigene Kapitel
+    search.js            Themensuche
+    settings.js              Profil-Dialog (Name, Avatar, Farben, Spielstand)
+    figures.js          Pixel-Gesichter für das Team (Toni, Sara, Jonas, Mia, Leon, Katrin, Ricky)
+    celebrate.js            Erfolgsmomente
 scripts/build.js        setzt alles zu index.html zusammen
 scripts/vendor.js       bündelt echtes Angular und RxJS nach vendor/
 vendor/                 angular.js und codemirror.css (liegen im Repo, damit klonen und starten reicht)
-server.js               lokaler Start: liefert die App aus, speichert fortschritt.json, baut bei Änderungen neu
-tests/                  *.test.js (Lernaufbau, Musterlösungen, Browser-Tests), hilfe.js ist der gemeinsame Browser-Start
+server.js               lokaler Start: liefert die App aus, speichert progress.json, baut bei Änderungen neu
+tests/                  *.test.js (Lernaufbau, Musterlösungen, Browser-Tests), helpers.js ist der gemeinsame Browser-Start
 ```
 
 ## Lizenz

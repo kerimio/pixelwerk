@@ -1,0 +1,128 @@
+/* ===== Grundlagen: Farben, Schrift, Kopfzeile mit Profil-Chip, Suche, Knöpfe, Seitenrahmen ===== */
+
+/* Design fürs Lernen (Belege in der App unter „Wie diese App beim Lernen hilft“):
+   - Hell als Standard: dunkle Schrift auf hellem Grund wird schneller und genauer gelesen (Piepenbrock, Mayr & Buchner 2013). Dunkel ist in den Einstellungen wählbar.
+   - Kohärenz: keine Deko beim Lesen, eine einzige Akzentfarbe (frei wählbar). Bewegung nur als kurzer Jubel bei echten Erfolgen, in den Einstellungen abschaltbar. Unnötige Reize kosten Arbeitsgedächtnis (Mayer & Fiorella 2014; Rey 2012).
+   - Fokus: eine Spalte ohne Seitenleiste, in Kapiteln ist nur der aktuelle Schritt zu sehen (Segmentierung).
+   - Lesbarkeit: normale Groß-/Kleinschreibung statt VERSALIEN, 17 px, Zeilenhöhe 1.6, Zeilen höchstens ~68 Zeichen.
+   - Spielgefühl ohne Ablenkung: Was man anklicken kann, sieht greifbar aus (Knöpfe mit Kante, die sich eindrücken lassen),
+     Fortschritt erscheint als Pixel-Blöcke. Gelesen wird weiter auf ruhigen Flächen. */
+:root,:root[data-theme="light"]{
+  --bg:#F6F7F5; --surface:#FFFFFF; --sunk:#EEF1EE; --ink:#1A2320; --muted:#59665F; --line:#DCE2DE;
+  --accent:#2453C9; --accent-ink:#FFFFFF; --accent-soft:#E8EEFB; --accent-line:#BBCBF0; --grass:#1D7A4A; --grass-soft:#E4F3EA; --on-grass:#FFFFFF; --bad:#C0392B; --bad-soft:#FBEAE8;
+  --code-bg:#0F1720; --code-ink:#E6EDF3; --code-line:#1E2A36; --code-lit:#1C2C3D;
+  --c-toni:#2E9E63; --c-boss:#4C8DF0; --c-leon:#E2A812; --c-du:#59665F; --c-ricky:#E0604F; --c-sara:#9A6BE0; --c-jonas:#2BA3A8; --c-mia:#E07AA8;
+  --w-js:#8A6D00; --w-ts:#1F5FBF; --w-ng:#C02848; --w-rx:#9A37A8; --w-web:#B45309;
+  --f-display:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:12px; color-scheme:light;
+  /* Kanten unter Knöpfen und Antworten (die „Tiefe“ zum Draufdrücken), Schatten für Karten, Gold für XP */
+  --edge:color-mix(in srgb,var(--ink) 16%,var(--line)); --accent-edge:color-mix(in srgb,var(--accent) 68%,#000); --grass-edge:color-mix(in srgb,var(--grass) 70%,#000); --bad-edge:color-mix(in srgb,var(--bad) 70%,#000);
+  --shadow:0 1px 2px rgba(16,24,20,.05),0 8px 24px -14px rgba(16,24,20,.22); --shadow-high:0 2px 4px rgba(16,24,20,.06),0 16px 34px -16px rgba(16,24,20,.32);
+  --gold:#8F5F00; --gold-soft:#FDF3DC;
+}
+:root[data-theme="dark"]{
+  --bg:#12161A; --surface:#1A2026; --sunk:#222A31; --ink:#E7ECEF; --muted:#9AA6AE; --line:#2C363F;
+  --accent:#86A8FF; --accent-ink:#0D1530; --accent-soft:#1E2944; --accent-line:#34477A; --grass:#4CC38A; --grass-soft:#173326; --on-grass:#06170D; --bad:#FF7A6B; --bad-soft:#3A1C19;
+  --code-bg:#0B1015; --code-ink:#E6EDF3; --code-line:#1E2A36; --code-lit:#1C2C3D;
+  --c-du:#9AA6AE;
+  --edge:#0B0E11; --accent-edge:color-mix(in srgb,var(--accent) 45%,#000); --grass-edge:color-mix(in srgb,var(--grass) 45%,#000); --bad-edge:color-mix(in srgb,var(--bad) 45%,#000);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 26px -14px rgba(0,0,0,.6); --shadow-high:0 2px 4px rgba(0,0,0,.35),0 18px 36px -16px rgba(0,0,0,.75);
+  --gold:#F2C14E; --gold-soft:#3A2E12;
+  --w-js:#E8D44D; --w-ts:#6CB2FF; --w-ng:#FF6B7F; --w-rx:#E07BE8; --w-web:#FF9F5A;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+:root{--toph:62px}
+[hidden]{display:none!important}
+html,body{background:var(--bg);margin:0}
+body{color:var(--ink);font:17px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:700;line-height:1.15;text-wrap:balance;margin:0;letter-spacing:-.01em}
+a{color:var(--accent)} p{max-width:68ch}
+code{font-family:var(--f-mono);font-size:.85em;background:var(--sunk);padding:.1em .35em;border-radius:5px;font-variant-ligatures:none}
+pre.code,.CodeMirror{font-variant-ligatures:none}
+.muted{color:var(--muted)} .small{font-size:13.5px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.top{height:var(--toph);position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;color:var(--ink);border-radius:10px}
+.crest{width:36px;height:36px;flex:none}
+.brand b{font-weight:700;font-size:19px;white-space:nowrap}
+.hud{margin-left:auto;display:flex;align-items:center;gap:10px;min-width:0}
+#searchBtn{min-height:44px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:0 13px;cursor:pointer;font-size:14px;line-height:1.2;font-weight:600;white-space:nowrap}
+#searchBtn:hover,#meBtn:hover{border-color:var(--accent)}
+
+/* Profil-Chip: Avatar, Name, Rang, XP-Balken, Serie. Öffnet die Einstellungen. */
+#meBtn{display:flex;align-items:center;gap:9px;min-height:44px;min-width:0;max-width:260px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:4px 12px 4px 5px;cursor:pointer;font:inherit;text-align:left}
+.hub-av{display:flex;flex:none;position:relative}
+.hub-av-new::after{content:"";position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--surface)}
+/* Hinter dem Pixel-Avatar: Seine Farben sind fest (dunkle Haare, weiße Augen), im dunklen Design braucht er deshalb einen hellen Grund */
+:root{--photo:var(--sunk)}
+:root[data-theme="dark"]{--photo:color-mix(in srgb,var(--ink) 74%,var(--bg))}
+.px-av{display:grid;place-items:center;width:28px;height:28px;border-radius:7px;background:var(--sunk);image-rendering:pixelated;flex:none;object-fit:cover}
+img.px-av{background:var(--photo)}
+.px-empty{background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:14px}
+.av.av-px{background:var(--sunk);overflow:hidden;padding:0}
+.av.av-px .px-av{width:100%;height:100%;border-radius:0}
+#meBtn .px-av{width:34px;height:34px;border-radius:9px}
+#meBtn .lvl{display:grid;grid-template-columns:minmax(0,1fr);min-width:96px}
+.hub-c1{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:14.5px;line-height:1.25}
+.me-n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.streak{flex:none;font-size:12.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.hub-c2{display:flex;gap:5px;font-size:12px;line-height:1.3;color:var(--muted);white-space:nowrap}
+#xpNum::before{content:"· "}
+/* XP-Balken aus Pixel-Blöcken: ein Muster legt alle 6 px eine Lücke in den Balken */
+.xpbar{height:6px;border-radius:2px;background:var(--sunk);overflow:hidden;margin-top:3px}
+.xpbar i{display:block;height:100%;background:var(--accent);-webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 6px);mask:repeating-linear-gradient(90deg,#000 0 5px,transparent 5px 6px);transition:width .5s}
+
+/* Suche */
+.search-dlg{max-width:640px;margin:8vh auto auto;max-height:84vh;padding:14px 16px;overflow:auto}
+.search-in{display:flex;gap:10px;align-items:center;position:sticky;top:-14px;background:var(--surface);padding:4px 0 10px;z-index:1}
+.aidlg .search-in input{flex:1;font-size:17px;padding:11px 14px}
+.search-list{list-style:none;margin:6px 0 12px;padding:0;display:grid;gap:6px}
+.search-list a{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
+.search-list a:hover,.search-list a:focus-visible{border-color:var(--accent);outline:none}
+.search-t{font-weight:700}
+.search-ok{color:var(--grass)}
+.search-m{font-size:12.5px;color:var(--muted)}
+.search-s{font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.search-s mark{background:color-mix(in srgb,var(--accent) 22%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.search-where{font-size:12.5px;color:var(--accent);font-weight:600}
+.search-wish{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted);padding-top:6px}
+
+/* Seitenrahmen: eine Spalte, Lesebreite begrenzt */
+.main{padding-block:30px 120px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.main > *{max-width:760px;margin-left:auto;margin-right:auto}
+.main.wide > *{max-width:1240px}
+
+/* Knöpfe mit Kante: Sie stehen 3 px hoch und lassen sich beim Klicken eindrücken */
+.btn{--rim:var(--edge);display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 16px;border-radius:12px;font-weight:700;cursor:pointer;text-decoration:none;font-size:15px;box-shadow:0 3px 0 var(--rim);transition:transform .08s,box-shadow .08s,filter .15s,border-color .15s}
+.btn:hover{border-color:var(--muted)}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 0 0 var(--rim)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{--rim:var(--accent-edge);background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08);border-color:var(--accent)}
+.btn.big{padding:14px 26px;font-size:17.5px;border-radius:14px;box-shadow:0 4px 0 var(--rim)}
+.btn.big:active:not(:disabled){transform:translateY(4px)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:4px 0;font-size:14px}
+.linkbtn:hover{color:var(--ink)}
+
+/* Nur für Screenreader: unsichtbar, wird aber vorgelesen */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--accent);color:var(--accent-ink);box-shadow:0 3px 0 var(--accent-edge),0 10px 24px -10px rgba(0,0,0,.4);padding:10px 16px;border-radius:99px;font-weight:700;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 24px);overflow:hidden;text-overflow:ellipsis}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+@media (max-width: 520px){
+  .brand b,.search-l,.hub-c1,#xpNum{display:none}
+  #searchBtn{padding:0 12px;font-size:16px}
+  #meBtn{padding-right:10px}
+  #meBtn .lvl{min-width:0}
+  .hub-c2{font-size:12.5px;font-weight:700;color:var(--ink)}
+  .search-dlg{margin-top:12px;max-height:calc(100vh - 24px)}
+  .main{padding-block:22px 110px}
+}
+
+@media print{.top,.step-nav{display:none!important}}

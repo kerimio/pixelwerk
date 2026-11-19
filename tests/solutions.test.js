@@ -21,34 +21,34 @@ const NM = path.join(root, 'node_modules');
   await page.goto('file://' + path.join(root, 'index.html'));
   await page.waitForFunction(() => window.ts, null, { timeout: 30000 });
 
-  // NUR=ex20,k16 prüft nur einzelne Übungen (Übungs-id oder Kapitel-id), z. B. beim Schreiben eines neuen Kapitels.
-  const nur = (process.env.NUR || '').split(',').map(x => x.trim()).filter(Boolean);
-  const res = await page.evaluate(async nur => {
+  // ONLY=ex20,k16 prüft nur einzelne Übungen (Übungs-id oder Kapitel-id), z. B. beim Schreiben eines neuen Kapitels.
+  const only = (process.env.ONLY || '').split(',').map(x => x.trim()).filter(Boolean);
+  const res = await page.evaluate(async only => {
     const out = [];
-    for (const ch of CH.filter(c => c.ex && (!nur.length || nur.includes(c.ex.id) || nur.includes(c.id)))) {
+    for (const ch of CH.filter(c => c.ex && (!only.length || only.includes(c.ex.id) || only.includes(c.id)))) {
       const ex = ch.ex;
       const box = document.createElement('div'); document.body.appendChild(box);
       const be = ex.backend ? BACKENDS[ex.backend] : null;
-      const r = await runTests(ex.solution, ex.tests.concat(codePruefungen(ex)), box, be, ex.modules);
+      const r = await runTests(ex.solution, ex.tests.concat(codeChecks(ex)), box, be, ex.modules);
       out.push({ id: ex.id, title: ex.title, fails: r.fatal ? [r.fatal] : r.results.filter(x => !x.ok).map(x => x.name + ': ' + x.msg) });
       box.remove();
     }
     return out;
-  }, nur);
+  }, only);
 
   // Schummeln muss auffallen: richtiges Ergebnis, aber ohne das geübte Konzept bzw. fest eingetragen
-  const schummel = await page.evaluate(async () => {
+  const cheat = await page.evaluate(async () => {
     const box = document.createElement('div'); document.body.appendChild(box);
     const ex05 = CH.find(c => c.ex && c.ex.id === 'ex20').ex;
-    const req = codePruefungen(ex05).map(t => t.name);
-    const lit = codePruefungen({ starter: 'export function f(a: number) { return 0; }', solution: 'export function f(a: number) {\n  return a * 2;\n}', tests: [] });
+    const req = codeChecks(ex05).map(t => t.name);
+    const lit = codeChecks({ starter: 'export function f(a: number) { return 0; }', solution: 'export function f(a: number) {\n  return a * 2;\n}', tests: [] });
     const r = await runTests('export function f(a: number) {\n  return 6;\n}', lit, box, null);
     box.remove();
     return { req, litFail: r.results.some(x => !x.ok && /fest/.test(x.msg)) };
   });
-  console.log((schummel.req.some(n => /\?\?/.test(n)) ? '✓' : '✗') + ' Code-Check verlangt das geübte Konzept (' + schummel.req.join(' | ') + ')');
-  console.log((schummel.litFail ? '✓' : '✗') + ' Fest eingetragenes Ergebnis fällt auf');
-  if (!schummel.litFail || !schummel.req.some(n => /\?\?/.test(n))) process.exitCode = 1;
+  console.log((cheat.req.some(n => /\?\?/.test(n)) ? '✓' : '✗') + ' Code-Check verlangt das geübte Konzept (' + cheat.req.join(' | ') + ')');
+  console.log((cheat.litFail ? '✓' : '✗') + ' Fest eingetragenes Ergebnis fällt auf');
+  if (!cheat.litFail || !cheat.req.some(n => /\?\?/.test(n))) process.exitCode = 1;
 
   await browser.close();
   let bad = 0;
