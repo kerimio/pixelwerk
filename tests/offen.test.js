@@ -65,11 +65,11 @@ async function durchblaettern(page) {
     await ende(browser, fehler);
   }
   {
-    /* 4. Üben: Quizfragen des Kapitels plus Übung aus dem Kopf */
+    /* 4. Üben: Quizfragen des Kapitels, Zuordnen und die Übung aus dem Kopf */
     const { browser, page, fehler } = await oeffnen({ hash: 'ueben-k06', stand: { ich: { start: 1, name: 'Kerim' }, xp: 300, done: { k06: Date.now() - 864e5 }, quiz: { 'k06:0': 3 }, ex: { ex06: { passed: true, fails: 5, usedSolution: true } } } });
     await page.waitForSelector('#leStand');
     const n = await page.evaluate(() => CH.find(c => c.id === 'k06').quiz.length);
-    ok((await page.textContent('#leStand')).includes('von ' + (n + 1)), '4. Üben: ' + n + ' Quizfragen und die Übung aus dem Kopf');
+    ok((await page.textContent('#leStand')).includes('von ' + (n + 2)), '4. Üben: ' + n + ' Quizfragen, Zuordnen und die Übung aus dem Kopf');
     await ende(browser, fehler);
   }
 })().catch(e => { console.error(e); process.exit(1); });

@@ -101,7 +101,14 @@ export class Anzeige {
       { name: 'Anfangs steht da Tickets: 0', run: T => { const f = T.mount(T.cmp('Anzeige')); T.ok(/Tickets:\s*0\b/.test(f.q('p').textContent), 'Im <p> soll „Tickets: 0“ stehen.'); } },
       { name: 'Ein Klick zählt hoch', run: async T => { const f = T.mount(T.cmp('Anzeige')); await f.click('button'); await f.click('button'); T.ok(/Tickets:\s*2\b/.test(f.q('p').textContent), 'Nach zwei Klicks soll „Tickets: 2“ dastehen. Ruft der Knopf erledigt() auf, und steht im <p> {{ tickets() }}?'); } }
     ] },
-  merke: ['Browser verstehen nur HTML, CSS, JavaScript. Angular erzeugt genau das.', 'Angular hält Daten und Bildschirm automatisch synchron.', 'Framework = fester Rahmen. Es ruft deinen Code (Hollywood-Prinzip).', 'AngularJS (alt, 2010) ≠ Angular (neu, seit 2016).']
+  merke: ['Browser verstehen nur HTML, CSS, JavaScript. Angular erzeugt genau das.', 'Angular hält Daten und Bildschirm automatisch synchron.', 'Framework = fester Rahmen. Es ruft deinen Code (Hollywood-Prinzip).', 'AngularJS (alt, 2010) ≠ Angular (neu, seit 2016).'],
+  paare: [
+    ['HTML', 'Die Struktur: Überschrift, Knopf, Liste'],
+    ['CSS', 'Das Aussehen: Farben, Abstände, Schrift'],
+    ['JavaScript', 'Das Verhalten: Klick, und etwas passiert'],
+    ['Framework', 'Fester Rahmen, der deinen Code aufruft'],
+    ['SPA', 'Eine Seite lädt, danach tauscht Angular nur Inhalte aus']
+  ]
 },
 {
   id: 'g02', akt: 0, title: 'Was passiert beim Start?', tag: 'index.html · main.ts · Komponenten-Baum', xp: 40,
@@ -162,6 +169,12 @@ App                 (app-root)
     { q: 'Was macht der Aufruf bootstrapApplication(App) in der Datei main.ts?', options: ['Er übersetzt TypeScript in JavaScript', 'Er startet Angular mit App als oberster Komponente', 'Er lädt die index.html vom Server', 'Er installiert die Angular-Pakete'], correct: 1, why: 'Das ist der Startschuss: Angular setzt die Komponente App in <app-root> ein, und von dort wächst der Komponenten-Baum.' },
     { q: 'Ein Signal ändert seinen Wert. Was macht Angular daraufhin?', options: ['Angular lädt die Seite neu', 'Angular prüft jede Komponente der App', 'Angular aktualisiert nur die Stellen, die das Signal benutzen', 'Angular macht nichts, bis du die Seite neu lädst'], correct: 2, why: 'Angular weiß, welche Stellen das Signal lesen, und aktualisiert nur diese. Genau das macht Signals so stark.' }
   ],
-  merke: ['index.html ist fast leer. Angular baut alles in <app-root>.', 'main.ts startet alles mit bootstrapApplication.', 'Komponenten bilden einen Baum. Daten runter, Meldungen hoch.', 'Signal ändert sich → nur die betroffene Stelle wird neu gemalt.']
+  merke: ['index.html ist fast leer. Angular baut alles in <app-root>.', 'main.ts startet alles mit bootstrapApplication.', 'Komponenten bilden einen Baum. Daten runter, Meldungen hoch.', 'Signal ändert sich → nur die betroffene Stelle wird neu gemalt.'],
+  paare: [
+    ['<code>index.html</code>', 'Fast leere Seite mit nur einem eigenen Tag'],
+    ['<code>main.ts</code>', 'Startet Angular mit bootstrapApplication'],
+    ['Komponenten-Baum', 'Daten fließen runter, Meldungen hoch'],
+    ['Tree-Shaking', 'Unbenutzter Code fliegt beim Build raus']
+  ]
 }
 );

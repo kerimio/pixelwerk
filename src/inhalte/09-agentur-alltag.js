@@ -169,7 +169,14 @@ describe('TeamZahl', () => {
       { name: 'Fehler 2 gefunden: Filter verdreht', run: async T => { const r = await T.suite({ './entwickler-api': ENTWICKLER_API('filter') }); T.ok(r.failed.length > 0, 'frontendDevs() liefert jetzt alle AUSSER Frontend-Devs. Keiner deiner Tests merkt es.'); } },
       { name: 'Fehler 3 gefunden: Komponente zählt falsch', run: async T => { const r = await T.suite({ './entwickler-api': ENTWICKLER_API('zahl') }); T.ok(r.failed.length > 0, 'TeamZahl zeigt jetzt eins zu viel. Teste die Komponente mit einem Fake-Service.'); } }
     ] },
-  merke: ['Verhalten testen, nicht Implementierung.', 'TestBed + providers: echte Teile gegen Fakes tauschen.', 'HttpTestingController: expectOne, flush, verify.', 'Wenige E2E-Tests für die wichtigsten Wege.']
+  merke: ['Verhalten testen, nicht Implementierung.', 'TestBed + providers: echte Teile gegen Fakes tauschen.', 'HttpTestingController: expectOne, flush, verify.', 'Wenige E2E-Tests für die wichtigsten Wege.'],
+  paare: [
+    ['TestBed + providers', 'Echte Teile gegen Fakes tauschen'],
+    ['HttpTestingController', 'Fängt Anfragen ab, du antwortest selbst'],
+    ['<code>expectOne</code>', 'Genau diese eine Anfrage wird erwartet'],
+    ['<code>flush</code>', 'Schickt die Antwort auf die Anfrage'],
+    ['<code>verify</code>', 'Prüft, dass keine Anfrage offen blieb']
+  ]
 });
 
 CH.push({
@@ -313,7 +320,14 @@ export class TeamListe {
       { name: 'input()/output() statt Decorators', run: T => { T.ok(!T.has(/@Input|@Output|EventEmitter/), '@Input, @Output und EventEmitter raus.'); T.ok(T.has(/input\.required\s*</) && T.has(/output\s*</), 'input.required<Entwickler>() und output<number>() benutzen.'); } },
       { name: 'inject() und Signals', run: T => { T.ok(!T.has(/constructor\s*\(\s*(public|private|protected)/), 'Kein Konstruktor-Parameter mehr: team = inject(TeamService).'); T.ok(!T.has(/@Injectable/) && T.has(/@Service\s*\(/), 'TeamService: @Service() statt @Injectable({ providedIn: \'root\' }).'); const f = T.mount(T.cmp('TeamListe')); T.ok(T.isSignal(f.instance.auswahl), 'auswahl soll ein Signal sein.'); T.ok(T.isSignal(T.inject(T.get('TeamService')).entwickler), 'TeamService.entwickler soll ein Signal sein.'); } }
     ] },
-  merke: ['Altcode lesen: NgModule, *ngIf, @Input, Konstruktor-DI, Zone.js.', 'ng update Version für Version, dann Schematics, je ein PR.', 'Erst Tests, dann migrieren. Kein Big Bang.', 'Erst fragen: Was bringt die Migration?']
+  merke: ['Altcode lesen: NgModule, *ngIf, @Input, Konstruktor-DI, Zone.js.', 'ng update Version für Version, dann Schematics, je ein PR.', 'Erst Tests, dann migrieren. Kein Big Bang.', 'Erst fragen: Was bringt die Migration?'],
+  paare: [
+    ['<code>@NgModule</code>', 'Heute standalone, imports in der Komponente'],
+    ['<code>*ngFor</code>', 'Heute @for mit track'],
+    ['<code>@Output()</code> + EventEmitter', 'Heute output()'],
+    ['Konstruktor-DI', 'Heute inject()'],
+    ['<code>ng update</code>', 'Hebt die Version, eine nach der anderen']
+  ]
 });
 
 CH.push({
@@ -469,7 +483,14 @@ export const ciSchritte: string[] = ['npm ci', 'npm run lint', 'npm test', 'npm 
       { name: 'Dateien mit Fingerabdruck ewig cachen', run: T => { const c = T.get('cacheRegel'); T.eq(c('main-AB12CD34.js'), 'public, max-age=31536000, immutable', 'main-AB12CD34.js hat einen Fingerabdruck.'); T.eq(c('styles-9F8E7D6C.css'), 'public, max-age=31536000, immutable', 'Auch CSS mit Fingerabdruck.'); T.eq(c('logo.png'), 'no-cache', 'Ohne Fingerabdruck lieber no-cache.'); } },
       { name: 'CI in der richtigen Reihenfolge', run: T => { const s = T.get('ciSchritte'); T.eq(s[0], 'npm ci', 'Zuerst npm ci (nicht npm install).'); const i = w => s.findIndex(x => x.includes(w)); T.ok(i('lint') > 0 && i('test') > i('lint') && i('build') > i('test'), 'Danach lint, dann test, dann build.'); } }
     ] },
-  merke: ['angular.json: configurations, budgets, outputHashing.', 'Einmal bauen, Konfig zur Laufzeit (provideAppInitializer).', 'CI: npm ci, lint, test, build bei jedem PR.', 'Server: SPA-Fallback auf index.html, index.html no-cache, gehashte Dateien immutable.']
+  merke: ['angular.json: configurations, budgets, outputHashing.', 'Einmal bauen, Konfig zur Laufzeit (provideAppInitializer).', 'CI: npm ci, lint, test, build bei jedem PR.', 'Server: SPA-Fallback auf index.html, index.html no-cache, gehashte Dateien immutable.'],
+  paare: [
+    ['<code>configurations</code>', 'Varianten des Builds in angular.json'],
+    ['<code>budgets</code>', 'Warnschwellen für die Größe'],
+    ['CI', 'Baut, prüft und testet jeden PR'],
+    ['SPA-Fallback', 'Unbekannte Pfade bekommen index.html'],
+    ['<code>outputHashing</code>', 'Fingerabdruck im Dateinamen, ewig cachebar']
+  ]
 });
 
 CH.push({
@@ -611,7 +632,14 @@ export const fehlerProvider = { provide: ErrorHandler, useClass: GlobalerFehler 
       { name: '404 bleibt Sache der Komponente', run: async T => { const r = await durchInterceptor(T, 'fehlerInterceptor', { status: 404 }); T.eq(T.inject(T.get('Meldungen')).letzte(), null, 'Bei 404 keine globale Meldung.'); T.ok(r.error && r.error.status === 404, 'Aber weiterwerfen!'); } },
       { name: 'Eigener ErrorHandler', run: T => { const p = T.get('fehlerProvider'); const EH = T.ng.core.ErrorHandler; T.ok(p && p.provide === EH, 'fehlerProvider = { provide: ErrorHandler, useClass: GlobalerFehler }'); const inj = new T.ng.Injector(null, [p]); const h = inj.get(EH); T.ok(h instanceof T.get('GlobalerFehler'), 'Für ErrorHandler soll GlobalerFehler kommen.'); h.handleError(new Error('Kaputt')); T.eq(inj.get(T.get('Monitoring')).fehler.length, 1, 'handleError soll Monitoring.melde(e) aufrufen.'); T.eq(inj.get(T.get('Meldungen')).letzte(), 'Ups, da ist was schiefgelaufen.', 'Und dem Nutzer eine Meldung zeigen.'); } }
     ] },
-  merke: ['Jede Anzeige: Laden, Fehler, Leer, Daten.', 'HTTP-Fehler zentral im Interceptor, immer weiterwerfen.', 'Eigener ErrorHandler → Monitoring.', 'Source Maps hochladen, keine persönlichen Daten in Fehlerberichte.']
+  merke: ['Jede Anzeige: Laden, Fehler, Leer, Daten.', 'HTTP-Fehler zentral im Interceptor, immer weiterwerfen.', 'Eigener ErrorHandler → Monitoring.', 'Source Maps hochladen, keine persönlichen Daten in Fehlerberichte.'],
+  paare: [
+    ['Vier Zustände', 'Laden, Fehler, Leer, Daten'],
+    ['Interceptor', 'Fängt HTTP-Fehler aller Anfragen'],
+    ['ErrorHandler', 'Fängt alle anderen Fehler ab'],
+    ['Source Maps', 'Machen main-AB12.js:1:48213 wieder lesbar'],
+    ['Monitoring', 'Fehler sehen, bevor Kunden sie melden']
+  ]
 });
 
 CH.push({
@@ -755,7 +783,14 @@ export function nurRolle(r: Rolle): CanActivateFn {
       { name: '/auth/ bleibt unberührt', run: async T => { const r = await durchInterceptor(T, 'authInterceptor', { url: '/auth/refresh', next: q => T.rx.of(q.headers.get('Authorization')) }); T.eq(r.vals, [null], 'Anfragen an /auth/ ohne Token und ohne Refresh weiterschicken.'); } },
       { name: 'Rollen-Guard', run: T => { const a = T.inject(T.get('Auth')); const g = T.get('nurRolle')('admin'); a.rolle.set('admin'); T.eq(T.inCtx(() => g({}, {})), true, 'Admin → true.'); a.rolle.set('kunde'); const r = T.inCtx(() => g({}, {})); T.ok(T.isUrlTree(r, '/kein-zutritt'), 'Kunde → createUrlTree([\'/kein-zutritt\']).'); } }
     ] },
-  merke: ['Login macht ein Identity Provider (OIDC + PKCE).', 'Kurzer Access-Token, Refresh im Interceptor, Anfrage wiederholen.', '/auth/ nie refreshen, bei kaputtem Refresh logout.', 'Rollen in der UI sind Komfort, der Server prüft.']
+  merke: ['Login macht ein Identity Provider (OIDC + PKCE).', 'Kurzer Access-Token, Refresh im Interceptor, Anfrage wiederholen.', '/auth/ nie refreshen, bei kaputtem Refresh logout.', 'Rollen in der UI sind Komfort, der Server prüft.'],
+  paare: [
+    ['OIDC + PKCE', 'Login über einen Identity Provider'],
+    ['Access-Token', 'Kurz gültig, geht mit jeder Anfrage mit'],
+    ['Refresh-Token', 'Holt einen neuen Access-Token ohne Login'],
+    ['401 im Interceptor', 'Still neuen Token holen, Anfrage wiederholen'],
+    ['Rollen in der UI', 'Nur Komfort, der Server prüft']
+  ]
 });
 
 CH.push({
@@ -869,7 +904,14 @@ export class LiveDashboard {
       { name: 'Timer stoppt', run: async T => { const f = T.mount(T.cmp('LiveDashboard')); await T.flush(50); const i = f.instance; f.destroy(); const v = i.ticks(); await T.flush(90); T.eq(i.ticks(), v, 'Nach destroy zählt ticks weiter: clearInterval(uhr) in onDestroy.'); } },
       { name: 'Abo endet', run: async T => { const f = T.mount(T.cmp('LiveDashboard')); await T.flush(50); const i = f.instance; f.destroy(); const v = i.pings; await T.flush(90); T.eq(i.pings, v, 'Nach destroy kommen noch Pings an: .pipe(takeUntilDestroyed()).'); } }
     ] },
-  merke: ['Erst messen: Profiler, Performance-Tab, Heap Snapshots, Web Vitals.', 'Lecks: Abos, Timer, Listener, Fremd-Bibliotheken.', 'DestroyRef.onDestroy + takeUntilDestroyed.', 'HTTP und (click) sind keine Lecks.']
+  merke: ['Erst messen: Profiler, Performance-Tab, Heap Snapshots, Web Vitals.', 'Lecks: Abos, Timer, Listener, Fremd-Bibliotheken.', 'DestroyRef.onDestroy + takeUntilDestroyed.', 'HTTP und (click) sind keine Lecks.'],
+  paare: [
+    ['Profiler', 'Welche Komponente wird wie oft geprüft?'],
+    ['Heap Snapshot', 'Speicher vorher und nachher vergleichen'],
+    ['<code>DestroyRef</code>', 'Der eine Ort fürs Aufräumen'],
+    ['<code>takeUntilDestroyed</code>', 'Beendet Abos automatisch'],
+    ['Listener an <code>window</code>', 'Lebt ewig, wenn du nicht aufräumst']
+  ]
 });
 
 CH.push({
@@ -997,5 +1039,12 @@ export class Bewerbersuche {
       { name: 'Suchbegriff kommt heil an', run: async T => { let kam = null; T.ng.backend.routes['GET /api/bewerber'] = ({ q }) => { kam = q.get('q'); return []; }; const f = T.mount(T.cmp('Bewerbersuche')); await f.type('.suche', 'Müller & Söhne'); await T.flush(80); T.eq(kam, 'Müller & Söhne', 'Beim Server kam „' + kam + '“ an. Das & zerlegt die URL. Schick den Begriff mit { params: { q } }.'); } },
       { name: 'Keine any mehr', run: T => { T.ok(!T.has(/\bany\b(?!\()/), 'any raus (außer $any im Template).'); } }
     ] },
-  merke: ['Reihenfolge: korrekt, sicher, Lecks, Zustand, lesbar, schnell.', 'Kommentar: was, warum, Vorschlag, Muss/Nit/Frage.', 'Kleine PRs fordern, Lob nicht vergessen.', 'Typische Funde: Abo im Abo, subscribe ohne Ende, Methode im Template, bypassSecurityTrust, any.']
+  merke: ['Reihenfolge: korrekt, sicher, Lecks, Zustand, lesbar, schnell.', 'Kommentar: was, warum, Vorschlag, Muss/Nit/Frage.', 'Kleine PRs fordern, Lob nicht vergessen.', 'Typische Funde: Abo im Abo, subscribe ohne Ende, Methode im Template, bypassSecurityTrust, any.'],
+  paare: [
+    ['1. Korrekt?', 'Race Conditions, Randfälle, Fehlerfall'],
+    ['2. Sicher?', 'innerHTML, Geheimnisse, Rechte'],
+    ['3. Lecks?', 'subscribe ohne Ende, Timer, Listener'],
+    ['Nit', 'Kleinigkeit, kein Muss'],
+    ['Guter Kommentar', 'Was, warum und ein Vorschlag']
+  ]
 });

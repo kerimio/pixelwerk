@@ -121,7 +121,14 @@ export const karte = \`
       { name: 'Knopf zum Speichern', run: T => { const b = bHtml(T.get('karte')).querySelector('.karte button'); T.ok(b, 'Kein <button> in der Karte gefunden.'); T.eq(b.textContent.trim(), 'Speichern', 'Auf dem Knopf soll Speichern stehen.'); } },
       { name: 'Alles steht in der Karte', run: T => T.eq([...bHtml(T.get('karte')).children].map(e => e.tagName.toLowerCase() + '.' + e.className), ['div.karte'], 'Alles gehört in den einen <div class="karte">. Steht etwas nach dem </div>?') }
     ] },
-  merke: ['Element = Start-Tag, Inhalt, End-Tag.', 'Attribute stehen im Start-Tag: name="wert".', 'class ist ein Name für CSS. label for gehört zur id eines Felds.', 'Attribut = Startwert im HTML. DOM-Property = Wert gerade jetzt.']
+  merke: ['Element = Start-Tag, Inhalt, End-Tag.', 'Attribute stehen im Start-Tag: name="wert".', 'class ist ein Name für CSS. label for gehört zur id eines Felds.', 'Attribut = Startwert im HTML. DOM-Property = Wert gerade jetzt.'],
+  paare: [
+    ['Element', 'Start-Tag, Inhalt, End-Tag'],
+    ['Attribut', 'Zusatzinfo im Start-Tag: name="wert"'],
+    ['<code><a></code>', 'Ein Link, das Ziel steht in href'],
+    ['<code><ul></code> und <code><li></code>', 'Eine Liste und ihre Punkte'],
+    ['DOM-Property', 'Der Wert des Elements gerade jetzt']
+  ]
 },
 {
   id: 'b02', akt: 'B', title: 'CSS in kurz', tag: 'Selektor · Klasse · Box-Modell · Flexbox', xp: 50,
@@ -216,7 +223,14 @@ export const stil = \`
         const s = bStil(T.get('stil')); T.ok(s.titel !== s.rolle, 'Der Name hat noch dieselbe Farbe wie die Rolle. Gib .titel eine eigene color.');
       } }
     ] },
-  merke: ['Selektor { eigenschaft: wert; }', '.name trifft eine Klasse, #name eine id.', 'Box-Modell: Inhalt, padding, border, margin.', 'display: flex stellt Kinder nebeneinander, gap macht Abstand.']
+  merke: ['Selektor { eigenschaft: wert; }', '.name trifft eine Klasse, #name eine id.', 'Box-Modell: Inhalt, padding, border, margin.', 'display: flex stellt Kinder nebeneinander, gap macht Abstand.'],
+  paare: [
+    ['Selektor', 'Sagt, wen eine CSS-Regel trifft'],
+    ['<code>.name</code>', 'Trifft alle Elemente mit dieser Klasse'],
+    ['<code>#name</code>', 'Trifft das Element mit dieser id'],
+    ['<code>padding</code>', 'Innenabstand zwischen Inhalt und Rahmen'],
+    ['<code>display: flex</code>', 'Stellt die Kinder nebeneinander']
+  ]
 },
 {
   id: 'b03', akt: 'B', title: 'TypeScript: Typen und Funktionen', tag: 'Typen · Pfeilfunktion · ? : · ?? · ?.', xp: 60,
@@ -313,7 +327,14 @@ export function stadtVon(kunde: { name: string; adresse?: { stadt: string } }): 
         T.eq(r, 'keine Angabe', "Ohne adresse soll keine Angabe kommen. Häng ?? 'keine Angabe' an.");
       } }
     ] },
-  merke: ['name: string, tickets: number, fertig: boolean, team: string[].', '(x: number) => x * 2 heißt: nimm x, gib x mal 2 zurück.', 'a ? b : c = wenn a, dann b, sonst c.', 'a ?? b = a, außer a ist null/undefined. a?.b = kein Absturz, wenn a fehlt.']
+  merke: ['name: string, tickets: number, fertig: boolean, team: string[].', '(x: number) => x * 2 heißt: nimm x, gib x mal 2 zurück.', 'a ? b : c = wenn a, dann b, sonst c.', 'a ?? b = a, außer a ist null/undefined. a?.b = kein Absturz, wenn a fehlt.'],
+  paare: [
+    ['<code>string[]</code>', 'Eine Liste von Texten'],
+    ['<code>(x: number) => x * 2</code>', 'Nimmt x, gibt das Doppelte zurück'],
+    ['<code>a ? b : c</code>', 'Wenn a, dann b, sonst c'],
+    ['<code>a ?? b</code>', 'a, außer a ist null oder undefined'],
+    ['<code>a?.b</code>', 'Liest b ohne Absturz, wenn a fehlt']
+  ]
 },
 {
   id: 'b04', akt: 'B', title: 'TypeScript: Klassen', tag: 'class · constructor · this · get · extends · abstract', xp: 60,
@@ -439,7 +460,14 @@ export class Bug extends Aufgabe {
       { name: 'kurz rechnet mit den Feldern', run: T => { const B = T.get('Bug'); T.eq([new B('Login reparieren', 3).kurz, new B('Export bauen', 5).kurz], ['Login reparieren (3 h)', 'Export bauen (5 h)'], 'kurz soll Titel und Stunden so zeigen: Login reparieren (3 h).'); } },
       { name: 'Bug erbt von Aufgabe', run: T => { const b = new (T.get('Bug'))('x', 1); T.ok(b instanceof T.get('Aufgabe'), 'Bug muss mit extends Aufgabe von Aufgabe erben.'); T.eq(b.art(), 'Bug', 'art() soll in Bug den Text Bug zurückgeben.'); } }
     ] },
-  merke: ['class = Bauplan, new baut ein Objekt danach.', 'constructor setzt Startwerte, this ist das Objekt selbst.', 'get name() liest sich wie ein Feld und rechnet bei jedem Lesen.', 'extends erbt alles. abstract = nur Vorlage, Lücken füllen die Erben.']
+  merke: ['class = Bauplan, new baut ein Objekt danach.', 'constructor setzt Startwerte, this ist das Objekt selbst.', 'get name() liest sich wie ein Feld und rechnet bei jedem Lesen.', 'extends erbt alles. abstract = nur Vorlage, Lücken füllen die Erben.'],
+  paare: [
+    ['<code>class</code>', 'Bauplan für Objekte'],
+    ['<code>new</code>', 'Baut ein Objekt nach dem Bauplan'],
+    ['<code>constructor</code>', 'Setzt die Startwerte beim Bauen'],
+    ['<code>get name()</code>', 'Liest sich wie ein Feld, rechnet bei jedem Lesen'],
+    ['<code>abstract</code>', 'Nur Vorlage zum Erben, nicht selbst baubar']
+  ]
 },
 {
   id: 'b05', akt: 'B', title: 'TypeScript: Listen und Objekte', tag: 'map · filter · reduce · Spread · Destrukturierung', xp: 70,
@@ -595,7 +623,14 @@ export function zeile(t: Ticket): string {
         T.ok(/\{\s*(titel\s*,\s*stunden|stunden\s*,\s*titel)\s*\}\s*[=:]/.test(T.code), 'Pack die Felder mit const { titel, stunden } = t; aus.');
       } }
     ] },
-  merke: ['map verwandelt jedes Element, filter siebt aus. Beide geben eine neue Liste.', 'reduce((zwischen, x) => …, start) macht aus einer Liste einen Wert.', '[...liste, neu] und { ...obj, feld: wert } = Kopie mit Änderung.', 'const { a } = obj und const [x, y] = liste packen aus.']
+  merke: ['map verwandelt jedes Element, filter siebt aus. Beide geben eine neue Liste.', 'reduce((zwischen, x) => …, start) macht aus einer Liste einen Wert.', '[...liste, neu] und { ...obj, feld: wert } = Kopie mit Änderung.', 'const { a } = obj und const [x, y] = liste packen aus.'],
+  paare: [
+    ['<code>map</code>', 'Verwandelt jedes Element, gibt eine neue Liste'],
+    ['<code>filter</code>', 'Siebt Elemente aus, gibt eine neue Liste'],
+    ['<code>reduce</code>', 'Macht aus einer Liste einen einzigen Wert'],
+    ['<code>{ ...obj, a: 1 }</code>', 'Kopie des Objekts mit einer Änderung'],
+    ['<code>const { a } = obj</code>', 'Packt das Feld a in eine eigene Variable']
+  ]
 },
 {
   id: 'b06', akt: 'B', title: 'TypeScript: Warten können', tag: 'Promise · async · await · try/catch', xp: 60,
@@ -677,7 +712,13 @@ export async function teamText(api: () => Promise<string[]>): Promise<string> {
         T.eq(r, 'Server nicht erreichbar', 'Bei einem Fehler soll Server nicht erreichbar kommen.');
       } }
     ] },
-  merke: ['Promise = Wert für später, oder ein Fehler.', 'async function darf warten und gibt ein Promise zurück.', 'await wartet auf ein Promise und gibt sein Ergebnis.', 'try/catch fängt Fehler beim Warten ab. Immer an den Fehlerfall denken.']
+  merke: ['Promise = Wert für später, oder ein Fehler.', 'async function darf warten und gibt ein Promise zurück.', 'await wartet auf ein Promise und gibt sein Ergebnis.', 'try/catch fängt Fehler beim Warten ab. Immer an den Fehlerfall denken.'],
+  paare: [
+    ['Promise', 'Ein Wert, der später kommt, oder ein Fehler'],
+    ['<code>async</code>', 'Funktion darf warten und gibt ein Promise zurück'],
+    ['<code>await</code>', 'Wartet auf ein Promise und gibt sein Ergebnis'],
+    ['<code>try/catch</code>', 'Fängt Fehler beim Warten ab']
+  ]
 },
 {
   id: 'b07', akt: 'B', title: 'Die Werkbank', tag: 'Terminal · npm · ng · git · DevTools', xp: 60,
@@ -779,6 +820,13 @@ export function nodeReicht(ausgabe: string): boolean {
       { name: 'nodeReicht: alte Versionen', run: T => { const f = T.get('nodeReicht'); T.eq([f('v18.20.4'), f('v20.19.0')], [false, false], 'Unter Version 22 soll false kommen.'); } },
       { name: 'nodeReicht: Zahlen, nicht Texte', run: T => { const f = T.get('nodeReicht'); T.eq([f('v8.17.0'), f('v100.0.0')], [false, true], 'Als Text verglichen wäre "8" größer als "22". Mach mit Number() eine Zahl daraus.'); } }
     ] },
-  merke: ['Terminal: pwd = wo bin ich, ls = was liegt hier, cd = Ordner wechseln.', 'node -v prüfen, npm install, npm start.', 'ng new legt an, ng serve startet auf localhost:4200.', 'Git: status, add, commit, push. DevTools: Console, Elements, Network, Breakpoint.']
+  merke: ['Terminal: pwd = wo bin ich, ls = was liegt hier, cd = Ordner wechseln.', 'node -v prüfen, npm install, npm start.', 'ng new legt an, ng serve startet auf localhost:4200.', 'Git: status, add, commit, push. DevTools: Console, Elements, Network, Breakpoint.'],
+  paare: [
+    ['<code>pwd</code>', 'Zeigt, in welchem Ordner du gerade bist'],
+    ['<code>npm install</code>', 'Lädt alle Pakete aus package.json'],
+    ['<code>ng serve</code>', 'Startet die App auf localhost:4200'],
+    ['<code>git commit</code>', 'Speichert einen Schnappschuss deines Codes'],
+    ['Network-Tab', 'Zeigt jede Anfrage mit Statuscode']
+  ]
 }
 );

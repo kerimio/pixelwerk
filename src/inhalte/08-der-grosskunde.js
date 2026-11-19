@@ -138,7 +138,14 @@ export class Bestseller {
       { name: 'track s.id', run: T => T.ok(T.has(/track\s+s\.id/), 'Im @for bitte track s.id statt track $index.') },
       { name: '@defer mit @placeholder', run: T => T.ok(T.has(/@defer/) && T.has(/@placeholder/), 'Pack die Liste in @defer (on viewport) { ... } @placeholder { ... }.') }
     ] },
-  merke: ['Drei Schubladen: zu viel laden, zu viel rechnen, zu viel malen. Erst messen.', 'Keine teuren Methoden im Template. computed() merkt sich das Ergebnis.', '@defer lädt Teile später, mit @placeholder und @loading.', 'track s.id, OnPush, NgOptimizedImage, Virtual Scrolling.']
+  merke: ['Drei Schubladen: zu viel laden, zu viel rechnen, zu viel malen. Erst messen.', 'Keine teuren Methoden im Template. computed() merkt sich das Ergebnis.', '@defer lädt Teile später, mit @placeholder und @loading.', 'track s.id, OnPush, NgOptimizedImage, Virtual Scrolling.'],
+  paare: [
+    ['Zu viel laden', 'Riesiges JavaScript schon beim Start'],
+    ['Zu viel rechnen', 'Teure Methode läuft bei jedem Neuzeichnen'],
+    ['Zu viel malen', 'Lange Liste wird komplett neu gebaut'],
+    ['<code>@defer</code>', 'Lädt einen Teil erst, wenn er gebraucht wird'],
+    ['<code>@placeholder</code>', 'Steht da, bis der Teil geladen wird']
+  ]
 });
 
 CH.push({
@@ -228,7 +235,14 @@ export function ruckler(frames: number[], fps = 60): number {
       { name: 'Ruckler bei 60 fps', run: T => T.eq(T.get('ruckler')([10, 20, 16, 40, 16.6]), 2, 'Budget 16,7 ms: nur 20 und 40 sind zu lang.') },
       { name: 'Ruckler bei 120 fps', run: T => T.eq(T.get('ruckler')([8, 9, 5, 12], 120), 2, 'Budget 8,3 ms: 9 und 12 sind zu lang.') }
     ] },
-  merke: ['Strecke pro Bild: DOM → Style → Layout → Paint → Composite.', 'Erst alles lesen, dann alles schreiben. Sonst Layout Thrashing.', 'Animiere transform und opacity, nicht width, height oder top.', 'Core Web Vitals: LCP < 2,5 s, INP < 200 ms, CLS < 0,1.']
+  merke: ['Strecke pro Bild: DOM → Style → Layout → Paint → Composite.', 'Erst alles lesen, dann alles schreiben. Sonst Layout Thrashing.', 'Animiere transform und opacity, nicht width, height oder top.', 'Core Web Vitals: LCP < 2,5 s, INP < 200 ms, CLS < 0,1.'],
+  paare: [
+    ['Layout', 'Wo steht jedes Element, wie groß ist es?'],
+    ['Composite', 'Nur Ebenen verschieben: transform, opacity'],
+    ['Layout Thrashing', 'Lesen, schreiben, lesen in einer Schleife'],
+    ['LCP', 'Wann ist das größte Element zu sehen?'],
+    ['CLS', 'Wie sehr springt der Inhalt?']
+  ]
 });
 
 CH.push({
@@ -316,7 +330,14 @@ export class Merkzettel {
       { name: 'Auf dem Server: speichern stürzt nicht ab', run: T => { const core = T.ng.modules['@angular/core']; T.ng.root.add({ provide: core.PLATFORM_ID, useValue: 'server' }); const undo = fakeStorage(true); try { const m = T.inject(T.get('Merkzettel')); try { m.speichern(['Leon']); } catch (e) { T.ok(false, 'Auf dem Server abgestürzt: ' + e.message); } } finally { undo(); } } },
       { name: 'Benutzt isPlatformBrowser', run: T => T.ok(T.has(/isPlatformBrowser\s*\(\s*inject\s*\(\s*PLATFORM_ID\s*\)\s*\)/), 'Frag Angular nach der Plattform: isPlatformBrowser(inject(PLATFORM_ID)).') }
     ] },
-  merke: ['CSR baut im Browser, SSR auf dem Server, Prerender beim Build.', 'Hydration weckt Server-HTML auf, statt es neu zu bauen.', 'Auf dem Server: kein window, document, localStorage. isPlatformBrowser / afterNextRender.', 'HttpClient-Antworten reisen im HTML mit, keine doppelten Anfragen.']
+  merke: ['CSR baut im Browser, SSR auf dem Server, Prerender beim Build.', 'Hydration weckt Server-HTML auf, statt es neu zu bauen.', 'Auf dem Server: kein window, document, localStorage. isPlatformBrowser / afterNextRender.', 'HttpClient-Antworten reisen im HTML mit, keine doppelten Anfragen.'],
+  paare: [
+    ['CSR', 'Der Browser baut alles mit JavaScript'],
+    ['SSR', 'Der Server baut bei jeder Anfrage fertiges HTML'],
+    ['Prerendering', 'HTML entsteht einmal beim Build'],
+    ['Hydration', 'Server-HTML aufwecken statt neu bauen'],
+    ['Event Replay', 'Ein früher Klick wird gemerkt und nachgespielt']
+  ]
 });
 
 CH.push({
@@ -436,7 +457,14 @@ export class PitchStore {
       { name: 'Zurücksetzen', run: T => { const st = T.inject(T.get('PitchStore')); st.eintragen({ wir: 5, andere: 0 }); st.zuruecksetzen(); T.eq([st.pitches().length, st.punkte ? st.punkte() : -1], [0, 0], 'Nach zuruecksetzen(): keine Pitches, 0 Punkte.'); } },
       { name: 'Von außen nur lesen', run: T => { const st = T.inject(T.get('PitchStore')); T.ok(!st.pitches.set && (!st.punkte || !st.punkte.set), 'pitches und punkte sollen computed sein, ohne set().'); T.ok(!T.has(/^\s*(public\s+)?state\s*=/m), 'state soll private sein.'); } }
     ] },
-  merke: ['Jede Information hat EINEN Ort. Der Rest ist computed.', 'Store = privates Signal + computed zum Lesen + Methoden zum Ändern.', 'Nie push/direkt ändern. Immer neue Objekte/Listen (Spread).', 'NgRx SignalStore für größere Apps, klassisches NgRx im Bestandscode.']
+  merke: ['Jede Information hat EINEN Ort. Der Rest ist computed.', 'Store = privates Signal + computed zum Lesen + Methoden zum Ändern.', 'Nie push/direkt ändern. Immer neue Objekte/Listen (Spread).', 'NgRx SignalStore für größere Apps, klassisches NgRx im Bestandscode.'],
+  paare: [
+    ['Lokaler State', 'signal() in der Komponente'],
+    ['Geteilter State', 'Ein Service als Store'],
+    ['Server-State', 'resource() oder HttpClient'],
+    ['Store', 'Privates Signal, computed zum Lesen, Methoden zum Ändern'],
+    ['NgRx SignalStore', 'Fertige Bibliothek für große Apps']
+  ]
 });
 
 CH.push({
@@ -581,5 +609,11 @@ export class Vorschau {
       { name: 'deaktiviert als leeres Attribut sperrt den Schalter', run: async T => { const f = T.mount(T.cmp('Schalter'), { inputs: { label: 'X', deaktiviert: '' } }); T.ok(f.instance.deaktiviert() === true, 'deaktiviert="" (das leere Attribut) soll true ergeben. Fehlt transform: booleanAttribute?'); await f.click(f.host); T.ok(f.instance.an() === false, 'Ein gesperrter Schalter darf beim Klick nicht umschalten.'); } },
       { name: 'label ist Pflicht', run: T => { T.ok(/label\s*=\s*input\.required\s*<\s*string\s*>\s*\(/.test(T.code), 'label soll input.required<string>() sein. Ein Schalter ohne Beschriftung soll gar nicht erst bauen.'); } }
     ] },
-  merke: ['model() = Wert rein und Änderung raus, auf der Seite [(wert)].', 'transform: booleanAttribute, damit ein leeres Attribut true ist.', 'host setzt Rolle, ARIA, Klassen und Ereignisse am Baustein selbst.', 'Ein Baustein für alle braucht eine API, die man nicht falsch benutzen kann.']
+  merke: ['model() = Wert rein und Änderung raus, auf der Seite [(wert)].', 'transform: booleanAttribute, damit ein leeres Attribut true ist.', 'host setzt Rolle, ARIA, Klassen und Ereignisse am Baustein selbst.', 'Ein Baustein für alle braucht eine API, die man nicht falsch benutzen kann.'],
+  paare: [
+    ['<code>model()</code>', 'Wert rein und Änderung raus'],
+    ['<code>[(wert)]</code>', 'Two-Way-Binding auf der Seite'],
+    ['<code>booleanAttribute</code>', 'Ein leeres Attribut wird true'],
+    ['<code>host</code>', 'Rolle, ARIA und Klassen am Baustein selbst']
+  ]
 });

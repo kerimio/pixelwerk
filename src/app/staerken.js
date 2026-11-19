@@ -1,19 +1,25 @@
 /* ===== Deine Themen: was sitzt und was wackelt. Ohne KI, nur aus dem Spielstand gerechnet =====
    Quellen je Kapitel: Kapitel-Quiz (S.quiz: Versuche bis richtig), Fehler in freien Runden (S.weak), Fehler beim Wiederholen
    (S.srs[…].l), „sicher, aber daneben“ beim Wiederholen (S.srs[…].sf), Übung (S.ex: Fehlversuche, Lösung angeschaut),
-   Mini-Spiel „Welche Zeile ist das?“ (S.zeile) und Toni-Fragen (S.tf).
+   Mini-Spiel „Welche Zeile ist das?“ (S.zeile), Zuordnen (S.zu im Kapitel, S.weak['<kapitel>:zu'] in freien Runden, zuordnen.js)
+   und Toni-Fragen (S.tf).
    Danach richten sich: Wiederholen und freie Runde (wackelige Themen öfter und früher), die Hilfe in der Übung (früher angeboten),
    der Schreibtisch („Wackelt noch“) und Toni (bekommt die Themen mit). Mit KI schreibt Toni zu einem Thema neue Fragen. */
 
 /* Ein Kapitel: pkt = Fehlerpunkte, n = Beobachtungen, schwach = 0 bis 1, stand = offen | wackelt | mittel | sitzt, gruende = Sätze */
 function themaStand(ch) {
   let pkt = 0, n = 0;
-  const g = { quiz: 0, frei: 0, wdh: 0, sicher: 0, fails: 0, loesung: false, zeile: 0, tf: 0 };
+  const g = { quiz: 0, frei: 0, wdh: 0, sicher: 0, fails: 0, loesung: false, zeile: 0, tf: 0, zu: 0 };
   (ch.quiz || []).forEach((q, i) => {
     const k = ch.id + ':' + i, t = (S.quiz || {})[k], w = (S.weak || {})[k];
     if (t) { n++; if (t > 1) { pkt += Math.min(t - 1, 2); g.quiz++; } }
     if (w) { pkt += w; g.frei += w; n++; }
   });
+  /* Zuordnen zählt wie Quizfragen: jeder Fehler im Kapitel ein Punkt, höchstens zwei je Paar wie bei einer Frage */
+  const zf = (S.zu || {})[ch.id];
+  if (typeof zf === 'number' && zuHat(ch)) { n += zuPaare(ch).length; if (zf) { pkt += Math.min(zf, 2 * zuPaare(ch).length); g.zu = zf; } }
+  const zw = (S.weak || {})[ch.id + ':zu'];
+  if (zw) { pkt += zw; g.frei += zw; n++; }
   Object.keys(S.srs || {}).forEach(k => {
     const c = S.srs[k]; if (!c || k.split(':')[1] !== ch.id) return;
     n += c.n || 0;
@@ -44,6 +50,7 @@ function themaStand(ch) {
   const gruende = [];
   if (nurAngeschaut) gruende.push(ch.ex ? 'Übung noch offen' : 'Quiz noch offen');
   if (g.quiz) gruende.push((g.quiz === 1 ? '1 Quizfrage' : g.quiz + ' Quizfragen') + ' erst im zweiten Anlauf');
+  if (g.zu) gruende.push((g.zu === 1 ? '1 Fehler' : g.zu + ' Fehler') + ' beim Zuordnen');
   if (g.frei + g.wdh) gruende.push((g.frei + g.wdh) + '× daneben beim Wiederholen');
   if (g.sicher) gruende.push(g.sicher + '× sicher, aber falsch');
   if (g.loesung) gruende.push('Übung mit der Lösung geschafft');
@@ -89,7 +96,10 @@ function hubBaustellenAn(main) { const b = $('#hubBauKi', main); if (b) b.onclic
    Gerade Fehlversuche in der Übung lassen ein Thema oft wackeln, darum gehört der Code mit zur Runde. */
 function renderUeben(main, ch) {
   const x = ch.ex && S.ex[ch.ex.id] && S.ex[ch.ex.id].passed ? ['x:' + ch.id] : [];
-  const keys = shuffle((ch.quiz || []).map((q, i) => 'q:' + ch.id + ':' + i)).slice(0, 7).concat(x);
+  /* Zuordnen kommt als Abwechslung irgendwo zwischen die Quizfragen */
+  const keys = shuffle((ch.quiz || []).map((q, i) => 'q:' + ch.id + ':' + i)).slice(0, 7);
+  if (zuHat(ch)) keys.splice(1 + Math.floor(Math.random() * keys.length), 0, 'z:' + ch.id);
+  keys.push(...x);
   if (!keys.length) { main.innerHTML = leKopf('Üben') + '<div class="card le-ruhe"><h2>Hier gibt es keine Fragen</h2></div>'; return; }
   leRunde(main, keys, true, 'Üben: ' + ch.title);
 }

@@ -101,7 +101,14 @@ export function zerlege(adresse: string) {
       { name: 'Pfad stimmt', run: T => T.eq(T.get('zerlege')('https://pixelwerk.de/team/leon?tab=zeiten').pfad, '/team/leon', 'pfad soll "/team/leon" sein.') },
       { name: 'Query als Objekt', run: T => T.eq(T.get('zerlege')('https://pixelwerk.de/t?tab=zeiten&monat=mai').query, { tab: 'zeiten', monat: 'mai' }, 'query soll { tab: "zeiten", monat: "mai" } sein.') }
     ] },
-  merke: ['URL = Protokoll + Host + Port + Pfad + Query + Anker.', 'DNS → Verbindung → TLS → Anfrage → Antwort.', 'HTTP kommt immer als Paar: Request und Response.', 'F12 → Network ist dein bester Freund.']
+  merke: ['URL = Protokoll + Host + Port + Pfad + Query + Anker.', 'DNS → Verbindung → TLS → Anfrage → Antwort.', 'HTTP kommt immer als Paar: Request und Response.', 'F12 → Network ist dein bester Freund.'],
+  paare: [
+    ['DNS', 'Telefonbuch: Name zu IP-Adresse'],
+    ['TLS', 'Verschlüsselt die Verbindung'],
+    ['Request', 'Die Frage des Browsers an den Server'],
+    ['Response', 'Die Antwort des Servers'],
+    ['Query <code>?q=angular</code>', 'Zusatzangaben hinter dem Fragezeichen']
+  ]
 },
 {
   id: 'w02', akt: 'W', title: 'HTTP: Methoden & Statuscodes', tag: 'GET · POST · 200 · 404 · 500', xp: 60,
@@ -172,7 +179,14 @@ export function darfWiederholen(methode: string): boolean {
       { name: 'GET, PUT, DELETE dürfen wiederholt werden', run: T => { const f = T.get('darfWiederholen'); T.eq(['GET', 'PUT', 'DELETE', 'get'].map(f), [true, true, true, true], 'GET, PUT, DELETE (auch klein geschrieben) sollen true sein.'); } },
       { name: 'POST und PATCH nicht', run: T => { const f = T.get('darfWiederholen'); T.eq(['POST', 'PATCH'].map(f), [false, false], 'POST und PATCH sind nicht idempotent → false.'); } }
     ] },
-  merke: ['GET holen, POST anlegen, PUT ersetzen, PATCH teilweise ändern, DELETE löschen.', '2xx gut, 3xx woanders, 4xx du, 5xx Server.', '401 = nicht eingeloggt, 403 = nicht erlaubt.', 'Nur idempotente Anfragen automatisch wiederholen.']
+  merke: ['GET holen, POST anlegen, PUT ersetzen, PATCH teilweise ändern, DELETE löschen.', '2xx gut, 3xx woanders, 4xx du, 5xx Server.', '401 = nicht eingeloggt, 403 = nicht erlaubt.', 'Nur idempotente Anfragen automatisch wiederholen.'],
+  paare: [
+    ['GET', 'Holen, ändert nichts'],
+    ['POST', 'Etwas neu anlegen'],
+    ['401', 'Nicht eingeloggt'],
+    ['403', 'Eingeloggt, aber nicht erlaubt'],
+    ['500', 'Fehler auf dem Server']
+  ]
 },
 {
   id: 'w03', akt: 'W', title: 'Header, JSON & REST', tag: 'Wie man mit APIs redet', xp: 60,
@@ -241,7 +255,14 @@ export function anfrage(aktion: Aktion, id?: number) {
       { name: 'aendern → PUT mit id', run: T => T.eq(T.get('anfrage')('aendern', 3), { methode: 'PUT', url: '/api/entwickler/3' }, 'Ändern = PUT /api/entwickler/3.') },
       { name: 'loeschen → DELETE mit id', run: T => T.eq(T.get('anfrage')('loeschen', 9), { methode: 'DELETE', url: '/api/entwickler/9' }, 'Löschen = DELETE /api/entwickler/9.') }
     ] },
-  merke: ['Header = Zusatzinfos: Content-Type, Accept, Authorization, Cache-Control.', 'JSON ist Text. stringify hin, parse zurück. Kein Datum, keine Funktionen.', 'REST: URL = Ding, Methode = Aktion. Keine Verben in der URL.']
+  merke: ['Header = Zusatzinfos: Content-Type, Accept, Authorization, Cache-Control.', 'JSON ist Text. stringify hin, parse zurück. Kein Datum, keine Funktionen.', 'REST: URL = Ding, Methode = Aktion. Keine Verben in der URL.'],
+  paare: [
+    ['Content-Type', 'Was im Body steckt, z. B. application/json'],
+    ['Authorization', 'Der Ausweis, z. B. ein Bearer-Token'],
+    ['<code>JSON.parse</code>', 'Macht aus JSON-Text ein Objekt'],
+    ['<code>JSON.stringify</code>', 'Macht aus einem Objekt JSON-Text'],
+    ['<code>DELETE /api/entwickler/7</code>', 'Entwickler 7 löschen, sauber im REST-Stil']
+  ]
 },
 {
   id: 'w04', akt: 'W', title: 'CORS', tag: 'Same-Origin · Preflight · Proxy', xp: 80,
@@ -334,7 +355,14 @@ export function darfRein(origin: string, allow: string | null): boolean {
       { name: 'Nur das genaue Origin', run: T => { const f = T.get('darfRein'); T.eq([f('http://localhost:4200', 'http://localhost:4200'), f('http://evil.de', 'http://localhost:4200')], [true, false], 'Genau gleich → true, anderes → false.'); } },
       { name: 'Kein Header → draußen', run: T => T.eq(T.get('darfRein')('http://localhost:4200', null), false, 'allow ist null → false.') }
     ] },
-  merke: ['Origin = Protokoll + Host + Port.', 'CORS ist ein Browser-Schutz. Der SERVER erlaubt per Access-Control-Allow-Origin.', 'Bei JSON-Anfragen klopft der Browser vorher mit OPTIONS an (Preflight).', 'Beim Entwickeln: proxy.conf.json mit ng serve.']
+  merke: ['Origin = Protokoll + Host + Port.', 'CORS ist ein Browser-Schutz. Der SERVER erlaubt per Access-Control-Allow-Origin.', 'Bei JSON-Anfragen klopft der Browser vorher mit OPTIONS an (Preflight).', 'Beim Entwickeln: proxy.conf.json mit ng serve.'],
+  paare: [
+    ['Origin', 'Protokoll + Host + Port'],
+    ['Same-Origin-Policy', 'JavaScript liest nur Antworten vom eigenen Origin'],
+    ['Access-Control-Allow-Origin', 'Damit erlaubt der Server ein fremdes Origin'],
+    ['Preflight', 'Der Browser fragt vorher mit OPTIONS'],
+    ['Proxy', 'ng serve reicht /api durch: gleiches Origin']
+  ]
 },
 {
   id: 'w05', akt: 'W', title: 'Cookies, Storage & Tokens', tag: 'Login verstehen · JWT', xp: 80,
@@ -409,7 +437,14 @@ export function abgelaufen(inhalt: { exp: number }, jetztSek: number): boolean {
       { name: 'Abgelaufen erkannt', run: T => { const f = T.get('abgelaufen'); T.eq([f({ exp: 100 }, 200), f({ exp: 200 }, 200)], [true, true], 'exp 100 bei jetzt 200 → abgelaufen. Genau gleich auch.'); } },
       { name: 'Noch gültig erkannt', run: T => T.eq(T.get('abgelaufen')({ exp: 300 }, 200), false, 'exp 300 bei jetzt 200 → noch gültig → false.') }
     ] },
-  merke: ['HTTP vergisst alles: Cookie oder Token bei jeder Anfrage.', 'Cookie-Flags: HttpOnly, Secure, SameSite.', 'JWT = Kopf.Inhalt.Stempel. Inhalt ist für alle lesbar, prüfen kann nur der Server.', 'Interceptor hängt den Token an jede Anfrage.']
+  merke: ['HTTP vergisst alles: Cookie oder Token bei jeder Anfrage.', 'Cookie-Flags: HttpOnly, Secure, SameSite.', 'JWT = Kopf.Inhalt.Stempel. Inhalt ist für alle lesbar, prüfen kann nur der Server.', 'Interceptor hängt den Token an jede Anfrage.'],
+  paare: [
+    ['Cookie', 'Der Server legt es ab, der Browser schickt es mit'],
+    ['localStorage', 'Bleibt für immer, JavaScript kann es lesen'],
+    ['sessionStorage', 'Weg, sobald der Tab zu ist'],
+    ['HttpOnly', 'JavaScript kommt an dieses Cookie nicht ran'],
+    ['JWT', 'Kopf.Inhalt.Stempel, der Inhalt ist für alle lesbar']
+  ]
 },
 {
   id: 'g06', akt: 'W', title: 'Sicherheit', tag: 'Was Angular schützt, was nicht', xp: 70,
@@ -448,7 +483,14 @@ name = signal('<img src=x onerror="klauDaten()">');
     { q: 'Ein Nutzer gibt als Namen <img onerror="…"> ein. Was zeigt das Template an der Stelle {{ name() }}?', options: ['Der Browser führt das Script aus', 'Die Eingabe erscheint als harmloser Text', 'Es erscheint ein kaputtes Bild', 'Angular entfernt den Tag, es erscheint nichts'], correct: 1, why: 'Angular wandelt Sonderzeichen in {{ }} automatisch in harmlosen Text um (Escaping). Das ist der eingebaute Schutz vor XSS.' },
     { q: 'Ein Knopf ist mit [disabled] gesperrt. Ist die Aktion damit sicher verboten?', options: ['Ja, ein gesperrter Knopf kann nichts auslösen', 'Nein, der Server muss es prüfen', 'Ja, wenn zusätzlich ein Route Guard die Seite sperrt', 'Ja, solange der Code minifiziert ist'], correct: 1, why: 'Jeder kann die Anfrage auch ohne Knopf direkt an den Server schicken. Echten Schutz gibt es deshalb nur auf dem Server.' }
   ],
-  merke: ['Alles im Browser ist sichtbar und änderbar. Geheimnisse gehören auf den Server.', 'Echte Prüfung passiert immer auf dem Server, nie nur im Frontend.', 'Angular schützt automatisch vor XSS, solange du nicht bypassSecurityTrust… benutzt oder innerHTML direkt am DOM setzt.', 'Tokens gut aufbewahren, Pakete aktuell halten.']
+  merke: ['Alles im Browser ist sichtbar und änderbar. Geheimnisse gehören auf den Server.', 'Echte Prüfung passiert immer auf dem Server, nie nur im Frontend.', 'Angular schützt automatisch vor XSS, solange du nicht bypassSecurityTrust… benutzt oder innerHTML direkt am DOM setzt.', 'Tokens gut aufbewahren, Pakete aktuell halten.'],
+  paare: [
+    ['XSS', 'Fremdes JavaScript läuft in deiner Seite'],
+    ['<code>bypassSecurityTrust…</code>', 'Schaltet Angulars Schutz bewusst ab'],
+    ['<code>[disabled]</code>', 'Nur Komfort, kein Schutz'],
+    ['HttpOnly-Cookie', 'Token, an das kein Script rankommt'],
+    ['Server', 'Prüft Rechte und Daten, immer']
+  ]
 },
 {
   id: 'w06', akt: 'W', title: 'npm & Dependencies', tag: 'package.json · Versionen · Lockfile', xp: 80,
@@ -551,7 +593,14 @@ export function passt(bereich: string, version: string): boolean {
       { name: 'Nicht älter als die Angabe', run: T => { const f = T.get('passt'); T.eq([f('^21.2.0', '21.1.9'), f('~7.8.3', '7.8.1')], [false, false], '21.1.9 ist älter als 21.2.0 → false.'); } },
       { name: 'Exakt heißt exakt', run: T => { const f = T.get('passt'); T.eq([f('5.4.5', '5.4.5'), f('5.4.5', '5.4.6')], [true, false], 'Ohne Zeichen nur genau gleich.'); } }
     ] },
-  merke: ['npm lädt Pakete in node_modules. Nie ins Git, nie per Hand ändern.', 'dependencies = braucht die App zur Laufzeit, devDependencies = nur zum Bauen/Testen. Ins Bundle kommt nur, was importiert wird.', 'MAJOR.MINOR.PATCH. ^ erlaubt MINOR+PATCH, ~ nur PATCH.', 'package-lock.json gehört ins Git. npm ci für exakt gleiche Versionen.']
+  merke: ['npm lädt Pakete in node_modules. Nie ins Git, nie per Hand ändern.', 'dependencies = braucht die App zur Laufzeit, devDependencies = nur zum Bauen/Testen. Ins Bundle kommt nur, was importiert wird.', 'MAJOR.MINOR.PATCH. ^ erlaubt MINOR+PATCH, ~ nur PATCH.', 'package-lock.json gehört ins Git. npm ci für exakt gleiche Versionen.'],
+  paare: [
+    ['MAJOR', 'Kann deinen Code kaputt machen'],
+    ['PATCH', 'Nur Fehler behoben'],
+    ['<code>^21.0.0</code>', 'Erlaubt 21.x.x, aber nicht 22'],
+    ['<code>~7.8.0</code>', 'Erlaubt nur 7.8.x'],
+    ['<code>npm ci</code>', 'Installiert genau die Versionen aus dem Lockfile']
+  ]
 },
 {
   id: 'w07', akt: 'W', title: 'HTTPS & Caching', tag: 'Verschlüsselung · Cache · CDN', xp: 50,
@@ -577,7 +626,14 @@ export function passt(bereich: string, version: string): boolean {
     { q: 'Warum darf der Browser eine Datei wie main-AB12CD.js aus dem Angular-Build beliebig lange cachen?', options: ['Weil die Datei klein ist', 'Weil sich bei jeder Änderung der Dateiname ändert', 'Weil alte Versionen niemanden stören', 'Das darf er gar nicht'], correct: 1, why: 'Ändert sich der Code, bekommt die Datei einen neuen Namen. Der Browser lädt sie dann neu herunter.' },
     { q: 'Was bedeutet der HTTP-Statuscode 304?', options: ['Auf dem Server ist ein Fehler passiert', 'Nichts hat sich geändert, nimm deine gespeicherte Kopie', 'Die Ressource wurde gelöscht', 'Die Adresse hat sich dauerhaft geändert'], correct: 1, why: '304 heißt Not Modified: Der Browser benutzt seine Kopie aus dem Cache und lädt nichts neu.' }
   ],
-  merke: ['HTTPS = verschlüsselt, echt, unverändert.', 'Cache-Control sagt, wie lange gespeichert wird.', 'Angular-Dateien haben Fingerabdrücke im Namen → ewig cachen ok.', 'CDN + Kompression = schnell überall.']
+  merke: ['HTTPS = verschlüsselt, echt, unverändert.', 'Cache-Control sagt, wie lange gespeichert wird.', 'Angular-Dateien haben Fingerabdrücke im Namen → ewig cachen ok.', 'CDN + Kompression = schnell überall.'],
+  paare: [
+    ['HTTPS', 'HTTP mit Verschlüsselung'],
+    ['<code>max-age=31536000</code>', 'Ein Jahr lang behalten'],
+    ['<code>no-cache</code>', 'Speichern, aber vor jeder Nutzung nachfragen'],
+    ['<code>no-store</code>', 'Gar nicht speichern'],
+    ['CDN', 'Kopien deiner Dateien weltweit, nah am Nutzer']
+  ]
 },
 {
   id: 'w08', akt: 'W', title: 'Die Event Loop', tag: 'Call Stack · Microtasks · Timer', xp: 90,
@@ -730,7 +786,14 @@ export const ausgabe4: string[] = ['A', 'C', 'B'];
       { name: 'Schnipsel 3: ein Timer stößt ein Promise an', run: T => elVorhersage(T, 3, 'Was passiert direkt nach dem ersten Timer, bevor der zweite drankommt?') },
       { name: 'Schnipsel 4: Mias Bug', run: T => elVorhersage(T, 4, 'Auch ein Promise, das schon fertig ist, ruft then nicht sofort auf. Wer ist trotzdem schneller als ein Timer?') }
     ] },
-  merke: ['JavaScript macht eins nach dem anderen. Laufender Code wird immer zu Ende ausgeführt.', 'Reihenfolge: laufender Code → alle Microtasks → EINE Macrotask → wieder alle Microtasks.', 'Promise.then und alles nach await sind Microtasks, setTimeout ist eine Macrotask.', 'setTimeout(…, 0) ist kein Fix, nur eine andere Reihenfolge.']
+  merke: ['JavaScript macht eins nach dem anderen. Laufender Code wird immer zu Ende ausgeführt.', 'Reihenfolge: laufender Code → alle Microtasks → EINE Macrotask → wieder alle Microtasks.', 'Promise.then und alles nach await sind Microtasks, setTimeout ist eine Macrotask.', 'setTimeout(…, 0) ist kein Fix, nur eine andere Reihenfolge.'],
+  paare: [
+    ['Call Stack', 'Der Code, der gerade läuft'],
+    ['Microtask', 'Promise.then und alles nach await'],
+    ['Macrotask', 'Ein Timer, ein Klick: genau einer pro Runde'],
+    ['Long Task', 'Läuft über 50 ms, die Seite friert ein'],
+    ['<code>setTimeout(…, 0)</code>', 'Kein Fix, nur eine andere Reihenfolge']
+  ]
 }
 ];
 CH.push(...WEB_CH);

@@ -28,7 +28,14 @@ CH.push({
     { q: 'Welcher Befehl startet deine App lokal zum Entwickeln?', options: ['ng build', 'ng new', 'ng serve', 'ng test'], correct: 2, why: 'Der Befehl ng serve startet einen Entwicklungs-Server und lädt die App bei jeder Änderung neu.' },
     { q: 'Wofür ist die Datei team.spec.ts in einem Angular-Projekt da?', options: ['Sie enthält die Styles der Komponente', 'Sie enthält die Tests der Komponente', 'Sie enthält die Typen (Interfaces) der Komponente', 'Sie enthält die Konfiguration für den Build'], correct: 1, why: 'Die Endung .spec.ts steht für Tests. Sie beschreiben, was die Komponente können muss.' }
   ],
-  merke: ['Angular bringt alles mit: Router, Formulare, HTTP, Tests, CLI.', 'Die CLI (ng …) legt an, startet, baut, testet und updatet.', 'Jede Komponente: .ts, .html, .css, .spec.ts.', 'Gleiche Struktur überall → du findest dich in jedem Angular-Projekt zurecht.']
+  merke: ['Angular bringt alles mit: Router, Formulare, HTTP, Tests, CLI.', 'Die CLI (ng …) legt an, startet, baut, testet und updatet.', 'Jede Komponente: .ts, .html, .css, .spec.ts.', 'Gleiche Struktur überall → du findest dich in jedem Angular-Projekt zurecht.'],
+  paare: [
+    ['Router', 'Seiten unter verschiedenen Adressen'],
+    ['HttpClient', 'Mit dem Server reden'],
+    ['i18n', 'Die App in mehreren Sprachen'],
+    ['<code>ng generate component</code>', 'Neue Komponente mit allen Dateien'],
+    ['<code>.spec.ts</code>', 'Die Datei mit den Tests']
+  ]
 });
 
 CH.push({
@@ -177,7 +184,14 @@ export const routes: Routes = [
       { name: 'Guard schickt Fremde zum Login', run: T => { T.inject(T.get('Auth')).eingeloggt.set(false); const r = T.inCtx(() => T.get('nurMitarbeiter')({}, {})); T.ok(T.isUrlTree(r, '/login'), 'Nicht eingeloggt → createUrlTree(["/login"]) zurückgeben.'); } },
       { name: 'Guard lässt Mitarbeiter rein', run: T => { T.inject(T.get('Auth')).eingeloggt.set(true); T.eq(T.inCtx(() => T.get('nurMitarbeiter')({}, {})), true, 'Eingeloggt → true.'); } }
     ] },
-  merke: ['Routes = Liste Pfad → Komponente. Erster Treffer gewinnt, ** ganz unten.', ':id ist ein Platzhalter. Mit withComponentInputBinding kommt er als input().', 'loadComponent / loadChildren laden Seiten erst bei Bedarf.', 'Guard: true oder UrlTree. Schützt nur die Ansicht, nicht die Daten.']
+  merke: ['Routes = Liste Pfad → Komponente. Erster Treffer gewinnt, ** ganz unten.', ':id ist ein Platzhalter. Mit withComponentInputBinding kommt er als input().', 'loadComponent / loadChildren laden Seiten erst bei Bedarf.', 'Guard: true oder UrlTree. Schützt nur die Ansicht, nicht die Daten.'],
+  paare: [
+    ['<code>Routes</code>', 'Liste: welcher Pfad zeigt welche Komponente'],
+    ['<code>:id</code>', 'Platzhalter im Pfad'],
+    ['<code>**</code>', 'Fängt alles Unbekannte, steht ganz unten'],
+    ['<code>loadComponent</code>', 'Lädt eine Seite erst bei Bedarf'],
+    ['Guard', 'Prüft vor dem Betreten: true oder UrlTree']
+  ]
 });
 
 CH.push({
@@ -312,7 +326,14 @@ export class Bewerbung {
       { name: 'Fehler erst nach dem Verlassen', run: async T => { const f = T.mount(T.cmp('Bewerbung')); T.ok(f.q('input.name'), 'Im Template fehlt <input class="name" formControlName="name">.'); T.ok(!f.q('p.fehler'), 'Beim Öffnen soll noch kein Fehler zu sehen sein. Prüfst du touched?'); f.q('input.name').dispatchEvent(new Event('blur')); await T.flush(); const p = f.q('p.fehler'); T.ok(p && /Name fehlt/.test(p.textContent), 'Nach dem Verlassen des leeren Namens soll <p class="fehler">Name fehlt.</p> erscheinen. Prüfst du name.touched und hasError(\'required\')?'); await f.type('input.name', 'Leon'); T.ok(!f.q('p.fehler'), 'Mit „Leon“ im Feld soll die Meldung wieder verschwinden.'); } },
       { name: 'Alles richtig → Formular gültig', run: T => { const f = T.get('neuerAntrag')(); T.eq(Object.keys(f.controls).length, 3, 'Erst alle drei Felder anlegen.'); f.setValue({ name: 'Leon', email: 'leon@pixelwerk.de', alter: 23 }); T.ok(f.valid, 'Mit gültigen Werten soll das ganze Formular valid sein.'); } }
     ] },
-  merke: ['FormControl = ein Feld, FormGroup = mehrere. Gruppe ist nur valid, wenn alle valid sind.', 'Validatoren: required, minLength, email, min … als Liste.', 'Eigener Validator: Funktion → null (gut) oder { fehler: true }.', 'Fehler erst zeigen, wenn touched.']
+  merke: ['FormControl = ein Feld, FormGroup = mehrere. Gruppe ist nur valid, wenn alle valid sind.', 'Validatoren: required, minLength, email, min … als Liste.', 'Eigener Validator: Funktion → null (gut) oder { fehler: true }.', 'Fehler erst zeigen, wenn touched.'],
+  paare: [
+    ['FormControl', 'Ein Feld mit Wert und Regeln'],
+    ['FormGroup', 'Bündelt Felder, gültig nur, wenn alle gültig sind'],
+    ['<code>Validators.required</code>', 'Das Feld darf nicht leer sein'],
+    ['Eigener Validator', 'Gibt null oder ein Fehler-Objekt zurück'],
+    ['<code>touched</code>', 'Schon angefasst: jetzt Fehler zeigen']
+  ]
 });
 
 CH.push({
@@ -422,7 +443,14 @@ export class LiveUhr implements OnDestroy {
       { name: 'Alle Werte sind Signals', run: T => { const f = T.mount(T.cmp('LiveUhr')); const i = f.instance; T.ok(['minute', 'erledigt', 'offen'].every(k => T.isSignal(i[k])), 'minute, erledigt und offen sollen Signals sein.'); } },
       { name: 'Uhr stoppt beim Verlassen', run: async T => { const f = T.mount(T.cmp('LiveUhr')); await T.flush(150); const i = f.instance; T.ok(typeof i.minute === 'function', 'minute soll ein Signal sein.'); f.destroy(); const vorher = i.minute(); await T.flush(300); T.eq(i.minute(), vorher, 'Nach destroy tickt die Uhr weiter. clearInterval(this.uhr) in ngOnDestroy!'); } }
     ] },
-  merke: ['Angular schaut nur hin bei: Signal-Änderung, Template-Ereignis, async-Pipe, markForCheck.', 'Normales Feld in setTimeout/setInterval → Bildschirm bleibt alt.', 'Früher Zone.js (prüft alles), heute Zoneless + Signals.', 'Signals + OnPush überall. Timer immer aufräumen.']
+  merke: ['Angular schaut nur hin bei: Signal-Änderung, Template-Ereignis, async-Pipe, markForCheck.', 'Normales Feld in setTimeout/setInterval → Bildschirm bleibt alt.', 'Früher Zone.js (prüft alles), heute Zoneless + Signals.', 'Signals + OnPush überall. Timer immer aufräumen.'],
+  paare: [
+    ['Change Detection', 'Angular prüft Daten und malt neu'],
+    ['Zone.js', 'Prüfte früher nach jedem Klick und Timer'],
+    ['Zoneless', 'Angular schaut nur bei echtem Grund hin'],
+    ['OnPush', 'Prüf mich nur bei Inputs, Signals und Ereignissen'],
+    ['Normales Feld in <code>setInterval</code>', 'Der Bildschirm bleibt alt']
+  ]
 });
 
 CH.push({
@@ -537,5 +565,12 @@ describe('fliegtRaus', () => {
       { name: 'Fehler 3 gefunden: Platz 16 bleibt drin', run: async T => { const r = await T.suite({ './ranking': { punkte: (s, u, n) => 3 * s + u, fliegtRaus: p => p > 16 } }); T.ok(r.failed.length > 0, 'Ich habe >= zu > gemacht: Platz 16 fliegt nicht mehr raus. Teste genau Platz 16.'); } },
       { name: 'Fehler 4 gefunden: Platz 15 fliegt raus', run: async T => { const r = await T.suite({ './ranking': { punkte: (s, u, n) => 3 * s + u, fliegtRaus: p => p >= 15 } }); T.ok(r.failed.length > 0, 'Jetzt fliegt schon Platz 15 raus. Teste die Grenze von unten: Platz 15.'); } }
     ] },
-  merke: ['Test = Code, der Code prüft. describe → it → expect.', 'Vorbereiten, ausführen, prüfen (Arrange, Act, Assert).', 'Grenzen testen! Dort wohnen die Bugs.', 'Ein guter Test wird rot, wenn der Code kaputt ist. Sonst ist er wertlos.']
+  merke: ['Test = Code, der Code prüft. describe → it → expect.', 'Vorbereiten, ausführen, prüfen (Arrange, Act, Assert).', 'Grenzen testen! Dort wohnen die Bugs.', 'Ein guter Test wird rot, wenn der Code kaputt ist. Sonst ist er wertlos.'],
+  paare: [
+    ['<code>describe</code>', 'Eine Gruppe von Tests'],
+    ['<code>it</code>', 'Ein einzelner Test'],
+    ['<code>expect</code>', 'Ich erwarte, dass …'],
+    ['Grenzfall', 'Platz 15 bleibt drin, 16 fliegt raus'],
+    ['TestBed', 'Eine Mini-App nur für den Test']
+  ]
 });

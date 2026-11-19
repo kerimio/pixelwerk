@@ -506,7 +506,13 @@ Workshops (Seite)
       { name: 'Die Suche filtert nach Titel und Thema', run: async T => { const f = T.mount(T.cmp('Workshops')); T.ok(T.isComputed(f.instance.gefiltert), 'gefiltert soll ein computed() sein.'); await f.type('input.suche', 'http'); T.eq(f.qa('.titel').map(t => t.textContent.trim()), ['HTTP verstehen'], '„http“ soll nur „HTTP verstehen“ finden, auch bei kleiner Schreibweise.'); await f.type('input.suche', 'angular'); T.eq(f.qa('app-workshop-karte').length, 2, '„angular“ soll beide Angular-Workshops über das Thema finden.'); await f.type('input.suche', 'xyz'); T.ok(f.q('p.leer'), 'Ohne Treffer soll <p class="leer"> erscheinen.'); } },
       { name: 'Anmelden zählt hoch', run: async T => { const f = T.mount(T.cmp('Workshops')); await f.click(f.q('app-workshop-karte button.anmelden')); T.eq(f.instance.liste()[0].belegt, 4, 'Nach einem Klick soll der erste Workshop 4 belegte Plätze haben.'); T.ok(f.q('app-workshop-karte .frei').textContent.includes('4 frei'), 'Die Karte soll danach „4 frei“ zeigen.'); } }
     ] },
-  merke: ['Eine App von innen nach außen bauen: erst die kleinste Komponente.', 'Data down, events up: input() rein, output() raus.', 'Was sich ergibt, ist computed(), nicht gespeichert.', 'Signals mit neuen Werten ändern, nicht das alte Objekt.']
+  merke: ['Eine App von innen nach außen bauen: erst die kleinste Komponente.', 'Data down, events up: input() rein, output() raus.', 'Was sich ergibt, ist computed(), nicht gespeichert.', 'Signals mit neuen Werten ändern, nicht das alte Objekt.'],
+  paare: [
+    ['Von innen nach außen', 'Erst die Karte, dann die Seite'],
+    ['<code>input()</code>', 'Daten rein in die Karte'],
+    ['<code>output()</code>', 'Meldung raus aus der Karte'],
+    ['<code>computed()</code>', 'Was sich ergibt, wird nicht gespeichert']
+  ]
 });
 
 CH.push({
@@ -551,7 +557,14 @@ this.daten.reload();`,
       { name: 'Anmelden geht zum Server und lädt neu', run: async T => { const f = T.mount(T.cmp('Workshops')); await T.flush(100); await f.click(f.q('app-workshop-karte button.anmelden')); await T.flush(200); T.eq(posts(T, '/api/workshops/1/anmeldung').length, 1, 'Ein Klick soll über die API anmelden.'); T.ok(T.ng.backend.calls.filter(c => c.method === 'GET' && c.url === '/api/workshops').length >= 2, 'Danach soll die Liste neu geladen werden (daten.reload()).'); T.ok(f.q('app-workshop-karte .frei').textContent.includes('4 frei'), 'Die Karte soll danach den Stand vom Server zeigen: „4 frei“.'); } },
       { name: 'httpResource lädt die Liste', run: T => T.ok(/httpResource\s*</.test(T.code) || /httpResource\s*\(/.test(T.code), 'Lade die Liste mit httpResource(() => \'/api/workshops\').') }
     ] },
-  merke: ['Alles, was zum Server geht, steht in einem Service.', 'Jede Seite mit Server-Daten hat drei Zustände: lädt, Fehler, Daten.', 'httpResource zum Lesen, HttpClient im Service zum Schreiben.', 'Nach einer Änderung den Stand vom Server neu holen.']
+  merke: ['Alles, was zum Server geht, steht in einem Service.', 'Jede Seite mit Server-Daten hat drei Zustände: lädt, Fehler, Daten.', 'httpResource zum Lesen, HttpClient im Service zum Schreiben.', 'Nach einer Änderung den Stand vom Server neu holen.'],
+  paare: [
+    ['Service', 'Alles, was zum Server geht'],
+    ['<code>httpResource</code>', 'Lesen, mit Signal für Laden und Fehler'],
+    ['HttpClient', 'Schreiben im Service, etwa POST'],
+    ['Drei Zustände', 'Lädt, Fehler, Daten'],
+    ['<code>reload()</code>', 'Nach einer Änderung den Stand neu holen']
+  ]
 });
 
 CH.push({
@@ -596,7 +609,13 @@ speichern() {
       { name: 'Speichern schickt, meldet und leert', run: async T => { const f = T.mount(T.cmp('NeuerWorkshop')); const got = []; T.ok(f.instance.angelegt && typeof f.instance.angelegt.subscribe === 'function', 'angelegt soll ein output<Workshop>() sein.'); f.instance.angelegt.subscribe(w => got.push(w)); f.instance.daten.set(GUELTIG); f.instance.speichern(); await T.flush(5); T.ok(f.q('button.speichern').disabled, 'Während gespeichert wird, soll der Knopf gesperrt sein: [disabled]="neu().submitting()".'); await T.flush(120); T.ok(!f.q('button.speichern').disabled, 'Nach dem Speichern soll der Knopf wieder frei sein.'); const p = posts(T, '/api/workshops'); T.eq(p.length, 1, 'Es soll genau ein POST an /api/workshops gehen.'); T.eq(p[0].body, GUELTIG, 'Im POST sollen genau die Daten aus dem Formular stehen.'); T.eq(got.map(w => w.titel), ['Angular testen'], 'Danach soll angelegt den neuen Workshop vom Server melden.'); T.eq(f.instance.daten().titel, '', 'Danach soll der Titel wieder leer sein.'); } },
       { name: 'Die Liste zeigt den neuen Workshop', run: async T => { const f = T.mount(T.cmp('Workshops')); await T.flush(100); T.ok(f.q('app-neuer-workshop'), 'Die Seite soll <app-neuer-workshop> enthalten.'); await f.type('app-neuer-workshop input.titel', 'Angular testen'); await f.click('app-neuer-workshop button.speichern'); await T.flush(250); T.eq(f.qa('app-workshop-karte').length, 5, 'Nach dem Anlegen soll die Liste neu laden und 5 Workshops zeigen.'); } }
     ] },
-  merke: ['Formulare als eigene Komponente: speichern und per output melden.', 'Regeln für Zahlen: min und max.', 'submit() schützt den Server vor ungültigen Daten.', 'firstValueFrom macht aus einem Observable ein Promise.']
+  merke: ['Formulare als eigene Komponente: speichern und per output melden.', 'Regeln für Zahlen: min und max.', 'submit() schützt den Server vor ungültigen Daten.', 'firstValueFrom macht aus einem Observable ein Promise.'],
+  paare: [
+    ['Formular-Komponente', 'Speichert und meldet per output'],
+    ['<code>min</code> und <code>max</code>', 'Regeln für Zahlen'],
+    ['<code>submit()</code>', 'Schickt nur gültige Daten an den Server'],
+    ['<code>firstValueFrom</code>', 'Macht aus einem Observable ein Promise']
+  ]
 });
 
 CH.push({
@@ -643,7 +662,13 @@ export class WorkshopDetail {
       { name: 'Der Guard lässt nur die Orga rein', run: T => { const a = T.inject(T.get('Auth')); a.rolle.set('teilnehmer'); T.ok(T.isUrlTree(T.inCtx(() => T.get('nurOrga')({}, {})), '/'), 'Teilnehmer sollen per createUrlTree([\'/\']) zur Liste.'); a.rolle.set('orga'); T.eq(T.inCtx(() => T.get('nurOrga')({}, {})), true, 'Die Orga soll rein dürfen.'); } },
       { name: 'Die id kommt als input', run: T => T.ok(/withComponentInputBinding\s*\(\s*\)/.test(T.code), 'In appConfig fehlt provideRouter(routes, withComponentInputBinding()).') }
     ] },
-  merke: ['Jede Seite eine Adresse, Details mit :id.', 'withComponentInputBinding: Platzhalter kommen als input().', 'Guard: true oder UrlTree. Der Server prüft trotzdem.', '** ganz unten fängt alles Unbekannte.']
+  merke: ['Jede Seite eine Adresse, Details mit :id.', 'withComponentInputBinding: Platzhalter kommen als input().', 'Guard: true oder UrlTree. Der Server prüft trotzdem.', '** ganz unten fängt alles Unbekannte.'],
+  paare: [
+    ['<code>:id</code>', 'Platzhalter für die Detailseite'],
+    ['<code>withComponentInputBinding</code>', 'Der Platzhalter kommt als input() an'],
+    ['Guard', 'Gibt true oder einen UrlTree zurück'],
+    ['<code>**</code>', 'Fängt alles Unbekannte, ganz unten']
+  ]
 });
 })();
 
@@ -709,7 +734,14 @@ jobs:
     { q: 'Was bedeutet „feat(team): …“ in einer Commit-Nachricht?', options: ['Der Commit liegt auf dem Branch team', 'Das ist ein Conventional Commit: ein neues Feature im Bereich team', 'Ein Feature-Flag namens team wird eingeschaltet', 'Ein Release-Tag für das Team'], correct: 1, why: 'So sehen alle Nachrichten einheitlich aus, und daraus lassen sich Changelogs erzeugen.' },
     { q: 'Wann ist eine Aufgabe „Done“?', options: ['Wenn sie auf deinem Rechner läuft', 'Wenn Tests, Review, grüne Pipeline und Fehlerfälle erfüllt sind', 'Wenn der Pull Request geöffnet ist', 'Sobald der Commit gemacht ist'], correct: 1, why: 'Die Definition of Done gilt für alle im Team gleich.' }
   ],
-  merke: ['Eigenes Projekt mit ng new: Liste, Formular, Login, Auswertung.', 'Git im Team: Branch, kleiner Pull Request, Review, Conventional Commits.', 'CI bei jedem PR: npm ci, lint, test, build. Deploy bei Merge.', 'Done = Tests + Review + grüne Pipeline + Fehlerfälle.']
+  merke: ['Eigenes Projekt mit ng new: Liste, Formular, Login, Auswertung.', 'Git im Team: Branch, kleiner Pull Request, Review, Conventional Commits.', 'CI bei jedem PR: npm ci, lint, test, build. Deploy bei Merge.', 'Done = Tests + Review + grüne Pipeline + Fehlerfälle.'],
+  paare: [
+    ['Branch', 'Eigener Zweig für jede Änderung'],
+    ['Pull Request', 'Bitte um Review vor dem Merge'],
+    ['CI', 'npm ci, lint, test, build bei jedem PR'],
+    ['Definition of Done', 'Tests, Review, grüne Pipeline, Fehlerfälle'],
+    ['Conventional Commits', 'Nachrichten wie „feat: …“ oder „fix: …“']
+  ]
 });
 
 CH.push({
@@ -747,5 +779,12 @@ CH.push({
     { q: 'Im Fachgespräch mit dem Team fragt man dich: „Wie findest du ein Speicherleck?“ Welche Antwort ist die beste?', options: ['Ich prüfe den Lighthouse-Score', 'Im Memory-Tab der DevTools vergleiche ich Heap Snapshots vor und nach der Navigation, dann suche ich offene Abos, Timer und Listener', 'Ich ersetze alle subscribe durch Promises', 'Ich schreibe überall console.log hinein'], correct: 1, why: 'Erst messen, dann gezielt aufräumen, zum Beispiel mit DestroyRef und takeUntilDestroyed.' },
     { q: 'Im Code-Review-Gespräch fragt Jonas: „Warum lädst du die Liste mit httpResource?“ Welche Antwort ist die beste?', options: ['„Das macht man heute so.“', '„Die Liste wird nur gelesen, und httpResource gibt mir Laden, Fehler und Daten als Signals. Der Preis: Nach jeder Änderung rufe ich reload() auf.“', '„Das hat Toni gesagt.“', '„Ich kann es auch wieder ändern, wenn du willst.“'], correct: 1, why: 'Ziel, Grund und Preis in zwei Sätzen. So kann das Team die Entscheidung prüfen.' }
   ],
-  merke: ['STAR: Situation, Aufgabe, deine Aktion, Ergebnis mit Zahl.', 'Fachfragen in 3 Stufen: Definition, Beispiel, Trade-off.', 'Live-Coding: laut denken, nachfragen, erst einfach, dann schön.', 'Im Review: Ziel, Entscheidung, Preis. Rückfragen annehmen, selbst fragen.']
+  merke: ['STAR: Situation, Aufgabe, deine Aktion, Ergebnis mit Zahl.', 'Fachfragen in 3 Stufen: Definition, Beispiel, Trade-off.', 'Live-Coding: laut denken, nachfragen, erst einfach, dann schön.', 'Im Review: Ziel, Entscheidung, Preis. Rückfragen annehmen, selbst fragen.'],
+  paare: [
+    ['S: Situation', '„Unsere Teamliste lud 8 Sekunden.“'],
+    ['T: Task', '„Ich sollte sie unter 1 Sekunde bringen.“'],
+    ['A: Action', '„Ich habe gemessen und @defer eingebaut.“'],
+    ['R: Result', '„0,7 Sekunden, Absprünge −30 %.“'],
+    ['Den Preis nennen', '„Dafür lädt die Liste nach jeder Anmeldung neu.“']
+  ]
 });

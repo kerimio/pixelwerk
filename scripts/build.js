@@ -14,7 +14,7 @@ const ORDER = [
   'werkstatt/aufgaben.js', 'werkstatt/review-schule-inhalte.js',
   'app/html-elemente.js', 'app/lexikon.js', 'app/lernen.js', 'app/pruefung.js',
   'app/basis.js', 'app/ki.js', 'app/code-anzeige.js', // Zustand und Speichern, KI-Anbindung, Code mit Erklärungen
-  'app/start.js', 'app/kapitel.js', 'app/uebung.js',  // Rahmen und Start, Kapitel-Ablauf, Code-Übung
+  'app/start.js', 'app/kapitel.js', 'app/zuordnen.js', 'app/uebung.js', // Rahmen und Start, Kapitel-Ablauf, Zuordnen, Code-Übung
   'app/chat.js', 'app/coach.js', 'app/staerken.js',   // Chat mit Toni, Lernprofil, Themen (was sitzt, was wackelt)
   'werkstatt/werkstatt.js', 'werkstatt/review-schule.js',
   'app/eigene.js', 'app/suche.js', 'app/jubel.js', 'app/ich.js', 'app/garderobe.js', 'app/figuren.js', 'app/einstieg.js', 'app/pr-review.js'

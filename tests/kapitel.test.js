@@ -45,7 +45,7 @@ const lage = page => page.evaluate(() => {
   const ms = mitSpiel(k);
   return {
     id: k.id, idx: CH.indexOf(k), title: k.title, xp: k.xp, story: k.story, stripped: k.story.map(z => stripHtml(z[1])), du: k.story.findIndex(z => z[0] === 'du'),
-    ticket: k.ticket.titel, slides: k.slides.length, quiz: k.quiz.map(q => ({ correct: q.correct, falsch: q.correct === 0 ? 1 : 0, why: stripHtml(q.why) })), ex: !!k.ex, merke: k.merke.length,
+    ticket: k.ticket.titel, slides: k.slides.length, zu: zuHat(k), quiz: k.quiz.map(q => ({ correct: q.correct, falsch: q.correct === 0 ? 1 : 0, why: stripHtml(q.why) })), ex: !!k.ex, merke: k.merke.length,
     f1: ms[0], s1: spiel(k.slides[ms[0]]), f2: ms[1], s2: spiel(k.slides[ms[1]]), ohneCode: k.slides.findIndex(s => !s.code && s.punkte && s.punkte.length >= 2), pro: k.slides[ms[0]].pro, say: k.slides[ms[0]].say,
     naechstes: (CH[CH.indexOf(k) + 1] || {}).id, letztes: CH.filter(c => !c.eigen).pop().id,
     chat: { id: kChat.id, n: kChat.story.length, erste: ersteNachricht(kChat), name: CAST[kChat.story.find(z => CAST[z[0]] && z[0] !== 'erz')[0]].name },
@@ -59,14 +59,14 @@ const lage = page => page.evaluate(() => {
   const { page } = a;
   const L = await lage(page);
   ok(L.id && L.chat.id && L.tag.id && L.alt.id && L.naechstes, 'Vorbedingung: Die Inhalte haben Kapitel für alle Fälle (' + L.id + ', ' + L.chat.id + ', ' + L.alt.id + ')');
-  const schritte = 1 + L.slides + L.quiz.length + (L.ex ? 1 : 0) + 1;
+  const schritte = 1 + L.slides + L.quiz.length + (L.zu ? 1 : 0) + (L.ex ? 1 : 0) + 1;
 
   // ---- Rahmen
   await geh(page, L.id);
   ok((await page.getAttribute('.ort a', 'href')) === '#start' && /Schreibtisch/.test(await txt(page, '.ort a')), 'Rahmen: leiser Weg „← Schreibtisch“ führt nach #start');
   ok((await txt(page, '.ch-head h1')) === L.title, 'Rahmen: Kapitel-Titel steht oben');
   const weg = await page.locator('#kpWeg .kp-ph').allTextContents();
-  ok(weg.map(w => w.replace(/\s*\d+\/\d+$/, '').trim()).join('·') === ['Ticket', 'Verstehen', 'Quiz'].concat(L.ex ? ['Umsetzen'] : [], ['Abschluss']).join('·'), 'Rahmen: eine Fortschrittsanzeige mit den Abschnitten (' + weg.join(' · ') + ')');
+  ok(weg.map(w => w.replace(/\s*\d+\/\d+$/, '').trim()).join('·') === ['Ticket', 'Verstehen', 'Quiz'].concat(L.zu ? ['Zuordnen'] : [], L.ex ? ['Umsetzen'] : [], ['Abschluss']).join('·'), 'Rahmen: eine Fortschrittsanzeige mit den Abschnitten (' + weg.join(' · ') + ')');
   ok((await page.locator('#kpWeg .kp-ph-b i').count()) === schritte, 'Rahmen: ein Strich je Schritt (' + schritte + ')');
   const zu = await page.locator('#kpWeg .kp-ph').evaluateAll(l => l.map(b => b.disabled));
   ok(zu.join() === zu.map((x, k) => k > 1).join(), 'Rahmen: Im frischen Kapitel sind nur „Ticket“ und der nächste Abschnitt anklickbar, der Rest ist deaktiviert');
@@ -111,7 +111,7 @@ const lage = page => page.evaluate(() => {
   ok((await st(page)).pre[L.id] === L.quiz[0].falsch && (await st(page)).xp === 0, 'Szene: Der Tipp wird gemerkt und zählt nicht');
   await page.click('#nextStep');
   ok((await sichtbar(page, '#stepBody .slide')) && (await st(page)).steps[L.id] === 1, 'Szene: „Weiter“ führt zur ersten Folie');
-  ok((await page.locator('#kpWeg .kp-ph:disabled').count()) === (L.ex ? 2 : 1) && !(await page.locator('#kpWeg .kp-ph >> nth=2').isDisabled()), 'Rahmen: Mit jedem erreichten Abschnitt wird der nächste anklickbar');
+  ok((await page.locator('#kpWeg .kp-ph:disabled').count()) === (L.ex ? 2 : 1) + (L.zu ? 1 : 0) && !(await page.locator('#kpWeg .kp-ph >> nth=2').isDisabled()), 'Rahmen: Mit jedem erreichten Abschnitt wird der nächste anklickbar');
   ok(await page.evaluate(id => aktFolie && aktFolie.ch.id === id && aktFolie.s === aktFolie.ch.slides[0], L.id), 'Folie: aktFolie zeigt auf Kapitel und Folie');
   await page.click('#prevStep');
   ok((await zeilen(page).count()) === L.story.length && (await sichtbar(page, '.ticket')) && !(await page.locator('#kpAnnehmen, .kp-sag, .kp-alles').count()) && (await sichtbar(page, '#nextStep.primary')), 'Szene: Zurück im angefangenen Kapitel steht sie sofort komplett da, ohne Annehmen, „Weiter“ ist von Anfang an da');
@@ -478,13 +478,15 @@ const lage = page => page.evaluate(() => {
   await geh(page, nach.id, { t: 'slide', i: nach.i });
   ok((await page.locator('.kp-se').count()) === 1 && (await offen(page)) === 0, 'Nachschlagen: Beim echten Besuch der Folie wartet das Selbsterklären noch');
   // Nachschlagen und von dort bis zum Abschluss blättern: Das Kapitel ist geschafft, der Schritt gemerkt, die Fortschrittsanzeige voll und frei
-  const durch = await page.evaluate(() => { const c = CH.find(c => !c.eigen && !c.ex && !S.done[c.id] && !S.steps[c.id] && c.quiz.length && CH.indexOf(c) < CH.length - 1); return { id: c.id, q: c.quiz.length - 1, letzter: buildSteps(c).length - 1 }; });
+  const durch = await page.evaluate(() => { const c = CH.find(c => !c.eigen && !c.ex && !S.done[c.id] && !S.steps[c.id] && c.quiz.length && CH.indexOf(c) < CH.length - 1); return { id: c.id, q: c.quiz.length - 1, letzter: buildSteps(c).length - 1, zu: zuHat(c) }; });
   await page.evaluate(x => { window.sprungZu = { id: x.id, t: 'quiz', i: x.q }; location.hash = x.id; }, durch);
   await page.waitForFunction(id => location.hash === '#' + id && document.querySelector('#stepBody .quiz'), durch.id);
   const gesperrt = await page.locator('#kpWeg .kp-ph:disabled').count();
   /* Ohne Übung zählt das Quiz: Alle Fragen sind richtig beantwortet (offen.test.js prüft den Fall ohne) */
   await page.evaluate(x => { CH.find(c => c.id === x.id).quiz.forEach((q, i) => { S.quiz[x.id + ':' + i] = 1; }); save(); }, durch);
   await page.click('#nextStep');
+  /* Nach dem Quiz kommt das Zuordnen, es ist kein Muss: weiterblättern */
+  if (durch.zu) { await page.waitForSelector('#stepBody .zu'); await page.click('#nextStep'); }
   s = await st(page);
   ok(gesperrt > 0 && !!s.done[durch.id] && s.steps[durch.id] === durch.letzter && (await sichtbar(page, '#dumpIn')) && !(await page.locator('#kpWeg .kp-ph:disabled').count()) && !(await page.locator('#kpWeg .kp-ph-b i:not(.voll):not(.an)').count()),
     'Nachschlagen: Wer von dort bis zum Abschluss blättert, hat das Kapitel geschafft, mit gemerktem Schritt und voller, freier Fortschrittsanzeige');

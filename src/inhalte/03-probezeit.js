@@ -96,7 +96,14 @@ export class KudosWand {
       { name: 'Feld ist nach Löschen leer', run: async T => { const f = T.mount(T.cmp('KudosWand')); await f.type('input', 'Kerim'); await f.click('button.loeschen'); T.eq(f.q('input').value, '', 'Nach Löschen soll auch das Eingabefeld leer sein. Hat das input [value]="name()"?'); } },
       { name: 'Kudos-Knopf zählt', run: async T => { const f = T.mount(T.cmp('KudosWand')); await f.click('button.kudos'); await f.click('button.kudos'); T.eq(f.q('span.kudos').textContent.trim(), '2', 'Nach 2 Klicks soll span.kudos 2 zeigen. Hat button.kudos ein (click) mit kudos.update(...)?'); } }
     ] },
-  merke: ['(event)="code" = HTML meldet an Klasse.', '$event = das Ereignis.', '[ ] rein, ( ) raus. [( )] für beides lernst du später mit model().']
+  merke: ['(event)="code" = HTML meldet an Klasse.', '$event = das Ereignis.', '[ ] rein, ( ) raus. [( )] für beides lernst du später mit model().'],
+  paare: [
+    ['<code>(click)="melden()"</code>', 'Ruft die Methode beim Klick auf'],
+    ['<code>$event</code>', 'Der Zettel mit allen Infos zum Ereignis'],
+    ['<code>$event.target</code>', 'Das Element, an dem es passiert ist'],
+    ['<code>[ ]</code>', 'Wert geht rein ins Element'],
+    ['<code>( )</code>', 'Meldung kommt raus zur Klasse']
+  ]
 });
 
 CH.push({
@@ -180,7 +187,13 @@ export class Team {
       { name: 'freiePlaetze nie unter 0', run: T => { const f = T.mount(T.cmp('Team')); T.eq(f.instance.freiePlaetze(), 4, 'Bei 7 Entwicklern sind 4 frei.'); f.instance.frontend.set(20); T.eq(f.instance.freiePlaetze(), 0, 'Bei 23 Entwicklern soll 0 kommen, nicht -12.'); } },
       { name: 'Template zeigt alles', run: async T => { const f = T.mount(T.cmp('Team')); T.eq(f.q('p.gesamt').textContent.trim(), '7', 'p.gesamt soll gesamt zeigen, am Anfang 7. Steht {{ gesamt() }} darin?'); T.ok(/4/.test(f.q('p.voll').textContent) && !/voll!/.test(f.q('p.voll').textContent), 'p.voll soll bei 7 „Noch 4 Plätze frei“ zeigen.'); f.instance.frontend.set(8); await T.flush(); T.ok(/voll/i.test(f.q('p.voll').textContent), 'Bei 11 soll p.voll „Team voll!“ zeigen.'); } }
     ] },
-  merke: ['computed(() => …) = abgeleiteter Wert.', 'Nur lesbar, rechnet selbst neu.', 'Was man ausrechnen kann, speichert man nicht.']
+  merke: ['computed(() => …) = abgeleiteter Wert.', 'Nur lesbar, rechnet selbst neu.', 'Was man ausrechnen kann, speichert man nicht.'],
+  paare: [
+    ['<code>signal([])</code>', 'Hält die Liste, du änderst sie selbst'],
+    ['<code>computed(() => team().length)</code>', 'Zählt von selbst mit, wenn sich team ändert'],
+    ['<code>team()</code>', 'Liest den aktuellen Wert'],
+    ['<code>anzahl.set(3)</code>', 'Geht nicht: ein computed ist nur lesbar']
+  ]
 });
 
 CH.push({
@@ -294,7 +307,14 @@ export class Besetzung {
       { name: 'p.viel nur bei mehr als 2', run: async T => { const f = T.mount(T.cmp('Besetzung')); T.ok(f.q('p.viel'), 'Bei 3 Entwicklern soll p.viel da sein.'); f.instance.entwickler.update(l => l.slice(0, 2)); await T.flush(); T.ok(!f.q('p.viel'), 'Bei 2 Entwicklern soll p.viel weg sein.'); } },
       { name: 'Leere Liste zeigt li.leer', run: async T => { const f = T.mount(T.cmp('Besetzung')); await f.click('button'); const lis = f.qa('ul li'); T.eq(lis.length, 1, 'Bei leerer Liste genau ein <li class="leer">. Nimm @empty.'); T.ok(lis[0].classList.contains('leer'), 'Das li braucht class="leer".'); } }
     ] },
-  merke: ['@for (x of liste(); track x.id) wiederholt.', '@empty für leere Listen.', '@if / @else if / @else entscheidet.']
+  merke: ['@for (x of liste(); track x.id) wiederholt.', '@empty für leere Listen.', '@if / @else if / @else entscheidet.'],
+  paare: [
+    ['<code>@for</code>', 'Wiederholt HTML für jedes Element'],
+    ['<code>track x.id</code>', 'Woran Angular jedes Element wiedererkennt'],
+    ['<code>@empty</code>', 'Wird gezeigt, wenn die Liste leer ist'],
+    ['<code>@if</code>', 'Zeigt HTML nur, wenn die Bedingung stimmt'],
+    ['<code>@else</code>', 'Zeigt HTML, wenn die Bedingung nicht stimmt']
+  ]
 });
 
 CH.push({
@@ -426,7 +446,13 @@ export class Besetzung {
       { name: 'Seite zeigt 3 Karten', run: T => { T.ok(/imports\s*:\s*\[\s*EntwicklerKarte/.test(T.code), 'Besetzung braucht EntwicklerKarte in imports: [...].'); const f = T.mount(T.cmp('Besetzung')); T.eq(f.qa('app-entwickler-karte').length, 3, 'Für 3 Entwickler sollen 3 <app-entwickler-karte> da sein. Steht die Karte in @for?'); T.eq(f.qa('app-entwickler-karte h3').map(h => h.textContent.trim()), ['Leon', 'Mo', 'Ben'], 'Die Karten sollen der Reihe nach Leon, Mo, Ben zeigen. Gibst du jeder Karte [entwickler]="person" mit?'); } },
       { name: 'Klick auf Mo landet bei der Seite', run: async T => { const f = T.mount(T.cmp('Besetzung')); await f.click(f.qa('app-entwickler-karte button')[1]); T.eq(f.instance.eingeplant(), [2], 'Nach Klick auf Mo soll eingeplant() [2] sein. Hört die Seite mit (einplanen)="rein($event)" zu, und hängt rein() die id an?'); T.ok(/1 eingeplant/.test(f.q('p.zaehler').textContent), 'p.zaehler soll „1 eingeplant“ zeigen, gefunden: „' + f.q('p.zaehler').textContent.trim() + '“.'); } }
     ] },
-  merke: ['input(): Daten von oben, lesen mit ().', 'output() + emit(): Ruf nach oben, kommt als $event.', 'Kinder in imports eintragen.']
+  merke: ['input(): Daten von oben, lesen mit ().', 'output() + emit(): Ruf nach oben, kommt als $event.', 'Kinder in imports eintragen.'],
+  paare: [
+    ['<code>input()</code>', 'Bekommt Daten vom Eltern-Baustein'],
+    ['<code>output()</code>', 'Kanal für Meldungen nach oben'],
+    ['<code>emit(wert)</code>', 'Schickt die Meldung jetzt ab'],
+    ['<code>$event</code>', 'Der gesendete Wert beim Eltern-Baustein']
+  ]
 });
 
 CH.push({
@@ -554,7 +580,14 @@ export class Kopfzeile {
       { name: 'team ist von außen nicht änderbar', run: T => { const s = T.inject(T.get('TeamService')); T.ok(typeof s.team === 'function' && !s.team.set, 'team hat noch .set(). Nimm this._team.asReadonly().'); } },
       { name: 'Kopfzeile nutzt den Service', run: async T => { T.ok(/inject\s*\(\s*TeamService\s*\)/.test(T.code), 'Kopfzeile soll inject(TeamService) benutzen.'); const f = T.mount(T.cmp('Kopfzeile')); T.eq(f.q('p.anzahl').textContent.trim(), '3 im Team', 'p.anzahl soll „3 im Team“ zeigen. Steht {{ service.anzahl() }} darin?'); T.inject(T.get('TeamService')).abziehen(1); await T.flush(); T.eq(f.q('p.anzahl').textContent.trim(), '2 im Team', 'Nach dem Abziehen im Service soll die Kopfzeile „2 im Team“ zeigen.'); } }
     ] },
-  merke: ['Service = geteilte Daten + Logik.', "@Service() = eine Instanz für die ganze App.", 'inject(X) nur im Injection Context.', 'Privat ändern, öffentlich readonly.']
+  merke: ['Service = geteilte Daten + Logik.', "@Service() = eine Instanz für die ganze App.", 'inject(X) nur im Injection Context.', 'Privat ändern, öffentlich readonly.'],
+  paare: [
+    ['Service', 'Geteilte Daten und Logik an einer Stelle'],
+    ['<code>@Service()</code>', 'Eine Instanz für die ganze App'],
+    ['<code>inject(X)</code>', 'Fordert den Service an'],
+    ['<code>private</code>', 'Nur der Service selbst darf ändern'],
+    ['<code>asReadonly()</code>', 'Alle anderen dürfen nur lesen']
+  ]
 });
 
 CH.push({
@@ -684,7 +717,13 @@ export class RecruitingService {
       { name: 'umschalten und anzahl klappen noch', run: T => { const s = T.inject(T.get('RecruitingService')); s.umschalten(1); s.umschalten(3); T.eq(s.merkliste(), [1, 3], 'Nach umschalten(1), umschalten(3) soll [1,3] drin sein.'); T.eq(s.anzahl(), 2, 'Bei 2 gemerkten Bewerbern soll anzahl 2 sein.'); s.umschalten(1); T.eq(s.merkliste(), [3], 'Nochmal umschalten(1) soll 1 entfernen.'); } },
       { name: 'Kein effect, der Signals setzt', run: T => T.ok(!/effect\s*\(\s*\(\s*\)\s*=>\s*\{?[^}]*\.(set|update)\(/.test(T.code), 'Im effect wird ein Signal gesetzt. Der effect soll nur speichern.') }
     ] },
-  merke: ['effect = Nebenwirkung bei Änderung.', 'Läuft am Anfang und danach bei jeder Änderung.', 'Ableiten immer mit computed.']
+  merke: ['effect = Nebenwirkung bei Änderung.', 'Läuft am Anfang und danach bei jeder Änderung.', 'Ableiten immer mit computed.'],
+  paare: [
+    ['<code>effect()</code>', 'Führt Code aus, wenn ein gelesenes Signal sich ändert'],
+    ['<code>computed()</code>', 'Rechnet einen neuen Wert aus Signals aus'],
+    ['<code>localStorage.setItem(…)</code>', 'Speichern im Browser: typische Arbeit für effect'],
+    ['Signal im effect setzen', 'Warnzeichen: das ist ein verkleidetes computed']
+  ]
 });
 
 CH.push({
@@ -728,5 +767,12 @@ export class Team {
     { q: 'Warum hilft Dependency Injection beim Testen?', options: ['DI schreibt die Tests automatisch', 'Man kann echte Services leicht gegen Fakes tauschen', 'Mit DI braucht man keinen Test-Runner mehr', 'DI prüft beim Bauen, ob alle Services fehlerfrei sind'], correct: 1, why: 'Im Test tauschst du den echten Service gegen einen Fake. So braucht der Test keinen echten Server und bleibt schnell und stabil.' },
     { q: 'Im Code deiner Firma steht *ngFor. Was ist das?', options: ['Ein Tippfehler, der den Build bricht', 'Die alte Schreibweise von @for', 'Ein RxJS-Operator für Listen', 'Eine neue Schreibweise seit Angular 22'], correct: 1, why: '*ngFor funktioniert noch, ist aber die alte Schreibweise von @for. Die Angular CLI kann solchen Code automatisch auf @for umbauen.' }
   ],
-  merke: ['Angular ist „opinionated“: ein empfohlener Weg für fast alles.', 'Immer TypeScript, Decorators, DI, und RxJS ist eingebaut.', 'Altes Angular (NgModule, *ngIf, @Input) und neues (standalone, @if, input()) musst du beide lesen können.', 'Regelmäßig neue Hauptversionen (bis Angular 22 alle 6 Monate, seitdem alle 12 Monate). Bei Anleitungen aufs Datum achten.']
+  merke: ['Angular ist „opinionated“: ein empfohlener Weg für fast alles.', 'Immer TypeScript, Decorators, DI, und RxJS ist eingebaut.', 'Altes Angular (NgModule, *ngIf, @Input) und neues (standalone, @if, input()) musst du beide lesen können.', 'Regelmäßig neue Hauptversionen (bis Angular 22 alle 6 Monate, seitdem alle 12 Monate). Bei Anleitungen aufs Datum achten.'],
+  paare: [
+    ['Opinionated', 'Ein empfohlener Weg für fast alles'],
+    ['Dependency Injection', 'Angular liefert Services, du fragst nur danach'],
+    ['<code>*ngIf</code>', 'Alte Schreibweise, heute @if'],
+    ['<code>@Input()</code>', 'Alter Decorator, heute input()'],
+    ['Zone.js', 'Weckte Angular früher bei jedem Klick und Timer']
+  ]
 });

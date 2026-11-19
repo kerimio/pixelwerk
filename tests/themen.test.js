@@ -59,7 +59,7 @@ const claudeText = t => sse([{ type: 'message_start' }, { type: 'content_block_d
     ok(tage.join() === '2,4', 'Übung, die nur mit Lösung klappte, kommt nach 2 statt 4 Tagen aus dem Kopf (' + tage.join(', ') + ')');
 
     /* Sicher, aber falsch: zählt an der Karte (sf) und damit fürs Thema */
-    await page.evaluate(() => { S.srs = { 'q:g02:0': { s: 3, n: 1, l: 0, due: Date.now() - 864e5 } }; CH.forEach(c => { if (S.done[c.id]) { ['m:', 'x:'].forEach(p => { S.srs[p + c.id] = { s: 3, n: 1, l: 0, due: Date.now() + 9 * 864e5 }; }); c.quiz.forEach((q, i) => { if (!S.srs['q:' + c.id + ':' + i]) S.srs['q:' + c.id + ':' + i] = { s: 3, n: 1, l: 0, due: Date.now() + 9 * 864e5 }; }); } }); save(); location.hash = 'wdh'; });
+    await page.evaluate(() => { S.srs = { 'q:g02:0': { s: 3, n: 1, l: 0, due: Date.now() - 864e5 } }; CH.forEach(c => { if (S.done[c.id]) { ['m:', 'x:', 'z:'].forEach(p => { S.srs[p + c.id] = { s: 3, n: 1, l: 0, due: Date.now() + 9 * 864e5 }; }); c.quiz.forEach((q, i) => { if (!S.srs['q:' + c.id + ':' + i]) S.srs['q:' + c.id + ':' + i] = { s: 3, n: 1, l: 0, due: Date.now() + 9 * 864e5 }; }); } }); save(); location.hash = 'wdh'; });
     await page.waitForSelector('.le-karte .opt');
     await page.evaluate(() => { const q = CH.find(c => c.id === 'g02').quiz[0]; [...document.querySelectorAll('.le-karte .opt')].find(o => +o.dataset.i !== q.correct).click(); });
     await page.click('.cf[data-c="1"]');
