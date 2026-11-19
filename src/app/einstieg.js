@@ -363,7 +363,7 @@ function esTeamAn(w, l) {
 
 /* ---------- 5. Dein Coach: mit eigener KI oder ohne ----------
    Mit KI: Anbieter wählen, eigenen API-Schlüssel einfügen, „Prüfen und speichern“ holt die Modelle und nimmt das empfohlene.
-   Gespeichert wird wie im Profil unter „Coach Toni“ (aiSave in ki.js, nur in diesem Browser). Ohne KI geht es einfach weiter. */
+   Gespeichert wird wie im Profil unter „Coach Toni“ (aiSave in ki.js: mit npm start nur in data/secrets.json, sonst in diesem Browser). Ohne KI geht es einfach weiter. */
 var ES_KI_ANB = ['claude', 'openai', 'gemini', 'deepseek'];
 function esKiHtml(l) {
   const c = aiCfg(), wahl = l.ki || (c.key ? 'mit' : null);
@@ -379,7 +379,7 @@ function esKiHtml(l) {
       <label class="fld" for="esKiKey" id="esKiKeyL">API-Schlüssel</label>
       <div class="hub-zeile"><input id="esKiKey" type="password" autocomplete="off" spellcheck="false"><button class="btn" id="esKiPruef" type="button">Prüfen und speichern</button></div>
       <p class="small" id="esKiMsg" aria-live="polite"></p>
-      <p class="muted small">Schlüssel gibt es bei <span id="esKiWo"></span>. Er bleibt nur in diesem Browser. Die Kosten laufen über dein Konto beim Anbieter, am besten mit Ausgabelimit.</p>
+      <p class="muted small">Schlüssel gibt es bei <span id="esKiWo"></span>. <span id="esKiOrt">${esc(kiOrt())}</span> Die Kosten laufen über dein Konto beim Anbieter, am besten mit Ausgabelimit.</p>
     </div>
     <div class="es-fuss"><p class="es-hinweis" id="esHinweis" aria-live="polite"></p><button type="button" class="btn primary big" id="esWeiter">Weiter</button></div>
   </section>`;
@@ -396,7 +396,7 @@ function esKiAn(w, l) {
     const k = KI_ANBIETER[a], c = aiCfg(); l.anb = a; esMerken();
     w.querySelectorAll('#esKiAnb button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.a === a)));
     $('#esKiKeyL', w).textContent = k.name + '-API-Schlüssel'; key.placeholder = k.ph; $('#esKiWo', w).textContent = k.wo;
-    key.value = c.anbieter === a ? c.key || '' : ''; msg.textContent = c.key && c.anbieter === a ? 'Gespeichert: ' + k.name + ' (' + (c.model || k.std) + ').' : '';
+    key.value = c.anbieter === a && !c.lokal ? c.key || '' : ''; msg.textContent = c.key && c.anbieter === a ? 'Gespeichert: ' + k.name + ' (' + (c.model || k.std) + ').' : '';
   };
   w.querySelectorAll('.es-ki-k').forEach(b => b.onclick = () => {
     l.ki = b.dataset.ki; esMerken(); stand();

@@ -52,8 +52,68 @@ Einrichten im Einstieg (Bild „Dein Coach“) oder später im Profil unter **Co
 | Gemini | aistudio.google.com, Get API key (Gratis-Tarif vorhanden) |
 | DeepSeek | platform.deepseek.com, API keys |
 
-- Der Schlüssel liegt nur in deinem Browser (localStorage). Er steht nicht in `fortschritt.json` und nie im Repo. Die Kosten laufen über dein Konto beim Anbieter, am besten setzt du dort ein Ausgabelimit.
+- Die Kosten laufen über dein Konto beim Anbieter, am besten setzt du dort ein Ausgabelimit.
 - Toni bekommt bei jeder Anfrage seine Rolle (`TONI` in `src/app/ki.js`) und dein Niveau aus dem Einstieg mit.
+
+### Ohne KI oder mit KI-Schlüssel?
+
+| | Ohne KI | Mit KI-Schlüssel |
+|---|---|---|
+| Kapitel, Folien, Quiz, Übungen | Vollständig, für alle gleich | Gleich, dazu **Neue Fragen von Toni** zu Themen, die bei dir wackeln |
+| Fehler im Code | Die Tests zeigen Rot, die Tipp-Leiter hilft Stufe für Stufe bis zur Lösung | Dazu **Toni, was fehlt?**: Toni liest deinen Code und sagt, welche Zeile und warum, ohne die Lösung zu verraten |
+| Chat mit Toni | Keine freien Antworten, der Chat sagt nur, was ohne KI geht | Erklärt frei, kennt deinen Code, die Tests und dein Lernprofil |
+| Selbst erklären (Folien) | Musterlösung neben deinen Worten | Dazu prüft Toni deine Erklärung vorher |
+| Pull Request an Toni, eigene Kapitel | Nein | Ja |
+| Schwächen erkennen | Ja, aus deinen Antworten („Wackelt noch“), ganz ohne KI gerechnet | Gleich, dazu gezielte Nachfragen und das Lernbild (wie du fragst und erklärst) |
+| Wiederholen | Wachsende Abstände, Schwaches kommt früher | Genauso |
+| Kosten | Keine | Pro Anfrage bei deinem Anbieter |
+| Datenschutz | Nichts verlässt deinen Rechner | Anfragen mit Code und Lernstand gehen an den Anbieter (siehe unten) |
+| Einrichtung | Keine | Schlüssel holen und eintragen, am sichersten mit `npm start` |
+
+Kurz: Ohne KI lernst du strukturiert, und die App merkt sich trotzdem, was wackelt. Mit KI bekommst du dazu einen Tutor, der deinen Code liest. Dafür zahlst du pro Anfrage, und dein Übungscode verlässt den Rechner. Bei Firmenrechnern vorher klären, ob das erlaubt ist.
+
+### Wie der Schlüssel gespeichert und übertragen wird
+
+Es gibt drei Betriebsarten. Welche gilt, entscheidet die App beim Start selbst: Läuft sie unter `http://localhost` und antwortet `GET /api/ki` des lokalen Servers, gilt Modus 1. Sonst Modus 2, im Artefakt Modus 3.
+
+**1. Mit `npm start` (empfohlen)**
+
+```
+Browser ──(einmal beim Speichern: Schlüssel)──▶ server.js auf 127.0.0.1 ──▶ data/secrets.json (600)
+Browser ──(Frage, ohne Schlüssel)──▶ POST /api/ki/chat ──(Frage + Schlüssel, HTTPS)──▶ Anbieter
+Browser ◀──(Antwort als Strom, unverändert durchgereicht)── server.js ◀── Anbieter
+```
+
+- **Speicherort:** `data/secrets.json` im Repo-Ordner, Inhalt `{ "anbieter", "key", "model" }` als Klartext. Die Datei wird mit Rechten `600` angelegt (nur dein Benutzer liest und schreibt), der Ordner `data/` mit `700`. Geschrieben wird erst in eine Zwischendatei, dann umbenannt, damit nie eine halbe Datei entsteht. Hat eine vorhandene Datei zu offene Rechte, stellt der Server sie beim Start wieder auf `600`. Anderer Pfad mit `SECRETS=/pfad/zur/datei npm start`.
+- **Nie im Git:** `data/` steht in `.gitignore`. Der Schlüssel steht auch nie in `fortschritt.json` oder im Spielstand-Export.
+- **Nie zurück an den Browser:** `GET /api/ki` liefert nur `{ server, anbieter, model, schluessel: true/false }`. Es gibt keinen Endpunkt, der den Schlüssel ausgibt. Im Formular bleibt das Feld danach leer („Gespeichert auf deinem Rechner“). Modell ändern geht ohne neuen Schlüssel.
+- **Wann der Schlüssel den Browser verlässt:** nur beim Prüfen (`POST /api/ki/modelle`) und Speichern (`PUT /api/ki`), jeweils an `127.0.0.1`. Das ist unverschlüsseltes HTTP, bleibt aber auf deinem Rechner (Loopback). Danach hält der Browser ihn nicht mehr im Speicher.
+- **Wer mit dem Anbieter spricht:** nur `server.js`, per HTTPS an fest eingetragene Adressen (`ANBIETER` in `server.js`: api.anthropic.com, api.openai.com, api.deepseek.com, generativelanguage.googleapis.com). Der Browser kann keine andere Adresse vorgeben. Der Server liest den Schlüssel bei jeder Anfrage aus der Datei und schreibt ihn in kein Log.
+- **Schutz gegen fremde Seiten:** Der Server lauscht nur auf `127.0.0.1`, nicht im Netzwerk. KI-Aufrufe nimmt er nur an, wenn der `Host`-Header `localhost`, `127.0.0.1` oder `[::1]` ist (gegen DNS-Rebinding), ein mitgeschicktes `Origin` ebenfalls lokal ist und schreibende Aufrufe `Content-Type: application/json` haben. Eine fremde Webseite kann deshalb weder per `fetch` (scheitert am CORS-Preflight, der Server sendet keine CORS-Header) noch per einfachem Formular-POST (kein JSON) deinen Schlüssel benutzen.
+- **Keine statische Auslieferung:** Der Server liefert `data/`, `fortschritt.json*` und alle versteckten Pfade (z. B. `.git`) nicht als Dateien aus, auch nicht über `../`.
+- **Umzug von früher:** Lag ein Schlüssel noch im Browser (`localStorage`, Eintrag `ngfc.ai`), schickt die App ihn beim ersten Start mit Server einmal an `PUT /api/ki` und löscht ihn danach im Browser.
+- **Entfernen:** „Schlüssel entfernen“ ruft `DELETE /api/ki` auf, das löscht `data/secrets.json`.
+- **Grenzen, ehrlich gesagt:** Die Datei ist nicht verschlüsselt. Wer als dein Benutzer (oder root) auf dem Rechner etwas ausführen kann, kann sie lesen oder `127.0.0.1:4300` selbst aufrufen. Backups des Repo-Ordners enthalten die Datei. Schutz davor wäre ein Passwort-Manager oder Schlüsselbund, das ist bewusst nicht eingebaut. Setz beim Anbieter ein Ausgabelimit und nutze einen eigenen Schlüssel nur für Pixelwerk.
+
+**2. Ohne Server** (`index.html` direkt geöffnet)
+
+- Der Schlüssel liegt im Klartext in `localStorage` des Browsers (`ngfc.ai`), und der Browser ruft den Anbieter direkt auf (bei Claude mit dem Header `anthropic-dangerous-direct-browser-access`).
+- Risiko: Jedes Script auf derselben Herkunft kann ihn lesen. Bei `file://` teilen sich je nach Browser alle lokalen HTML-Dateien diesen Speicher. Die Einstellungen und der Einstieg weisen darauf hin und empfehlen `npm start`.
+
+**3. Im Artefakt auf claude.ai**
+
+- Dort gibt es keinen Server. Ohne eigenen Schlüssel antwortet Toni über Claude im Artefakt (die Anfrage läuft über dein claude.ai-Konto, ein API-Schlüssel ist nicht nötig). Trägt man trotzdem einen eigenen ein, gilt Modus 2. Mit „Ganz ohne KI“ bleibt Toni still.
+
+### Was an den Anbieter geht
+
+Nur wenn ein Schlüssel eingetragen ist und du Toni etwas fragst oder eine KI-Funktion auslöst. Ohne KI geht nichts nach außen.
+
+- Tonis Rolle (`TONI` in `src/app/ki.js`) und dein Niveau aus dem Einstieg
+- dein Vorname aus dem Profil
+- dein Lernstand: welche Themen sitzen und wackeln, mit Grund (aus `themenNote` und `profilNote`). Das Lernbild aus deinen Fragen nur, solange „Toni darf aus meinen Fragen lernen“ an ist
+- je nach Funktion: deine Frage und die letzten 10 Chat-Nachrichten, die aktuelle Folie, **dein Übungscode und die Testergebnisse**, deine eigene Erklärung oder dein Pull Request
+
+Was der Anbieter damit macht (Speicherdauer, Training), regeln seine API-Bedingungen. Keine Firmen-Geheimnisse oder Kundendaten in die Übungen kopieren.
 
 ## Echtes Angular
 
@@ -85,7 +145,7 @@ npm run build                      # baut index.html aus src/
 npm test                           # baut, dann alle Tests
 ```
 
-`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand und KI-Auswahl.
+`npm test` prüft den Lernaufbau (Phasen, eindeutige IDs, Pflichtfelder, Quiz), alle Musterlösungen der Übungen und im echten Browser (Playwright) Einstieg, Schreibtisch, Kapitel, Übung, Wiederholen, Toni-Chat, Werkstatt, Profil, Spielstand, KI-Auswahl und den KI-Schlüssel über den lokalen Server (`tests/ki-server.test.js`).
 
 **Artefakt-Fassung** (claude.ai): `scripts/artefakt/` macht aus `index.html` die Fassung, in der Toni ohne eigenen Schlüssel über Claude im Artefakt antwortet. Dort kann man auch „Ganz ohne KI“ wählen.
 
